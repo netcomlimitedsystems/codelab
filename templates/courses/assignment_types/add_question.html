@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Multiple Choice Question - {{ assignment.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'courses:manage_assignments' course_pk=assignment.course.pk %}">Manage Assignments</a></li>
+                    <li class="breadcrumb-item active">Add Question</li>
+                </ol>
+            </nav>
+
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Add Multiple Choice Question</h4>
+                    <p class="mb-0 text-muted">Assignment: {{ assignment.title }}</p>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.question_text.id_for_label }}" class="form-label">Question Text</label>
+                            {{ form.question_text }}
+                            {% if form.question_text.errors %}
+                            <div class="text-danger small">{{ form.question_text.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.option_a.id_for_label }}" class="form-label">Option A</label>
+                                    {{ form.option_a }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.option_b.id_for_label }}" class="form-label">Option B</label>
+                                    {{ form.option_b }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.option_c.id_for_label }}" class="form-label">Option C</label>
+                                    {{ form.option_c }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.option_d.id_for_label }}" class="form-label">Option D</label>
+                                    {{ form.option_d }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.correct_answer.id_for_label }}" class="form-label">Correct Answer</label>
+                            {{ form.correct_answer }}
+                            {% if form.correct_answer.errors %}
+                            <div class="text-danger small">{{ form.correct_answer.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.explanation.id_for_label }}" class="form-label">Explanation (Optional)</label>
+                            {{ form.explanation }}
+                            <div class="form-text">This will be shown to students after they submit their answer.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'courses:manage_assignments' course_pk=assignment.course.pk %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                Save Question
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

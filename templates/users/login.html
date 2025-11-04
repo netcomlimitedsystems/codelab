@@ -1,0 +1,585 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Secure Login - CodeLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-hero {
+        background: linear-gradient(135deg, #1a1f35 0%, #2d3748 100%);
+        color: white;
+        padding: 40px 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+    }
+    
+    .login-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        background: #2d3748;
+        margin: 1rem 0;
+        border: 1px solid #4a5568;
+        transition: all 0.3s ease;
+    }
+    
+    .login-card:hover {
+        box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        transform: translateY(-2px);
+    }
+    
+    .login-brand {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .brand-logo {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #4299e1 0%, #667eea 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.75rem;
+        box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
+        border: 2px solid #4299e1;
+    }
+    
+    .brand-logo i {
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .form-control {
+        border-radius: 8px;
+        padding: 0.6rem 0.75rem;
+        border: 2px solid #4a5568;
+        background: #1a202c;
+        color: white;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #4299e1;
+        box-shadow: 0 0 0 0.2rem rgba(66, 153, 225, 0.25);
+        background: #1a202c;
+        color: white;
+    }
+    
+    .form-floating-custom {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+    
+    .form-floating-custom label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        padding: 0.6rem 0.75rem;
+        pointer-events: none;
+        border: 1px solid transparent;
+        transform-origin: 0 0;
+        transition: opacity .1s ease-in-out, transform .1s ease-in-out;
+        color: #a0aec0;
+        font-size: 0.9rem;
+    }
+    
+    .form-floating-custom input:focus ~ label,
+    .form-floating-custom input:not(:placeholder-shown) ~ label {
+        opacity: .65;
+        transform: scale(.85) translateY(-0.7rem) translateX(0.15rem);
+        color: #4299e1;
+    }
+    
+    .login-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+    }
+    
+    .remember-me {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .forgot-password {
+        color: #4299e1;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .forgot-password:hover {
+        color: #63b3ed;
+        text-decoration: underline;
+    }
+    
+    .security-features {
+        background: #1a202c;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+        border: 1px solid #4a5568;
+    }
+    
+    .security-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .security-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .security-icon {
+        width: 30px;
+        height: 30px;
+        background: #4299e1;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 0.75rem;
+        flex-shrink: 0;
+    }
+    
+    .security-icon i {
+        color: white;
+        font-size: 0.9rem;
+    }
+    
+    .password-toggle {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #a0aec0;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #4299e1 0%, #667eea 100%);
+        border: none;
+        border-radius: 8px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 15px rgba(66, 153, 225, 0.3);
+    }
+    
+    .cyber-divider {
+        text-align: center;
+        position: relative;
+        margin: 1.5rem 0;
+    }
+    
+    .cyber-divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: #4a5568;
+    }
+    
+    .cyber-divider span {
+        background: #2d3748;
+        padding: 0 0.75rem;
+        color: #a0aec0;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .cyber-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding: 0.6rem;
+        background: #1a202c;
+        border-radius: 8px;
+        border: 1px solid #4a5568;
+        font-size: 0.8rem;
+    }
+    
+    /* Animation classes */
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .shake {
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .login-hero {
+            padding: 20px 0;
+            min-height: auto;
+        }
+        
+        .login-card {
+            margin: 0.5rem;
+        }
+        
+        .brand-logo {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .brand-logo i {
+            font-size: 1.25rem;
+        }
+        
+        .security-features {
+            padding: 0.75rem;
+        }
+        
+        .login-options {
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: flex-start;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .login-hero {
+            padding: 15px 0;
+        }
+        
+        .h3 {
+            font-size: 1.25rem;
+        }
+        
+        .security-item {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .security-icon {
+            margin-right: 0;
+            margin-bottom: 0.5rem;
+        }
+    }
+    
+    /* Loading states */
+    .btn-loading {
+        position: relative;
+        color: transparent !important;
+    }
+    
+    .btn-loading::after {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        top: 50%;
+        left: 50%;
+        margin-left: -8px;
+        margin-top: -8px;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        border-right-color: transparent;
+        animation: spin 0.75s linear infinite;
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="login-hero">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <div class="login-card">
+                    <div class="card-body p-3 p-md-4">
+                        <!-- Brand Logo -->
+                        <div class="login-brand">
+                            <div class="brand-logo pulse">
+                                <i class="bi bi-shield-lock"></i>
+                            </div>
+                            <h3 class="fw-bold text-center text-white mb-1">Secure Login</h3>
+                            <p class="text-center text-light mb-0" style="font-size: 0.9rem;">Access your CodeLab account</p>
+                        </div>
+
+                        <!-- Messages -->
+                        {% if messages %}
+                        <div class="mb-3">
+                            {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="font-size: 0.85rem;">
+                                <i class="bi {% if message.tags == 'success' %}bi-check-circle{% else %}bi-exclamation-triangle{% endif %} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Form Errors -->
+                        {% if form.errors %}
+                        <div class="alert alert-danger alert-dismissible fade show shake" role="alert" style="font-size: 0.85rem;">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Invalid credentials. Please try again.
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endif %}
+
+                        <!-- Login Form -->
+                        <form method="POST" id="login-form">
+                            {% csrf_token %}
+                            
+                            <!-- Username/Email Field -->
+                            <div class="form-floating-custom">
+                                <input type="text" 
+                                       name="username"
+                                       class="form-control form-control-sm {% if form.errors %}is-invalid{% endif %}" 
+                                       id="id_username"
+                                       placeholder=" "
+                                       required
+                                       autocomplete="username"
+                                       autofocus>
+                                <label for="id_username">
+                                    <i class="bi bi-person me-2"></i>Username or Email
+                                </label>
+                            </div>
+
+                            <!-- Password Field -->
+                            <div class="form-floating-custom position-relative">
+                                <input type="password" 
+                                       name="password"
+                                       class="form-control form-control-sm {% if form.errors %}is-invalid{% endif %}" 
+                                       id="id_password"
+                                       placeholder=" "
+                                       required
+                                       autocomplete="current-password">
+                                <label for="id_password">
+                                    <i class="bi bi-lock me-2"></i>Password
+                                </label>
+                                <button type="button" class="password-toggle" id="toggle-password">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+
+                            <!-- Login Options -->
+                            <div class="login-options">
+                                <div class="remember-me">
+                                    <input type="checkbox" class="form-check-input" id="remember-me" name="remember_me">
+                                    <label class="form-check-label text-light" for="remember-me">Remember this device</label>
+                                </div>
+                                <a href="#" class="forgot-password" onclick="showForgotPasswordAlert()">
+                                    Forgot Password?
+                                </a>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="form-group mb-3">
+                                <button class="btn btn-primary btn-sm w-100" type="submit" id="login-btn">
+                                    <i class="bi bi-shield-check me-2"></i>Secure Login
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Security Features -->
+                        <div class="security-features">
+                            <h6 class="text-white mb-3" style="font-size: 0.9rem;">
+                                <i class="bi bi-shield-check me-2"></i>Active Security Measures
+                            </h6>
+                            
+                            <div class="security-item">
+                                <div class="security-icon">
+                                    <i class="bi bi-clock-history"></i>
+                                </div>
+                                <div>
+                                    <strong class="text-light">Session Monitoring</strong>
+                                    <div class="text-muted" style="font-size: 0.75rem;">Real-time activity tracking enabled</div>
+                                </div>
+                            </div>
+                            
+                            <div class="security-item">
+                                <div class="security-icon">
+                                    <i class="bi bi-incognito"></i>
+                                </div>
+                                <div>
+                                    <strong class="text-light">IP Monitoring</strong>
+                                    <div class="text-muted" style="font-size: 0.75rem;">Suspicious login detection active</div>
+                                </div>
+                            </div>
+                            
+                            <div class="security-item">
+                                <div class="security-icon">
+                                    <i class="bi bi-bell"></i>
+                                </div>
+                                <div>
+                                    <strong class="text-light">Alert System</strong>
+                                    <div class="text-muted" style="font-size: 0.75rem;">Instant notifications for new logins</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Registration Link -->
+                        <div class="text-center mt-3">
+                            <p class="text-muted mb-0" style="font-size: 0.85rem;">
+                                Need a secure account?
+                                <a href="{% url 'users:register' %}" class="fw-semibold text-primary text-decoration-none">
+                                    Register here
+                                </a>
+                            </p>
+                        </div>
+
+                        <!-- Security Badge -->
+                        <div class="cyber-badge">
+                            <i class="bi bi-patch-check text-success"></i>
+                            <small class="text-muted">Enterprise-Grade Security</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Password toggle functionality
+    const togglePassword = document.getElementById('toggle-password');
+    const passwordInput = document.getElementById('id_password');
+    
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle eye icon
+            const icon = this.querySelector('i');
+            if (type === 'password') {
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            } else {
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            }
+        });
+    }
+    
+    // Form submission handling
+    const loginForm = document.getElementById('login-form');
+    const loginBtn = document.getElementById('login-btn');
+    
+    if (loginForm && loginBtn) {
+        loginForm.addEventListener('submit', function(e) {
+            // Show loading state
+            loginBtn.classList.add('btn-loading');
+            loginBtn.disabled = true;
+        });
+    }
+    
+    // Auto-focus on username field
+    const usernameField = document.getElementById('id_username');
+    if (usernameField) {
+        usernameField.focus();
+    }
+    
+    // Input validation styling
+    const inputs = document.querySelectorAll('input[type="text"], input[type="password"]');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim() === '') {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+        
+        input.addEventListener('input', function() {
+            if (this.value.trim() !== '') {
+                this.classList.remove('is-invalid');
+            }
+        });
+    });
+    
+    // Remember me functionality
+    const rememberMe = document.getElementById('remember-me');
+    const username = document.getElementById('id_username');
+    
+    // Load saved credentials if remember me was checked
+    if (localStorage.getItem('rememberMe') === 'true') {
+        rememberMe.checked = true;
+        if (localStorage.getItem('username')) {
+            username.value = localStorage.getItem('username');
+        }
+    }
+    
+    // Save credentials when remember me is checked
+    if (rememberMe) {
+        rememberMe.addEventListener('change', function() {
+            if (this.checked && username.value) {
+                localStorage.setItem('rememberMe', 'true');
+                localStorage.setItem('username', username.value);
+            } else {
+                localStorage.removeItem('rememberMe');
+                localStorage.removeItem('username');
+            }
+        });
+    }
+});
+
+// Alert functions for demo purposes
+function showForgotPasswordAlert() {
+    alert('For security reasons, please contact our support team to reset your password.\n\nSecurity Protocol: Manual verification required.');
+}
+
+// Handle browser back button
+window.addEventListener('pageshow', function(event) {
+    // Reset form state when returning to page
+    const loginBtn = document.getElementById('login-btn');
+    if (loginBtn) {
+        loginBtn.classList.remove('btn-loading');
+        loginBtn.disabled = false;
+    }
+});
+
+// Add security logging for demo
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('%c🔒 Security: Login page loaded with encryption active', 'color: #4299e1; font-weight: bold;');
+});
+</script>
+{% endblock %}

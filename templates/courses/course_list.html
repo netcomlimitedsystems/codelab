@@ -1,0 +1,1357 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Browse Courses - CodeLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    .courses-hero {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 100px 0;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .courses-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+    }
+    
+    .floating-element {
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(5deg); }
+        100% { transform: translateY(0px) rotate(0deg); }
+    }
+    
+    .filter-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        background: white;
+        backdrop-filter: blur(10px);
+    }
+    
+    .course-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        height: 100%;
+        overflow: hidden;
+        position: relative;
+        background: white;
+    }
+    
+    .course-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+    
+    .course-card:hover {
+        transform: translateY(-15px) scale(1.02);
+        box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    }
+    
+    .course-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .course-thumbnail {
+        height: 220px;
+        object-fit: cover;
+        width: 100%;
+        transition: transform 0.3s ease;
+    }
+    
+    .course-card:hover .course-thumbnail {
+        transform: scale(1.1);
+    }
+    
+    .badge-difficulty {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        border-radius: 25px;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255,255,255,0.2);
+    }
+    
+    .badge-beginner { 
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+    }
+    .badge-intermediate { 
+        background: linear-gradient(135deg, #ffc107, #fd7e14);
+        color: #000;
+    }
+    .badge-advanced { 
+        background: linear-gradient(135deg, #dc3545, #e83e8c);
+        color: white;
+    }
+    
+    .price-tag {
+        font-size: 1.5rem;
+        font-weight: 800;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .instructor-avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .course-card:hover .instructor-avatar {
+        border-color: #667eea;
+        transform: scale(1.1);
+    }
+    
+    .search-box {
+        border-radius: 50px;
+        border: 2px solid #e9ecef;
+        padding: 1rem 1.5rem;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .search-box:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.3rem rgba(102, 126, 234, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .filter-group {
+        border-bottom: 1px solid #f1f3f4;
+        padding: 1.5rem 0;
+    }
+    
+    .filter-group:last-child {
+        border-bottom: none;
+    }
+    
+    .category-chip {
+        display: inline-block;
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 25px;
+        padding: 0.5rem 1rem;
+        margin: 0.25rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .category-chip::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--primary-gradient);
+        transition: left 0.3s ease;
+        z-index: -1;
+    }
+    
+    .category-chip:hover,
+    .category-chip.active {
+        color: white;
+        border-color: transparent;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .category-chip:hover::before,
+    .category-chip.active::before {
+        left: 0;
+    }
+    
+    .results-info {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-radius: 15px;
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .sort-dropdown .dropdown-toggle {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .sort-dropdown .dropdown-toggle:hover {
+        border-color: #667eea;
+        transform: translateY(-2px);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    
+    .empty-state-icon {
+        font-size: 5rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 2rem;
+        animation: bounce 2s infinite;
+    }
+    
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-10px); }
+        60% { transform: translateY(-5px); }
+    }
+    
+    .pagination {
+        justify-content: center;
+        margin-top: 4rem;
+    }
+    
+    .page-link {
+        border: 2px solid #e9ecef;
+        color: #667eea;
+        padding: 0.75rem 1.25rem;
+        margin: 0 0.25rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .page-item.active .page-link {
+        background: var(--primary-gradient);
+        border-color: transparent;
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    .page-link:hover {
+        background: #667eea;
+        border-color: #667eea;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .progress-ring {
+        position: relative;
+        width: 60px;
+        height: 60px;
+    }
+    
+    .progress-ring-circle {
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+    }
+    
+    .trending-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: var(--secondary-gradient);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        animation: pulse 2s infinite;
+    }
+    
+    .wishlist-btn {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(255,255,255,0.9);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+    
+    .wishlist-btn:hover {
+        background: white;
+        transform: scale(1.1);
+    }
+    
+    .wishlist-btn.active {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .quick-view-btn {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(255,255,255,0.9);
+        border: none;
+        border-radius: 25px;
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    
+    .course-card:hover .quick-view-btn {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .quick-view-btn:hover {
+        background: white;
+        transform: translateY(-2px);
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        border: 1px solid #f1f3f4;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+    }
+    
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1;
+    }
+    
+    .learning-path-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .learning-path-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 200px;
+        height: 200px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        transform: translate(50%, -50%);
+    }
+    
+    .featured-courses-carousel {
+        margin: 3rem 0;
+    }
+    
+    .carousel-course-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin: 1rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border: 1px solid #f1f3f4;
+    }
+    
+    .carousel-course-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    
+    /* Loading animations */
+    .skeleton-loader {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+    
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .courses-hero {
+            padding: 80px 0;
+            text-align: center;
+        }
+        
+        .display-3 {
+            font-size: 2.5rem;
+        }
+        
+        .filter-sidebar {
+            margin-bottom: 2rem;
+        }
+        
+        .search-box {
+            border-radius: 15px;
+            font-size: 1rem;
+        }
+        
+        .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+        
+        .course-thumbnail {
+            height: 180px;
+        }
+        
+        .results-info {
+            padding: 1rem 1.5rem;
+        }
+        
+        .stats-card {
+            padding: 1.5rem;
+        }
+        
+        .stats-number {
+            font-size: 2rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .courses-hero {
+            padding: 60px 0;
+        }
+        
+        .display-3 {
+            font-size: 2rem;
+        }
+        
+        .lead {
+            font-size: 1rem;
+        }
+        
+        .course-card .card-body {
+            padding: 1rem;
+        }
+        
+        .empty-state {
+            padding: 3rem 1rem;
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+        }
+        
+        .learning-path-card {
+            padding: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="courses-hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-3 fw-bold mb-4">Master Your Craft</h1>
+                <p class="lead mb-4 fs-5">
+                    Discover cutting-edge courses in programming, AI, web development, and more. 
+                    Learn from industry leaders and build the future, one line of code at a time.
+                </p>
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                    <span class="badge bg-light text-dark px-3 py-2">
+                        <i class="bi bi-people me-2"></i> 75,000+ Developers
+                    </span>
+                    <span class="badge bg-light text-dark px-3 py-2">
+                        <i class="bi bi-journal-bookmark me-2"></i> 500+ Courses
+                    </span>
+                    <span class="badge bg-light text-dark px-3 py-2">
+                        <i class="bi bi-star me-2"></i> 4.9/5 Rating
+                    </span>
+                    <span class="badge bg-light text-dark px-3 py-2">
+                        <i class="bi bi-lightning me-2"></i> Live Mentoring
+                    </span>
+                </div>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                <div class="floating-element">
+                    <i class="bi bi-laptop display-1 text-white opacity-75"></i>
+                </div>
+                {% if user.is_authenticated and user.instructor %}
+                <a href="{% url 'courses:create_course' %}" class="btn btn-light btn-lg mt-3">
+                    <i class="bi bi-plus-circle me-2"></i>Create Course
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Stats -->
+<section class="py-4 bg-light">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-3 col-6">
+                <div class="stats-card">
+                    <div class="stats-number">75K+</div>
+                    <p class="text-muted mb-0">Active Learners</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stats-card">
+                    <div class="stats-number">500+</div>
+                    <p class="text-muted mb-0">Courses</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stats-card">
+                    <div class="stats-number">4.9</div>
+                    <p class="text-muted mb-0">Avg Rating</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stats-card">
+                    <div class="stats-number">98%</div>
+                    <p class="text-muted mb-0">Success Rate</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content -->
+<div class="container py-5">
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3 mb-4 filter-sidebar">
+            <div class="filter-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="card-title mb-0 fw-bold">Filters</h5>
+                        <a href="{% url 'courses:course_list' %}" class="btn btn-sm btn-outline-primary">Clear All</a>
+                    </div>
+
+                    <form method="GET" id="filter-form">
+                        <!-- Search -->
+                        <div class="filter-group">
+                            <label class="form-label fw-semibold">Search Courses</label>
+                            <div class="input-group">
+                                <input type="text" 
+                                       name="search" 
+                                       class="form-control search-box" 
+                                       placeholder="What do you want to learn?"
+                                       value="{{ request.GET.search }}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Quick Categories -->
+                        <div class="filter-group">
+                            <label class="form-label fw-semibold">Popular Categories</label>
+                            <div class="d-flex flex-wrap">
+                                <span class="category-chip" data-category="web">Web Dev</span>
+                                <span class="category-chip" data-category="python">Python</span>
+                                <span class="category-chip" data-category="ai">AI/ML</span>
+                                <span class="category-chip" data-category="mobile">Mobile</span>
+                                <span class="category-chip" data-category="data">Data Science</span>
+                            </div>
+                        </div>
+
+                        <!-- Categories -->
+                        <div class="filter-group">
+                            <label class="form-label fw-semibold">All Categories</label>
+                            <div class="mb-3">
+                                {% for category in categories %}
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           name="category" 
+                                           value="{{ category.id }}"
+                                           id="category-{{ category.id }}"
+                                           {% if category.id|stringformat:"i" in request.GET.getlist|default:'' %}checked{% endif %}>
+                                    <label class="form-check-label" for="category-{{ category.id }}">
+                                        {{ category.name }}
+                                    </label>
+                                    <small class="text-muted d-block">({{ category.course_count }})</small>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Difficulty -->
+                        <div class="filter-group">
+                            <label class="form-label fw-semibold">Skill Level</label>
+                            <div>
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           name="difficulty" 
+                                           value="beginner"
+                                           id="difficulty-beginner"
+                                           {% if 'beginner' in request.GET.getlist|default:'' %}checked{% endif %}>
+                                    <label class="form-check-label" for="difficulty-beginner">
+                                        <span class="badge badge-beginner">Beginner</span>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           name="difficulty" 
+                                           value="intermediate"
+                                           id="difficulty-intermediate"
+                                           {% if 'intermediate' in request.GET.getlist|default:'' %}checked{% endif %}>
+                                    <label class="form-check-label" for="difficulty-intermediate">
+                                        <span class="badge badge-intermediate">Intermediate</span>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           name="difficulty" 
+                                           value="advanced"
+                                           id="difficulty-advanced"
+                                           {% if 'advanced' in request.GET.getlist|default:'' %}checked{% endif %}>
+                                    <label class="form-check-label" for="difficulty-advanced">
+                                        <span class="badge badge-advanced">Advanced</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="filter-group">
+                            <label class="form-label fw-semibold">Price Range</label>
+                            <div>
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="radio" 
+                                           name="price" 
+                                           value="free"
+                                           id="price-free"
+                                           {% if request.GET.price == 'free' %}checked{% endif %}>
+                                    <label class="form-check-label" for="price-free">
+                                        Free Courses
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="radio" 
+                                           name="price" 
+                                           value="paid"
+                                           id="price-paid"
+                                           {% if request.GET.price == 'paid' %}checked{% endif %}>
+                                    <label class="form-check-label" for="price-paid">
+                                        Paid Courses
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="radio" 
+                                           name="price" 
+                                           value=""
+                                           id="price-all"
+                                           {% if not request.GET.price %}checked{% endif %}>
+                                    <label class="form-check-label" for="price-all">
+                                        All Courses
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Features -->
+                        <div class="filter-group">
+                            <label class="form-label fw-semibold">Course Features</label>
+                            <div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="features" value="certificate" id="feature-certificate">
+                                    <label class="form-check-label" for="feature-certificate">
+                                        <i class="bi bi-award text-primary me-1"></i>Certificate
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="features" value="projects" id="feature-projects">
+                                    <label class="form-check-label" for="feature-projects">
+                                        <i class="bi bi-folder text-primary me-1"></i>Real Projects
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="features" value="mentor" id="feature-mentor">
+                                    <label class="form-check-label" for="feature-mentor">
+                                        <i class="bi bi-person-check text-primary me-1"></i>1-on-1 Mentoring
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Apply Filters Button -->
+                        <button type="submit" class="btn btn-primary w-100 mt-3 py-2 fw-semibold">
+                            <i class="bi bi-funnel me-2"></i>Apply Filters
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Learning Paths -->
+            <div class="learning-path-card">
+                <h6 class="fw-bold mb-3">🚀 Learning Paths</h6>
+                <div class="list-group list-group-flush bg-transparent">
+                    <a href="#" class="list-group-item list-group-item-action border-0 px-0 bg-transparent text-white">
+                        <i class="bi bi-laptop me-2"></i>
+                        Full-Stack Developer
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action border-0 px-0 bg-transparent text-white">
+                        <i class="bi bi-phone me-2"></i>
+                        Mobile Developer
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action border-0 px-0 bg-transparent text-white">
+                        <i class="bi bi-graph-up me-2"></i>
+                        Data Scientist
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action border-0 px-0 bg-transparent text-white">
+                        <i class="bi bi-shield-check me-2"></i>
+                        Cybersecurity Expert
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action border-0 px-0 bg-transparent text-white">
+                        <i class="bi bi-cloud me-2"></i>
+                        Cloud Engineer
+                    </a>
+                </div>
+            </div>
+
+            <!-- Trending Topics -->
+            <div class="filter-card">
+                <div class="card-body">
+                    <h6 class="card-title fw-bold">🔥 Trending Now</h6>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <span class="badge bg-primary bg-opacity-10 text-primary">AI & ML</span>
+                        <span class="badge bg-success bg-opacity-10 text-success">Web3</span>
+                        <span class="badge bg-info bg-opacity-10 text-info">DevOps</span>
+                        <span class="badge bg-warning bg-opacity-10 text-warning">React</span>
+                        <span class="badge bg-danger bg-opacity-10 text-danger">Python</span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary">Cloud</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Courses Grid -->
+        <div class="col-lg-9">
+            <!-- Results Header -->
+            <div class="results-info">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="mb-2 fw-bold">
+                            {% if courses %}
+                            <span class="text-primary">{{ courses.paginator.count }}</span> course{{ courses.paginator.count|pluralize }} found
+                            {% else %}
+                            No courses found
+                            {% endif %}
+                        </h5>
+                        {% if request.GET.search or request.GET.category or request.GET.difficulty %}
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            {% if request.GET.search %}
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-search me-1"></i>"{{ request.GET.search }}"
+                            </span>
+                            {% endif %}
+                            {% if request.GET.category %}
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-tag me-1"></i>Category
+                            </span>
+                            {% endif %}
+                            {% if request.GET.difficulty %}
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-bar-chart me-1"></i>{{ request.GET.difficulty|title }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <div class="d-flex justify-content-md-end align-items-center gap-3">
+                            <span class="text-muted fw-semibold">Sort by:</span>
+                            <div class="sort-dropdown">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    {% if request.GET.sort == 'newest' %}Newest
+                                    {% elif request.GET.sort == 'price_low' %}Price: Low to High
+                                    {% elif request.GET.sort == 'price_high' %}Price: High to Low
+                                    {% elif request.GET.sort == 'rating' %}Highest Rated
+                                    {% elif request.GET.sort == 'trending' %}Trending
+                                    {% else %}Recommended
+                                    {% endif %}
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="?{% include 'courses/includes/query_params.html' with param='sort' value='recommended' %}">
+                                        <i class="bi bi-star me-2"></i>Recommended
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="?{% include 'courses/includes/query_params.html' with param='sort' value='trending' %}">
+                                        <i class="bi bi-fire me-2"></i>Trending
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="?{% include 'courses/includes/query_params.html' with param='sort' value='newest' %}">
+                                        <i class="bi bi-clock me-2"></i>Newest
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="?{% include 'courses/includes/query_params.html' with param='sort' value='rating' %}">
+                                        <i class="bi bi-star-fill me-2"></i>Highest Rated
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="?{% include 'courses/includes/query_params.html' with param='sort' value='price_low' %}">
+                                        <i class="bi bi-arrow-up me-2"></i>Price: Low to High
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="?{% include 'courses/includes/query_params.html' with param='sort' value='price_high' %}">
+                                        <i class="bi bi-arrow-down me-2"></i>Price: High to Low
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured Courses Carousel -->
+            {% if featured_courses %}
+            <div class="featured-courses-carousel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0">⭐ Featured Courses</h4>
+                    <a href="#" class="btn btn-outline-primary btn-sm">View All</a>
+                </div>
+                <div class="row g-4">
+                    {% for course in featured_courses|slice:":4" %}
+                    <div class="col-md-4">
+                        <div class="carousel-course-card">
+                            <div class="text-center mb-3">
+                                <i class="bi bi-star-fill display-6 text-warning"></i>
+                            </div>
+                            <h6 class="fw-bold">{{ course.title }}</h6>
+                            <p class="text-muted small mb-3">{{ course.description|truncatewords:15 }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-primary">Featured</span>
+                                <small class="text-muted">{{ course.enrollment_count }} students</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Courses Grid -->
+            {% if courses %}
+            <div class="row g-4" id="courses-grid">
+                {% for course in courses %}
+                <div class="col-xl-4 col-lg-6 col-md-6 course-item">
+                    <div class="card course-card">
+                        <div class="position-relative overflow-hidden">
+                            <img src="{{ course.thumbnail.url }}" 
+                                 class="card-img-top course-thumbnail" 
+                                 alt="{{ course.title }}"
+                                 loading="lazy">
+                            
+                            <!-- Trending Badge -->
+                            {% if course.is_trending %}
+                            <span class="trending-badge">
+                                <i class="bi bi-fire me-1"></i>Trending
+                            </span>
+                            {% endif %}
+                            
+                            <!-- Difficulty Badge -->
+                            <span class="badge badge-difficulty 
+                                {% if course.difficulty == 'beginner' %}badge-beginner
+                                {% elif course.difficulty == 'intermediate' %}badge-intermediate
+                                {% else %}badge-advanced{% endif %}">
+                                {{ course.difficulty|title }}
+                            </span>
+                            
+                            <!-- Free Badge -->
+                            {% if course.price == 0 %}
+                            <span class="badge bg-success position-absolute top-0 start-0 m-3">
+                                FREE
+                            </span>
+                            {% endif %}
+                            
+                            <!-- Wishlist Button -->
+                            <button class="wishlist-btn" data-course-id="{{ course.id }}">
+                                <i class="bi bi-heart"></i>
+                            </button>
+                            
+                            <!-- Quick View Button -->
+                            <button class="quick-view-btn" data-course-id="{{ course.id }}">
+                                <i class="bi bi-eye me-1"></i>Quick View
+                            </button>
+                        </div>
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">{{ course.title }}</h5>
+                            <p class="card-text text-muted flex-grow-1">
+                                {{ course.description|truncatewords:20 }}
+                            </p>
+                            
+                            <div class="mt-auto">
+                                <!-- Instructor Info -->
+                                <div class="d-flex align-items-center mb-3">
+                                    {% if course.instructor.user.profile.profile_picture %}
+                                    <img src="{{ course.instructor.user.profile.profile_picture.url }}" 
+                                         alt="{{ course.instructor.user.get_full_name }}"
+                                         class="instructor-avatar me-2">
+                                    {% else %}
+                                    <div class="instructor-avatar bg-secondary d-flex align-items-center justify-content-center me-2">
+                                        <i class="bi bi-person text-white"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div class="flex-grow-1">
+                                        <small class="fw-semibold d-block">
+                                            {{ course.instructor.user.get_full_name|default:course.instructor.user.username }}
+                                        </small>
+                                        <small class="text-muted">
+                                            {{ course.instructor.title|default:"Instructor" }}
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Course Meta -->
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="d-flex gap-3">
+                                        <small class="text-muted">
+                                            <i class="bi bi-clock"></i> {{ course.duration_hours }}h
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="bi bi-bar-chart"></i> {{ course.enrollment_count|default:"0" }}
+                                        </small>
+                                    </div>
+                                    <div class="text-warning">
+                                        <i class="bi bi-star-fill"></i>
+                                        <small class="fw-semibold">{{ course.average_rating|default:"4.5" }}</small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Progress Ring (if enrolled) -->
+                                {% if course.user_progress %}
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress-ring">
+                                            <svg width="40" height="40" viewBox="0 0 40 40">
+                                                <circle class="progress-ring-circle" 
+                                                        stroke="#667eea" 
+                                                        stroke-width="3" 
+                                                        fill="transparent" 
+                                                        r="17" 
+                                                        cx="20" 
+                                                        cy="20"
+                                                        stroke-dasharray="{{ course.user_progress|stringformat:'f' }} 100"
+                                                        stroke-dashoffset="0"/>
+                                            </svg>
+                                        </div>
+                                        <small class="text-muted">{{ course.user_progress }}% Complete</small>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Price and Action -->
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="price-tag">
+                                        {% if course.price == 0 %}
+                                        Free
+                                        {% else %}
+                                        ${{ course.price }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        {% if course.user_enrolled %}
+                                        <a href="{% url 'courses:lesson_detail' course.pk %}" class="btn btn-success btn-sm">
+                                            Continue
+                                        </a>
+                                        {% else %}
+                                        <a href="{% url 'courses:course_detail' course.pk %}" class="btn btn-primary btn-sm">
+                                            Enroll Now
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if courses.has_other_pages %}
+            <nav aria-label="Course pagination" class="mt-5">
+                <ul class="pagination">
+                    {% if courses.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% include 'courses/includes/query_params.html' with param='page' value=courses.previous_page_number %}">
+                            <i class="bi bi-chevron-left me-1"></i> Previous
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in courses.paginator.page_range %}
+                        {% if courses.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > courses.number|add:'-3' and num < courses.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% include 'courses/includes/query_params.html' with param='page' value=num %}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if courses.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% include 'courses/includes/query_params.html' with param='page' value=courses.next_page_number %}">
+                            Next <i class="bi bi-chevron-right ms-1"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="bi bi-search"></i>
+                </div>
+                <h4 class="fw-bold mb-3">No courses found</h4>
+                <p class="text-muted mb-4 fs-6">
+                    {% if request.GET.search or request.GET.category or request.GET.difficulty %}
+                    Try adjusting your search criteria or explore our popular categories below.
+                    {% else %}
+                    We're constantly adding new courses. Check back soon or suggest a course topic!
+                    {% endif %}
+                </p>
+                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+                    <a href="{% url 'courses:course_list' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Clear Filters
+                    </a>
+                    <a href="#" class="btn btn-primary btn-lg">
+                        <i class="bi bi-compass me-2"></i>Explore All Courses
+                    </a>
+                </div>
+                
+                <!-- Popular Categories Suggestion -->
+                <div class="mt-5">
+                    <h6 class="fw-semibold mb-3">Popular Categories</h6>
+                    <div class="d-flex flex-wrap gap-2 justify-content-center">
+                        <a href="?category=web" class="btn btn-outline-primary">Web Development</a>
+                        <a href="?category=python" class="btn btn-outline-success">Python</a>
+                        <a href="?category=mobile" class="btn btn-outline-info">Mobile Dev</a>
+                        <a href="?category=data" class="btn btn-outline-warning">Data Science</a>
+                        <a href="?category=ai" class="btn btn-outline-danger">AI & ML</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Features Section -->
+<section class="py-5 bg-dark text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="display-5 fw-bold mb-4">Advanced Learning Features</h2>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start mb-4">
+                            <i class="bi bi-cpu display-6 text-primary me-3"></i>
+                            <div>
+                                <h5 class="fw-bold">AI-Powered Paths</h5>
+                                <p class="text-light mb-0">Personalized learning recommendations based on your goals</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start mb-4">
+                            <i class="bi bi-code-slash display-6 text-success me-3"></i>
+                            <div>
+                                <h5 class="fw-bold">Live Code Editor</h5>
+                                <p class="text-light mb-0">Practice coding directly in your browser with instant feedback</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start mb-4">
+                            <i class="bi bi-people display-6 text-warning me-3"></i>
+                            <div>
+                                <h5 class="fw-bold">Peer Learning</h5>
+                                <p class="text-light mb-0">Collaborate with fellow learners in study groups</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start mb-4">
+                            <i class="bi bi-graph-up-arrow display-6 text-info me-3"></i>
+                            <div>
+                                <h5 class="fw-bold">Progress Analytics</h5>
+                                <p class="text-light mb-0">Track your learning journey with detailed insights</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="floating-element">
+                    <i class="bi bi-rocket-takeoff display-1 text-primary"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <div class="row justify-content-center text-center text-white">
+            <div class="col-lg-8">
+                <h2 class="display-5 fw-bold mb-4">Ready to Start Your Journey?</h2>
+                <p class="lead mb-4 opacity-75">
+                    Join thousands of developers who have transformed their careers with CodeLab. 
+                    Start learning today and build the future you envision.
+                </p>
+                <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+                    <a href="{% url 'users:register' %}" class="btn btn-light btn-lg px-4 py-3 fw-semibold">
+                        <i class="bi bi-rocket-takeoff me-2"></i>Start Learning Free
+                    </a>
+                    {% if user.is_authenticated and not user.instructor %}
+                    <a href="#" class="btn btn-outline-light btn-lg px-4 py-3 fw-semibold">
+                        <i class="bi bi-person-plus me-2"></i>Become an Instructor
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="mt-4">
+                    <small class="opacity-75">
+                        <i class="bi bi-shield-check me-1"></i>7-day free trial • No credit card required
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced filter form with real-time updates
+    const filterForm = document.getElementById('filter-form');
+    const categoryChips = document.querySelectorAll('.category-chip');
+    
+    // Category chips functionality
+    categoryChips.forEach(chip => {
+        chip.addEventListener('click', function() {
+            this.classList.toggle('active');
+            const category = this.dataset.category;
+            // Add your category filtering logic here
+            console.log('Category selected:', category);
+        });
+    });
+    
+    // Auto-submit form when filters change (with debounce)
+    let filterTimeout;
+    const filterInputs = filterForm.querySelectorAll('input, select');
+    filterInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(() => {
+                // filterForm.submit(); // Uncomment for auto-submit
+            }, 500);
+        });
+    });
+    
+    // Wishlist functionality
+    const wishlistButtons = document.querySelectorAll('.wishlist-btn');
+    wishlistButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const courseId = this.dataset.courseId;
+            this.classList.toggle('active');
+            this.querySelector('i').classList.toggle('bi-heart');
+            this.querySelector('i').classList.toggle('bi-heart-fill');
+            
+            // Add your wishlist API call here
+            console.log('Wishlist toggle for course:', courseId);
+        });
+    });
+    
+    // Quick view functionality
+    const quickViewButtons = document.querySelectorAll('.quick-view-btn');
+    quickViewButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const courseId = this.dataset.courseId;
+            // Add your quick view modal logic here
+            console.log('Quick view for course:', courseId);
+        });
+    });
+    
+    // Course card animations with intersection observer
+    const courseItems = document.querySelectorAll('.course-item');
+    const courseObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    courseItems.forEach(item => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(30px)';
+        item.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        courseObserver.observe(item);
+    });
+    
+    // Mobile filter toggle with enhanced UI
+    const mobileFilterToggle = document.createElement('button');
+    mobileFilterToggle.className = 'btn btn-primary w-100 d-lg-none mb-4 py-3 fw-semibold';
+    mobileFilterToggle.innerHTML = '<i class="bi bi-funnel me-2"></i>Show Filters & Search';
+    
+    const filterSidebar = document.querySelector('.filter-sidebar');
+    filterSidebar.parentNode.insertBefore(mobileFilterToggle, filterSidebar);
+    
+    let filtersVisible = false;
+    mobileFilterToggle.addEventListener('click', function() {
+        if (filtersVisible) {
+            filterSidebar.style.display = 'none';
+            this.innerHTML = '<i class="bi bi-funnel me-2"></i>Show Filters & Search';
+            this.classList.remove('btn-outline-primary');
+            this.classList.add('btn-primary');
+        } else {
+            filterSidebar.style.display = 'block';
+            this.innerHTML = '<i class="bi bi-x me-2"></i>Hide Filters';
+            this.classList.remove('btn-primary');
+            this.classList.add('btn-outline-primary');
+        }
+        filtersVisible = !filtersVisible;
+    });
+    
+    // Hide filters on mobile by default
+    if (window.innerWidth < 992) {
+        filterSidebar.style.display = 'none';
+    }
+    
+    // Search suggestions (mock data)
+    const searchInput = document.querySelector('input[name="search"]');
+    searchInput.addEventListener('input', function() {
+        // Add search suggestion logic here
+        console.log('Search query:', this.value);
+    });
+    
+    // Price filter enhancement
+    const priceRadios = document.querySelectorAll('input[name="price"]');
+    priceRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Add price filter animation
+            console.log('Price filter:', this.value);
+        });
+    });
+    
+    // Smooth scroll to results
+    function scrollToResults() {
+        const resultsElement = document.getElementById('courses-grid');
+        if (resultsElement) {
+            resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+    
+    // Add scroll to top button
+    const scrollToTopBtn = document.createElement('button');
+    scrollToTopBtn.className = 'btn btn-primary rounded-circle position-fixed';
+    scrollToTopBtn.style.cssText = 'bottom: 20px; right: 20px; width: 50px; height: 50px; z-index: 1000; display: none;';
+    scrollToTopBtn.innerHTML = '<i class="bi bi-chevron-up"></i>';
+    document.body.appendChild(scrollToTopBtn);
+    
+    scrollToTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    
+    window.addEventListener('scroll', () => {
+        scrollToTopBtn.style.display = window.scrollY > 500 ? 'block' : 'none';
+    });
+    
+    // Add loading states
+    function showLoading() {
+        const coursesGrid = document.getElementById('courses-grid');
+        if (coursesGrid) {
+            coursesGrid.innerHTML = `
+                <div class="col-12">
+                    <div class="skeleton-loader rounded-3" style="height: 200px; margin-bottom: 1rem;"></div>
+                </div>
+                <div class="col-12">
+                    <div class="skeleton-loader rounded-3" style="height: 200px; margin-bottom: 1rem;"></div>
+                </div>
+                <div class="col-12">
+                    <div class="skeleton-loader rounded-3" style="height: 200px; margin-bottom: 1rem;"></div>
+                </div>
+            `;
+        }
+    }
+    
+    // Mock function to simulate API call
+    function simulateAPICall() {
+        showLoading();
+        setTimeout(() => {
+            // This would be replaced with actual data loading
+            console.log('Data loaded');
+        }, 1000);
+    }
+});
+</script>
+{% endblock %}

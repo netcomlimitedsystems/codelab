@@ -1,0 +1,459 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit Question{% else %}Add New Question{% endif %} - CodeLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        padding: 2.5rem;
+        margin: 2rem auto;
+        max-width: 800px;
+        border: 1px solid #f0f0f0;
+    }
+
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        border-radius: 15px 15px 0 0;
+        margin: -2.5rem -2.5rem 2rem -2.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        background: #fafafa;
+    }
+
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        background: white;
+        transform: translateY(-2px);
+    }
+
+    .form-text {
+        font-size: 0.875rem;
+        color: #718096;
+        margin-top: 0.25rem;
+    }
+
+    .btn-modern {
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #48bb78, #38a169);
+        color: white;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+        background: #718096;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #4a5568;
+        transform: translateY(-2px);
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #f7fafc;
+    }
+
+    .form-section {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #667eea;
+    }
+
+    .form-section-title {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .error-list {
+        background: #fed7d7;
+        color: #c53030;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        border-left: 4px solid #f56565;
+    }
+
+    .error-list ul {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+
+        .form-header {
+            margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+            padding: 1rem 1.5rem;
+        }
+
+        .button-group {
+            flex-direction: column;
+        }
+
+        .button-group .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="form-container">
+        <!-- Form Header -->
+        <div class="form-header">
+            <h2 class="mb-0">
+                <i class="bi bi-journal-plus me-2"></i>
+                {% if form.instance.pk %}
+                    Edit Question
+                {% else %}
+                    Add New Question
+                {% endif %}
+            </h2>
+            <p class="mb-0 mt-1 opacity-90">
+                Assignment: <strong>{{ assignment.title }}</strong>
+            </p>
+        </div>
+
+        <!-- Error Messages -->
+        {% if form.errors %}
+        <div class="error-list">
+            <strong>Please correct the following errors:</strong>
+            {{ form.errors }}
+        </div>
+        {% endif %}
+
+        <!-- Form Content -->
+        <form method="post" action="" novalidate>
+            {% csrf_token %}
+
+            <!-- Question Text Section -->
+            <div class="form-section">
+                <h4 class="form-section-title">
+                    <i class="bi bi-chat-square-text"></i>
+                    Question Details
+                </h4>
+                
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.question_text.id_for_label }}">
+                        Question Text *
+                    </label>
+                    {{ form.question_text }}
+                    {% if form.question_text.help_text %}
+                    <div class="form-text">{{ form.question_text.help_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.points.id_for_label }}">
+                                Points *
+                            </label>
+                            {{ form.points }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.order.id_for_label }}">
+                                Display Order
+                            </label>
+                            {{ form.order }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Type Specific Fields -->
+            {% if form.option_a %}
+            <!-- Multiple Choice Options -->
+            <div class="form-section">
+                <h4 class="form-section-title">
+                    <i class="bi bi-list-ul"></i>
+                    Multiple Choice Options
+                </h4>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.option_a.id_for_label }}">
+                                Option A *
+                            </label>
+                            {{ form.option_a }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.option_b.id_for_label }}">
+                                Option B *
+                            </label>
+                            {{ form.option_b }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.option_c.id_for_label }}">
+                                Option C *
+                            </label>
+                            {{ form.option_c }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.option_d.id_for_label }}">
+                                Option D *
+                            </label>
+                            {{ form.option_d }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.correct_answer.id_for_label }}">
+                                Correct Answer *
+                            </label>
+                            {{ form.correct_answer }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.explanation.id_for_label }}">
+                                Explanation
+                            </label>
+                            {{ form.explanation }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% elif form.language %}
+            <!-- Code Question Options -->
+            <div class="form-section">
+                <h4 class="form-section-title">
+                    <i class="bi bi-code-slash"></i>
+                    Code Settings
+                </h4>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.language.id_for_label }}">
+                                Programming Language *
+                            </label>
+                            {{ form.language }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.timeout_seconds.id_for_label }}">
+                                Timeout (seconds)
+                            </label>
+                            {{ form.timeout_seconds }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.starter_code.id_for_label }}">
+                        Starter Code
+                    </label>
+                    {{ form.starter_code }}
+                    <div class="form-text">Optional initial code template for students</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="test_cases_json">
+                        Test Cases (JSON)
+                    </label>
+                    <textarea name="test_cases_json" id="test_cases_json" class="form-control" rows="4" 
+                              placeholder='[{"input": "1 2", "expected_output": "3", "points": 1}]'>{{ form.instance.test_cases|default:"[]" }}</textarea>
+                    <div class="form-text">Enter test cases as JSON array</div>
+                </div>
+            </div>
+
+            {% elif form.expected_answer %}
+            <!-- Text Question Options -->
+            <div class="form-section">
+                <h4 class="form-section-title">
+                    <i class="bi bi-text-paragraph"></i>
+                    Answer Settings
+                </h4>
+                
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.expected_answer.id_for_label }}">
+                        Expected Answer
+                    </label>
+                    {{ form.expected_answer }}
+                    <div class="form-text">For auto-grading (optional)</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.max_length.id_for_label }}">
+                        Maximum Answer Length
+                    </label>
+                    {{ form.max_length }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="button-group">
+                <button type="submit" name="add_another" class="btn-modern btn-success">
+                    <i class="bi bi-plus-circle"></i>
+                    Save & Add Another
+                </button>
+
+                <button type="submit" class="btn-modern btn-primary">
+                    <i class="bi bi-check-lg"></i>
+                    Finish & View Questions
+                </button>
+
+                <a href="{% url 'courses:manage_assignment_questions' assignment.id %}" class="btn-modern btn-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Questions
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Add enhanced form styling
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Bootstrap classes to all form inputs
+        const formInputs = document.querySelectorAll('input, select, textarea');
+        formInputs.forEach(input => {
+            if (!input.classList.contains('btn')) {
+                input.classList.add('form-control');
+            }
+        });
+
+        // Add specific styling for select elements
+        const selectElements = document.querySelectorAll('select');
+        selectElements.forEach(select => {
+            select.classList.add('form-select');
+        });
+
+        // Add character counter for text areas
+        const textAreas = document.querySelectorAll('textarea');
+        textAreas.forEach(textarea => {
+            const counter = document.createElement('div');
+            counter.className = 'form-text text-end';
+            counter.textContent = `0/${textarea.getAttribute('maxlength') || '∞'} characters`;
+            
+            textarea.parentNode.appendChild(counter);
+            
+            textarea.addEventListener('input', function() {
+                const maxLength = this.getAttribute('maxlength');
+                if (maxLength) {
+                    counter.textContent = `${this.value.length}/${maxLength} characters`;
+                    
+                    if (this.value.length > maxLength * 0.9) {
+                        counter.style.color = '#e53e3e';
+                    } else {
+                        counter.style.color = '#718096';
+                    }
+                }
+            });
+        });
+
+        // Add form validation styling
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                let isValid = true;
+                const requiredFields = form.querySelectorAll('[required]');
+                
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        field.style.borderColor = '#e53e3e';
+                        isValid = false;
+                    }
+                });
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    // Show error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-list';
+                    errorDiv.innerHTML = '<strong>Please fill in all required fields.</strong>';
+                    form.prepend(errorDiv);
+                    
+                    // Scroll to error
+                    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

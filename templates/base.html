@@ -1,0 +1,989 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CodeLab - Learn to code with our comprehensive courses and hands-on projects">
+    <meta name="keywords" content="programming, coding, courses, learn python, web development, django">
+    <meta name="author" content="CodeLab">
+    
+    <!-- Mobile Specific Meta Tags -->
+    <meta name="theme-color" content="#4361ee">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>{% block title %}CodeLab - Learn to Code{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+    
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-dark: #3a0ca3;
+            --secondary-color: #7209b7;
+            --accent-color: #4cc9f0;
+            --success-color: #4bb543;
+            --warning-color: #f8961e;
+            --danger-color: #e63946;
+            --dark-color: #1d3557;
+            --light-color: #f8f9fa;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-600: #6c757d;
+            --gray-800: #343a40;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+            --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            --gradient-secondary: linear-gradient(135deg, var(--secondary-color) 0%, #560bad 100%);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+            color: var(--gray-800);
+            background-color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        
+        main {
+            flex: 1;
+            width: 100%;
+        }
+        
+        /* Enhanced Navigation - Mobile First */
+        .navbar {
+            background: var(--gradient-primary) !important;
+            box-shadow: var(--shadow-md);
+            padding: 0.75rem 0;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-brand {
+            font-weight: 800;
+            font-size: clamp(1.25rem, 4vw, 1.75rem);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .navbar-brand img {
+            transition: transform 0.3s ease;
+            width: clamp(35px, 8vw, 45px);
+            height: clamp(35px, 8vw, 45px);
+        }
+        
+        .navbar-brand:hover img {
+            transform: rotate(10deg);
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            padding: 0.75rem 1rem !important;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+        
+        .nav-link:not(.dropdown-toggle):hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: var(--shadow-lg);
+            border-radius: 0.75rem;
+            padding: 0.5rem;
+            min-width: 200px;
+        }
+        
+        .dropdown-item {
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .btn-primary {
+            background: var(--gradient-primary);
+            border: none;
+            padding: clamp(0.625rem, 2vw, 0.75rem) clamp(1.25rem, 3vw, 1.5rem);
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        /* Enhanced Messages - Responsive */
+        .alert {
+            border: none;
+            border-radius: 0.75rem;
+            padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 3vw, 1.5rem);
+            box-shadow: var(--shadow-sm);
+            border-left: 4px solid;
+            margin: 0.5rem 0;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+        
+        .alert-success {
+            background-color: #f0f9ff;
+            border-left-color: var(--success-color);
+            color: #065f46;
+        }
+        
+        .alert-warning {
+            background-color: #fffbeb;
+            border-left-color: var(--warning-color);
+            color: #92400e;
+        }
+        
+        .alert-error, .alert-danger {
+            background-color: #fef2f2;
+            border-left-color: var(--danger-color);
+            color: #991b1b;
+        }
+        
+        .alert-info {
+            background-color: #eff6ff;
+            border-left-color: var(--accent-color);
+            color: #1e40af;
+        }
+        
+        /* Enhanced Footer - Mobile Optimized */
+        .footer {
+            background: var(--dark-color);
+            color: white;
+            margin-top: auto;
+        }
+        
+        .footer h5 {
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            position: relative;
+            font-size: clamp(1.1rem, 3vw, 1.25rem);
+        }
+        
+        .footer h5::after {
+            content: '';
+            position: absolute;
+            bottom: -0.5rem;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: var(--accent-color);
+            border-radius: 2px;
+        }
+        
+        .footer a {
+            color: var(--gray-300);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+        
+        .footer a:hover {
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .footer a::before {
+            content: '›';
+            position: absolute;
+            left: -15px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .footer a:hover::before {
+            opacity: 1;
+            left: -10px;
+        }
+        
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: clamp(35px, 8vw, 40px);
+            height: clamp(35px, 8vw, 40px);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .social-links a:hover {
+            background: var(--primary-color);
+            transform: translateY(-3px);
+        }
+        
+        .map-placeholder {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            height: clamp(120px, 30vw, 150px);
+        }
+        
+        /* Back to Top Button - Mobile Friendly */
+        .back-to-top {
+            position: fixed;
+            bottom: clamp(15px, 4vw, 30px);
+            right: clamp(15px, 4vw, 30px);
+            width: clamp(45px, 10vw, 50px);
+            height: clamp(45px, 10vw, 50px);
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1rem, 3vw, 1.25rem);
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .back-to-top:hover {
+            transform: translateY(-3px);
+        }
+        
+        /* Loading Animation */
+        .loading-spinner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .loading-spinner.active {
+            display: flex;
+        }
+        
+        .spinner {
+            width: clamp(40px, 10vw, 50px);
+            height: clamp(40px, 10vw, 50px);
+            border: 4px solid var(--gray-200);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Mobile Menu Enhancements */
+        .navbar-toggler {
+            border: none;
+            padding: 0.25rem 0.5rem;
+            font-size: 1.25rem;
+        }
+        
+        .navbar-toggler:focus {
+            box-shadow: none;
+        }
+        
+        /* Touch Device Optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            .nav-link:hover {
+                background-color: transparent;
+                transform: none;
+            }
+            
+            .btn-primary:hover {
+                transform: none;
+                box-shadow: var(--shadow-sm);
+            }
+            
+            .social-links a:hover {
+                transform: none;
+            }
+            
+            .back-to-top:hover {
+                transform: none;
+            }
+            
+            .dropdown-item:hover {
+                transform: none;
+            }
+        }
+        
+        /* Responsive Breakpoints */
+        
+        /* Extra Small Devices (phones, 320px and up) */
+        @media (min-width: 320px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            .navbar-collapse {
+                background: var(--gradient-primary);
+                border-radius: 0.5rem;
+                margin-top: 0.5rem;
+                padding: 1rem;
+            }
+        }
+        
+        /* Small Devices (phones, 576px and up) */
+        @media (min-width: 576px) {
+            .container {
+                max-width: 540px;
+            }
+            
+            .footer .row > div {
+                margin-bottom: 2rem;
+            }
+        }
+        
+        /* Medium Devices (tablets, 768px and up) */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 720px;
+            }
+            
+            .navbar-collapse {
+                background: transparent;
+                margin-top: 0;
+                padding: 0;
+            }
+            
+            .nav-link {
+                padding: 0.5rem 1rem !important;
+            }
+        }
+        
+        /* Large Devices (desktops, 992px and up) */
+        @media (min-width: 992px) {
+            .container {
+                max-width: 960px;
+            }
+            
+            .footer .row > div {
+                margin-bottom: 0;
+            }
+        }
+        
+        /* Extra Large Devices (large desktops, 1200px and up) */
+        @media (min-width: 1200px) {
+            .container {
+                max-width: 1140px;
+            }
+        }
+        
+        /* Extra Extra Large Devices (4K displays, 1400px and up) */
+        @media (min-width: 1400px) {
+            .container {
+                max-width: 1320px;
+            }
+            
+            html {
+                font-size: 18px;
+            }
+        }
+        
+        /* Ultra Small Devices (very small phones, 320px and down) */
+        @media (max-width: 320px) {
+            .navbar-brand span {
+                display: none;
+            }
+            
+            .btn-primary {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* Landscape Mode Optimizations */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .navbar {
+                padding: 0.5rem 0;
+            }
+            
+            .hero-section {
+                padding: 2rem 0;
+            }
+            
+            .footer {
+                padding: 1.5rem 0;
+            }
+        }
+        
+        /* High DPI Screens */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .navbar-brand img {
+                image-rendering: -webkit-optimize-contrast;
+            }
+        }
+        
+        /* Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            
+            html {
+                scroll-behavior: auto;
+            }
+        }
+        
+        /* Dark Mode Support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #0a0a0a;
+                color: #e0e0e0;
+            }
+            
+            .alert-success {
+                background-color: #052f23;
+                color: #a7f3d0;
+            }
+            
+            .alert-warning {
+                background-color: #451a03;
+                color: #fed7aa;
+            }
+            
+            .alert-danger {
+                background-color: #450a0a;
+                color: #fecaca;
+            }
+            
+            .alert-info {
+                background-color: #172554;
+                color: #bfdbfe;
+            }
+        }
+        
+        /* Print Styles */
+        @media print {
+            .navbar, .footer, .back-to-top, .loading-spinner {
+                display: none !important;
+            }
+            
+            body {
+                background: white;
+                color: black;
+                font-size: 12pt;
+                line-height: 1.4;
+            }
+            
+            .container {
+                max-width: 100% !important;
+                padding: 0 !important;
+            }
+            
+            a {
+                color: black !important;
+                text-decoration: underline !important;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'pages:home' %}">
+                <img src="{% static 'images/logo.png' %}" alt="CodeLab Logo" class="rounded-circle border border-light">
+                <span>CodeLab</span>
+            </a>
+        
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% if not user.is_authenticated and not user.instructor %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" 
+                           href="{% url 'pages:home' %}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'course' in request.resolver_match.url_name %}active{% endif %}" 
+                           href="{% url 'courses:course_list' %}">Courses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'certify' in request.resolver_match.url_name %}active{% endif %}" 
+                           href="{% url 'courses:get_certify' %}">Certify</a>
+                    </li>                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}" 
+                           href="{% url 'pages:about' %}">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}" 
+                           href="{% url 'pages:contact' %}">Contact</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% if user.is_authenticated and user.instructor %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'instructor_dashboard' in request.resolver_match.url_name %}active{% endif %}" 
+                           href="{% url 'courses:instructor_dashboard' %}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'course' in request.resolver_match.url_name %}active{% endif %}" 
+                           href="{% url 'courses:course_list' %}">Courses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}" 
+                           href="{% url 'pages:about' %}">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}" 
+                           href="{% url 'pages:contact' %}">Contact</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            Instructor
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'courses:instructor_dashboard' %}">
+                                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'courses:create_course' %}">
+                                <i class="bi bi-plus-circle me-2"></i>Create Course
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    {% if user.is_authenticated and not user.instructor %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" 
+                           href="{% url 'pages:home' %}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'dashboard' in request.resolver_match.url_name %}active{% endif %}" 
+                           href="{% url 'users:dashboard' %}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'course' in request.resolver_match.url_name %}active{% endif %}" 
+                           href="{% url 'courses:course_list' %}">Courses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}" 
+                           href="{% url 'pages:about' %}">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}" 
+                           href="{% url 'pages:contact' %}">Contact</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-2"></i> 
+                            <span class="d-none d-sm-inline">{{ user.get_full_name|default:user.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'users:dashboard' %}">
+                                <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'users:profile' %}">
+                                <i class="bi bi-person me-2"></i> Profile
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'users:logout' %}">
+                                <i class="bi bi-box-arrow-right me-2"></i> Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'users:login' %}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-primary text-white ms-lg-2 mt-2 mt-lg-0" href="{% url 'users:register' %}">
+                            Sign Up
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi 
+                    {% if message.tags == 'success' %}bi-check-circle-fill
+                    {% elif message.tags == 'warning' %}bi-exclamation-triangle-fill
+                    {% elif message.tags == 'error' or message.tags == 'danger' %}bi-x-circle-fill
+                    {% else %}bi-info-circle-fill{% endif %} 
+                    me-2"></i>
+                <div>{{ message }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}
+        <!-- Content will be injected here -->
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container py-5">
+            <div class="row g-4">
+                <!-- Company Info -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="{% static 'images/logo.png' %}" alt="CodeLab Logo" class="me-3 rounded-circle border border-light" style="width: 65px; height: 65px;">
+                        <h4 class="mb-0"><i class="bi bi-code-slash me-2"></i>CodeLab</h4>
+                    </div>
+                    <p class="mb-4">
+                        Learn to code with our comprehensive courses, hands-on projects, and expert instructors. 
+                        Start your programming journey today and build the skills for tomorrow.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="text-white" title="Facebook" data-bs-toggle="tooltip">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <a href="#" class="text-white" title="Twitter" data-bs-toggle="tooltip">
+                            <i class="bi bi-twitter"></i>
+                        </a>
+                        <a href="#" class="text-white" title="LinkedIn" data-bs-toggle="tooltip">
+                            <i class="bi bi-linkedin"></i>
+                        </a>
+                        <a href="#" class="text-white" title="Instagram" data-bs-toggle="tooltip">
+                            <i class="bi bi-instagram"></i>
+                        </a>
+                        <a href="https://github.com/netcomlimitedsystems" class="text-white" title="GitHub" data-bs-toggle="tooltip">
+                            <i class="bi bi-github"></i>
+                        </a>
+                        <a href="https://www.youtube.com/@netcomlimitedsystems" class="text-white" title="YouTube" data-bs-toggle="tooltip">
+                            <i class="bi bi-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{% url 'pages:home' %}">Home</a></li>
+                        <li class="mb-2"><a href="{% url 'courses:course_list' %}">Courses</a></li>
+                        <li class="mb-2"><a href="{% url 'courses:get_certify' %}">Certify</a></li>
+                        <li class="mb-2"><a href="{% url 'pages:about' %}">About Us</a></li>
+                        <li class="mb-2"><a href="{% url 'pages:contact' %}">Contact</a></li>
+                        <li class="mb-2"><a href="#">Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Categories -->
+                <div class="col-lg-2 col-md-6">
+                    <h5>Categories</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#">Web Development</a></li>
+                        <li class="mb-2"><a href="#">Data Science</a></li>
+                        <li class="mb-2"><a href="#">Mobile Development</a></li>
+                        <li class="mb-2"><a href="#">Programming</a></li>
+                        <li class="mb-2"><a href="#">DevOps</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact & Map -->
+                <div class="col-lg-4 col-md-6">
+                    <h5>Contact Info</h5>
+                    <div class="mb-4">
+                        <p class="mb-2">
+                            <i class="bi bi-geo-alt me-2"></i> 
+                            2129 Sokomoko Street, Kitale City, Kenya 30200
+                        </p>
+                        <p class="mb-2">
+                            <i class="bi bi-telephone me-2"></i> 
+                            + (254)70-766-4316
+                        </p>
+                        <p class="mb-2">
+                            <i class="bi bi-envelope me-2"></i> 
+                            contact@netcomlimitedsystems@gmail.com
+                        </p>
+                    </div>
+                    
+                    <!-- Map Placeholder -->
+                    <div class="map-placeholder p-3 p-md-4">
+                        <div class="text-center h-100 d-flex flex-column justify-content-center">
+                            <i class="bi bi-map display-6 mb-2 d-block"></i>
+                            <h6>Interactive Map</h6>
+                            <small class="text-muted">Would display Google Maps</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-4 bg-light opacity-25">
+            
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <p class="mb-0">&copy; 2025 CodeLab. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="{% url 'users:privacy' %}" class="text-white text-decoration-none me-3">Privacy Policy</a>
+                    <a href="{% url 'users:terms_and_conditions' %}" class="text-white text-decoration-none me-3">Terms of Service</a>
+                    <a href="#" class="text-white text-decoration-none">Cookie Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" aria-label="Back to top">
+        <i class="bi bi-chevron-up"></i>
+    </button>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript with Enhanced Responsiveness -->
+    <script>
+        // Enhanced responsive JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            // Enable tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Back to top button with throttle
+            const backToTopButton = document.getElementById('backToTop');
+            let scrollTimeout;
+            
+            function handleScroll() {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(function() {
+                    if (window.pageYOffset > 300) {
+                        backToTopButton.classList.add('show');
+                    } else {
+                        backToTopButton.classList.remove('show');
+                    }
+                }, 10);
+            }
+            
+            window.addEventListener('scroll', handleScroll, { passive: true });
+
+            backToTopButton.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            // Enhanced smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+                    
+                    if (href !== '#' && href.startsWith('#') && document.querySelector(href)) {
+                        e.preventDefault();
+                        const target = document.querySelector(href);
+                        const headerHeight = document.querySelector('.navbar').offsetHeight;
+                        const targetPosition = target.offsetTop - headerHeight - 20;
+                        
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+
+            // Auto-dismiss alerts with touch support
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    if (alert && alert.classList.contains('show')) {
+                        var bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    }
+                }, 5000);
+            });
+
+            // Enhanced loading spinner for better mobile experience
+            document.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (this.href && this.href.startsWith(window.location.origin) && 
+                        !this.getAttribute('href').startsWith('#') &&
+                        !this.getAttribute('download')) {
+                        showLoading();
+                    }
+                });
+            });
+
+            // Hide loading spinner when page is fully loaded
+            if (document.readyState === 'loading') {
+                window.addEventListener('load', hideLoading);
+            } else {
+                hideLoading();
+            }
+
+            // Mobile menu enhancements
+            const navbarToggler = document.querySelector('.navbar-toggler');
+            const navbarCollapse = document.querySelector('.navbar-collapse');
+            
+            if (navbarToggler && navbarCollapse) {
+                navbarToggler.addEventListener('click', function() {
+                    const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                    if (isExpanded) {
+                        document.body.style.overflow = '';
+                    } else {
+                        document.body.style.overflow = 'hidden';
+                    }
+                });
+                
+                // Close mobile menu when clicking on a link
+                navbarCollapse.querySelectorAll('.nav-link').forEach(link => {
+                    link.addEventListener('click', function() {
+                        if (window.innerWidth < 992) {
+                            navbarToggler.click();
+                            document.body.style.overflow = '';
+                        }
+                    });
+                });
+            }
+
+            // Touch device detection and optimizations
+            function isTouchDevice() {
+                return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            }
+            
+            if (isTouchDevice()) {
+                document.body.classList.add('touch-device');
+                
+                // Add touch feedback for buttons
+                document.querySelectorAll('.btn, .nav-link').forEach(element => {
+                    element.addEventListener('touchstart', function() {
+                        this.style.transform = 'scale(0.98)';
+                    });
+                    
+                    element.addEventListener('touchend', function() {
+                        this.style.transform = '';
+                    });
+                });
+            }
+
+            // Viewport height fix for mobile browsers
+            function setVH() {
+                let vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            }
+            
+            setVH();
+            window.addEventListener('resize', setVH);
+            window.addEventListener('orientationchange', setVH);
+        });
+
+        // Global loading functions
+        function showLoading() {
+            document.getElementById('loadingSpinner').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingSpinner').classList.remove('active');
+        }
+
+        // Enhanced resize handler
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                // Re-initialize tooltips on resize
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+                    var tooltip = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
+                    if (tooltip) {
+                        tooltip.dispose();
+                        new bootstrap.Tooltip(tooltipTriggerEl);
+                    }
+                });
+            }, 250);
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

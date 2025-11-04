@@ -1,0 +1,494 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About CodeLab - Learn to Code{% endblock %}
+
+{% block extra_css %}
+<style>
+    .about-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 80px 0;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .about-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+    }
+    
+    .feature-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        background: white;
+        overflow: hidden;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .feature-icon i {
+        font-size: 2.5rem;
+        color: white;
+    }
+    
+    .stats-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        margin: 3rem 0;
+    }
+    
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1;
+    }
+    
+    .mission-card {
+        border: none;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+    }
+    
+    .team-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .team-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+    
+    .team-img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid white;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .floating-element {
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+        100% { transform: translateY(0px); }
+    }
+    
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    /* Modern gradient backgrounds */
+    .gradient-bg-1 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .gradient-bg-2 {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .gradient-bg-3 {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .gradient-bg-4 {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .about-hero {
+            padding: 60px 0;
+        }
+        
+        .display-3 {
+            font-size: 2.5rem;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .feature-icon i {
+            font-size: 2rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .about-hero {
+            padding: 40px 0;
+        }
+        
+        .display-3 {
+            font-size: 2rem;
+        }
+        
+        .stats-section {
+            padding: 2rem 1rem;
+            margin: 2rem 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="about-hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-3 fw-bold mb-4"> 
+                    <img src="{% static 'images/logo.png' %}" alt="icon" width="50" height="50" class="me-2 rounded-circle border border-dark">
+                    <span class="navbar-brand"><i class="bi bi-code-slash"></i> About CodeLab</span><span class="text-light"></span>
+                </h1>
+                <p class="lead mb-4">
+                    Transforming lives through code. Empowering the next generation of developers 
+                    with cutting-edge education and real-world skills.
+                    Lasted from 2025 up-to-date .....
+                </p>
+                <div class="floating-element">
+                    <i class="bi bi-code-slash display-1 text-white"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Mission Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="mission-card p-4 p-md-5">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <h2 class="display-5 fw-bold mb-4">Our Mission</h2>
+                            <p class="lead mb-4">
+                                At CodeLab, we're on a mission to democratize programming education. 
+                                We believe that coding is a superpower that should be accessible to everyone, 
+                                regardless of their background or experience level.
+                            </p>
+                            <p class="mb-0">
+                                Through innovative learning platforms, hands-on projects, and a supportive 
+                                community, we're building the most effective and engaging way to learn 
+                                programming in the 21st century.
+                            </p>
+                        </div>
+                        <div class="col-lg-4 text-center">
+                            <div class="feature-icon pulse">
+                                <i class="bi bi-rocket-takeoff"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2 class="display-5 fw-bold mb-4">Why Choose CodeLab?</h2>
+                <p class="lead text-muted">Experience the future of coding education with our innovative approach</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card p-4 text-center h-100">
+                    <div class="feature-icon gradient-bg-1">
+                        <i class="bi bi-laptop"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Interactive Learning</h4>
+                    <p class="text-muted">
+                        Learn by doing with our interactive coding environment. Write, test, and debug code 
+                        in real-time with instant feedback and guidance.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card p-4 text-center h-100">
+                    <div class="feature-icon gradient-bg-2">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Expert Community</h4>
+                    <p class="text-muted">
+                        Join a vibrant community of learners and industry experts. Get personalized code reviews, 
+                        participate in discussions, and collaborate on projects.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card p-4 text-center h-100">
+                    <div class="feature-icon gradient-bg-3">
+                        <i class="bi bi-briefcase"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Career Focused</h4>
+                    <p class="text-muted">
+                        Build job-ready skills with curriculum designed by industry leaders. Portfolio projects, 
+                        interview prep, and career guidance included.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card p-4 text-center h-100">
+                    <div class="feature-icon gradient-bg-4">
+                        <i class="bi bi-lightning-charge"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Fast Track Learning</h4>
+                    <p class="text-muted">
+                        Accelerate your learning with AI-powered personalized paths. Focus on what matters most 
+                        for your goals and skill level.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card p-4 text-center h-100">
+                    <div class="feature-icon gradient-bg-1">
+                        <i class="bi bi-phone"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Mobile First</h4>
+                    <p class="text-muted">
+                        Learn anywhere, anytime with our mobile-optimized platform. Code on the go with our 
+                        mobile-friendly development environment.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card p-4 text-center h-100">
+                    <div class="feature-icon gradient-bg-2">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Progress Tracking</h4>
+                    <p class="text-muted">
+                        Visualize your growth with detailed analytics and progress tracking. Set goals, 
+                        monitor improvements, and celebrate milestones.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="stats-section">
+            <div class="row text-center">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="stat-number">50K+</div>
+                    <h5 class="fw-bold">Students Enrolled</h5>
+                    <p class="text-muted mb-0">Join our growing community</p>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="stat-number">500+</div>
+                    <h5 class="fw-bold">Hours of Content</h5>
+                    <p class="text-muted mb-0">Comprehensive curriculum</p>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="stat-number">95%</div>
+                    <h5 class="fw-bold">Success Rate</h5>
+                    <p class="text-muted mb-0">Students achieve their goals</p>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="stat-number">24/7</div>
+                    <h5 class="fw-bold">Support</h5>
+                    <p class="text-muted mb-0">Always here to help</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Team Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2 class="display-5 fw-bold mb-4">Meet Our Team</h2>
+                <p class="lead text-muted">Passionate educators and industry experts dedicated to your success</p>
+            </div>
+        </div>
+        
+        <div class="row g-4 justify-content-center">
+            <div class="col-lg-4 col-md-6">
+                <div class="team-card p-4 text-center">
+                    <img src="{% static 'images/logo.ico' %}" 
+                         alt="Team Member" class="team-img mb-3">
+                    <h5 class="fw-bold mb-1">Saidi Dancun</h5>
+                    <p class="text-primary mb-2">Chief Executive Officer</p>
+                    <p class="text-muted small">
+                        Former Google engineer with 10+ years of experience in software development 
+                        and a passion for teaching.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="team-card p-4 text-center">
+                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face" 
+                         alt="Team Member" class="team-img mb-3">
+                    <h5 class="fw-bold mb-1">Alex Johnson</h5>
+                    <p class="text-primary mb-2">Lead Instructor</p>
+                    <p class="text-muted small">
+                        Education specialist focused on creating engaging, effective learning experiences 
+                        for aspiring developers.
+                    </p>
+                </div>
+            </div>
+            
+          
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="team-card p-4 text-center">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face" 
+                         alt="Team Member" class="team-img mb-3">
+                    <h5 class="fw-bold mb-1">Marcus Rivera</h5>
+                    <p class="text-primary mb-2">Community Manager</p>
+                    <p class="text-muted small">
+                        Dedicated to building supportive learning communities and helping students 
+                        connect and grow together.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 gradient-bg-1 text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h3 class="fw-bold mb-3">Ready to Start Your Coding Journey?</h3>
+                <p class="mb-0">Join thousands of students who have transformed their careers with CodeLab.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% url 'users:register' %}" class="btn btn-light btn-lg px-4">
+                    <i class="bi bi-rocket-takeoff me-2"></i>Get Started Free
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add intersection observer for animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // Observe feature cards for animation
+    document.querySelectorAll('.feature-card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+    });
+
+    // Observe team cards for animation
+    document.querySelectorAll('.team-card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+    });
+
+    // Add scroll-triggered animations for stats
+    const statsSection = document.querySelector('.stats-section');
+    if (statsSection) {
+        const statNumbers = document.querySelectorAll('.stat-number');
+        
+        const statsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    statNumbers.forEach((stat, index) => {
+                        setTimeout(() => {
+                            stat.style.opacity = '1';
+                            stat.style.transform = 'scale(1)';
+                        }, index * 200);
+                    });
+                }
+            });
+        }, { threshold: 0.5 });
+
+        statsObserver.observe(statsSection);
+
+        // Set initial state
+        statNumbers.forEach(stat => {
+            stat.style.opacity = '0';
+            stat.style.transform = 'scale(0.5)';
+            stat.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        });
+    }
+});
+</script>
+{% endblock %}

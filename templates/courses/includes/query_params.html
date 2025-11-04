@@ -1,0 +1,11 @@
+{% comment %}
+This template builds query parameters while preserving existing ones
+{% endcomment %}
+
+{% for key, value_list in request.GET.lists %}
+    {% if key != param %}
+        {% for value in value_list %}
+            {{ key }}={{ value }}{% if not forloop.last or not forloop.parentloop.last %}&{% endif %}
+        {% endfor %}
+    {% endif %}
+{% endfor %}{% if value %}{% if request.GET.urlencode %}&{% endif %}{{ param }}={{ value }}{% endif %}

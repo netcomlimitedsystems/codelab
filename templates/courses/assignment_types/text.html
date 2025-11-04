@@ -1,0 +1,80 @@
+<div class="text-assignment">
+    <h5>Question</h5>
+    <div class="card mb-4">
+        <div class="card-body">
+            <p class="card-text">{{ question.question_text|linebreaks }}</p>
+        </div>
+    </div>
+
+    {% if not submission %}
+    <form method="post">
+        {% csrf_token %}
+        <h5 class="mb-3">Write your answer:</h5>
+        
+        <div class="mb-3">
+            <label for="id_answer_text" class="form-label">Your Answer</label>
+            <textarea name="answer_text" id="id_answer_text" class="form-control" rows="6" 
+                      placeholder="Type your answer here..." 
+                      maxlength="{{ question.max_length }}" required></textarea>
+            <div class="form-text">
+                Maximum {{ question.max_length }} characters. 
+                <span id="charCount">0</span>/{{ question.max_length }}
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-send me-2"></i>Submit Answer
+            </button>
+        </div>
+    </form>
+    {% else %}
+        <!-- Show submission results -->
+        <div class="submission-result {% if submission.is_correct %}success{% else %}warning{% endif %}">
+            <h6>
+                <i class="bi bi-{% if submission.is_correct %}check-circle{% else %}chat-text{% endif %} me-2"></i>
+                Your Submission
+            </h6>
+            
+            <p><strong>Score:</strong> {{ submission.score|floatformat:1 }}/{{ assignment.points }}</p>
+            
+            <div class="mt-3">
+                <strong>Your Answer:</strong>
+                <div class="card mt-2">
+                    <div class="card-body">
+                        <p class="mb-0">{{ submission.text_submission.answer_text|linebreaks }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            {% if submission.feedback %}
+            <div class="mt-3">
+                <strong>Feedback:</strong>
+                <p class="mb-0">{{ submission.feedback }}</p>
+            </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('id_answer_text');
+    const charCount = document.getElementById('charCount');
+    
+    if (textarea && charCount) {
+        textarea.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
+            
+            if (this.value.length > {{ question.max_length }}) {
+                charCount.classList.add('text-danger');
+            } else {
+                charCount.classList.remove('text-danger');
+            }
+        });
+        
+        // Initialize count
+        charCount.textContent = textarea.value.length;
+    }
+});
+</script>

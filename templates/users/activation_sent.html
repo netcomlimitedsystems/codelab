@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Verify Your Email - CodeLab{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8 col-sm-10">
+            <!-- Verification Card -->
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <div class="d-flex justify-content-center align-items-center mb-3">
+                        <div class="bg-white rounded-circle p-3 me-3">
+                            <i class="bi bi-envelope-check-fill text-primary display-6"></i>
+                        </div>
+                        <div>
+                            <h2 class="h3 mb-0">Check Your Email</h2>
+                            <p class="mb-0 opacity-75">Verification Required</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-4 p-md-5">
+                    <!-- Email Illustration -->
+                    <div class="text-center mb-4">
+                        <div class="email-animation mx-auto mb-3">
+                            <div class="envelope">
+                                <div class="envelope-front"></div>
+                                <div class="envelope-back"></div>
+                                <div class="letter">
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Content -->
+                    <div class="text-center mb-4">
+                        <h3 class="h4 text-dark mb-3">Almost There!</h3>
+                        <p class="text-muted mb-3">
+                            We've sent an activation link to:
+                        </p>
+                        <div class="alert alert-info border-0 bg-light">
+                            <i class="bi bi-envelope me-2"></i>
+                            <strong class="text-primary">{{ email }}</strong>
+                        </div>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="verification-steps mb-4">
+                        <div class="step d-flex align-items-start mb-3">
+                            <div class="step-icon bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0">
+                                <span class="fw-bold">1</span>
+                            </div>
+                            <div class="step-content">
+                                <h6 class="mb-1">Check Your Inbox</h6>
+                                <p class="text-muted mb-0 small">Open the email from CodeLab</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step d-flex align-items-start mb-3">
+                            <div class="step-icon bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0">
+                                <span class="fw-bold">2</span>
+                            </div>
+                            <div class="step-content">
+                                <h6 class="mb-1">Click the Link</h6>
+                                <p class="text-muted mb-0 small">Verify your email address</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step d-flex align-items-start">
+                            <div class="step-icon bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0">
+                                <span class="fw-bold">3</span>
+                            </div>
+                            <div class="step-content">
+                                <h6 class="mb-1">Start Learning</h6>
+                                <p class="text-muted mb-0 small">Access all CodeLab features</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Important Notes -->
+                    <div class="alert alert-warning border-0 bg-light-warning mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-exclamation-triangle-fill text-warning me-2 mt-1"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">Didn't receive the email?</h6>
+                                <ul class="mb-0 ps-3 small">
+                                    <li class="mb-1">Check your spam or junk folder</li>
+                                    <li class="mb-1">Ensure you entered the correct email address</li>
+                                    <li class="mb-0">Wait a few minutes - emails may take up to 5 minutes</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{% url 'pages:home' %}" class="btn btn-outline-primary btn-lg px-4">
+                            <i class="bi bi-house me-2"></i>Return Home
+                        </a>
+                        <a href="{% url 'pages:contact' %}" class="btn btn-primary btn-lg px-4">
+                            <i class="bi bi-headset me-2"></i>Contact Support
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Help Section -->
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    Need help? Check our <a href="#" class="text-primary">FAQ</a> or 
+                    <a href="{% url 'pages:contact' %}" class="text-primary">contact our support team</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .email-animation {
+        width: 120px;
+        height: 80px;
+        position: relative;
+    }
+    
+    .envelope {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transform-style: preserve-3d;
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    .envelope-front, .envelope-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        border-radius: 8px;
+    }
+    
+    .envelope-front {
+        z-index: 2;
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 70%, 0 100%);
+    }
+    
+    .envelope-back {
+        z-index: 1;
+        transform: translateY(5px);
+        opacity: 0.8;
+    }
+    
+    .letter {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80%;
+        height: 60px;
+        background: white;
+        border-radius: 4px;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        animation: letter-glow 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes letter-glow {
+        0% { box-shadow: 0 2px 8px rgba(67, 97, 238, 0.3); }
+        100% { box-shadow: 0 4px 16px rgba(67, 97, 238, 0.5); }
+    }
+    
+    .step-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 0.875rem;
+    }
+    
+    .bg-light-warning {
+        background-color: rgba(255, 193, 7, 0.1) !important;
+        border: 1px solid rgba(255, 193, 7, 0.2) !important;
+    }
+    
+    .verification-steps {
+        border-left: 2px solid #e9ecef;
+        margin-left: 16px;
+        padding-left: 24px;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .card-body {
+            padding: 2rem !important;
+        }
+        
+        .email-animation {
+            width: 100px;
+            height: 70px;
+        }
+        
+        .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .card-body {
+            padding: 1.5rem !important;
+        }
+        
+        .d-md-flex .btn {
+            margin-bottom: 0.5rem;
+        }
+        
+        .verification-steps {
+            margin-left: 12px;
+            padding-left: 20px;
+        }
+    }
+    
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .card {
+            background-color: #1a1d20;
+            color: #e9ecef;
+        }
+        
+        .alert-info {
+            background-color: rgba(13, 110, 253, 0.1) !important;
+            color: #b6d4fe;
+        }
+        
+        .text-dark {
+            color: #f8f9fa !important;
+        }
+        
+        .text-muted {
+            color: #adb5bd !important;
+        }
+        
+        .letter {
+            background-color: #2d2d2d;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add subtle animation to the verification steps
+        const steps = document.querySelectorAll('.step');
+        steps.forEach((step, index) => {
+            step.style.opacity = '0';
+            step.style.transform = 'translateX(-20px)';
+            
+            setTimeout(() => {
+                step.style.transition = 'all 0.5s ease';
+                step.style.opacity = '1';
+                step.style.transform = 'translateX(0)';
+            }, index * 200);
+        });
+        
+        // Add hover effect to buttons
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.transition = 'all 0.2s ease';
+            });
+            
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Check if user might have entered wrong email
+        const email = '{{ email }}';
+        const commonDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com'];
+        const userDomain = email.split('@')[1];
+        
+        if (!commonDomains.includes(userDomain?.toLowerCase())) {
+            // Show additional tip for custom domains
+            const alertElement = document.querySelector('.alert-warning');
+            if (alertElement) {
+                const tip = document.createElement('li');
+                tip.className = 'mb-1 small';
+                tip.textContent = 'Check with your IT department for custom domain restrictions';
+                alertElement.querySelector('ul').appendChild(tip);
+            }
+        }
+    });
+</script>
+{% endblock %}
