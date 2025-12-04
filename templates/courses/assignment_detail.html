@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ assignment.title }} - {{ course.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .code-editor {
+        font-family: 'Fira Code', 'Monaco', 'Cascadia Code', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    
+    .test-case {
+        background: #f8f9fa;
+        border-left: 4px solid #3498db;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        border-radius: 0 4px 4px 0;
+    }
+    
+    .test-case.passed {
+        border-left-color: #28a745;
+        background: #d4edda;
+    }
+    
+    .test-case.failed {
+        border-left-color: #dc3545;
+        background: #f8d7da;
+    }
+    
+    .submission-result {
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+    }
+    
+    .submission-result.success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+    }
+    
+    .submission-result.error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+    }
+    
+    .option-label {
+        display: block;
+        padding: 0.75rem;
+        margin: 0.5rem 0;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .option-label:hover {
+        border-color: #3498db;
+        background: #f8f9fa;
+    }
+    
+    .option-label.selected {
+        border-color: #3498db;
+        background: #e3f2fd;
+    }
+    
+    .option-label.correct {
+        border-color: #28a745;
+        background: #d4edda;
+    }
+    
+    .option-label.incorrect {
+        border-color: #dc3545;
+        background: #f8d7da;
+    }
+    
+    input[type="radio"] {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'courses:assignment_detail' course_pk=course.pk assignment_pk=assignment.pk %}">{{ assignment.title }}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'courses:assignment_list' course_pk=course.pk %}">Assignments</a></li>
+                    <li class="breadcrumb-item active">{{ assignment.title }}</li>
+                </ol>
+            </nav>
+
+            <div class="card">
+                <div class="card-header bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h1 class="h3 mb-0">{{ assignment.title }}</h1>
+                        <span class="badge bg-{% if assignment.assignment_type == 'multiple_choice' %}info{% elif assignment.assignment_type == 'code' %}warning{% else %}secondary{% endif %}">
+                            {{ assignment.get_assignment_type_display }}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <small class="text-muted">
+                            <i class="bi bi-star me-1"></i>{{ assignment.points }} points
+                        </small>
+                        {% if assignment.due_date %}
+                        <small class="text-muted">
+                            <i class="bi bi-clock me-1"></i>Due: {{ assignment.due_date|date:"M d, Y H:i" }}
+                        </small>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    {% if assignment.description %}
+                    <div class="mb-4">
+                        <h5>Description</h5>
+                        <p class="text-muted">{{ assignment.description|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Submission Status -->
+                    {% if submission %}
+                    <div class="alert alert-{% if submission.is_correct %}success{% else %}warning{% endif %} mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="alert-heading">
+                                    <i class="bi bi-{% if submission.is_correct %}check-circle{% else %}exclamation-circle{% endif %} me-2"></i>
+                                    Assignment {% if submission.is_correct %}Completed{% else %}Attempted{% endif %}
+                                </h6>
+                                <p class="mb-0">Score: <strong>{{ submission.score|default:0 }}/{{ assignment.points }}</strong></p>
+                                {% if submission.feedback %}
+                                <p class="mb-0 mt-1"><small>Feedback: {{ submission.feedback }}</small></p>
+                                {% endif %}
+                            </div>
+                            <small>{{ submission.submitted_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Assignment Content Based on Type -->
+                    {% if assignment.assignment_type == 'multiple_choice' and question %}
+                        {% include 'courses/assignment_types/multiple_choice.html' %}
+                    {% elif assignment.assignment_type == 'code' and question %}
+                        {% include 'courses/assignment_types/code.html' %}
+                    {% elif assignment.assignment_type == 'text' and question %}
+                        {% include 'courses/assignment_types/text.html' %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Assignment Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Assignment Info</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Type:</strong>
+                        <span class="badge bg-{% if assignment.assignment_type == 'multiple_choice' %}info{% elif assignment.assignment_type == 'code' %}warning{% else %}secondary{% endif %} ms-2">
+                            {{ assignment.get_assignment_type_display }}
+                        </span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Points:</strong>
+                        <span class="ms-2">{{ assignment.points }}</span>
+                    </div>
+                    {% if assignment.due_date %}
+                    <div class="mb-3">
+                        <strong>Due Date:</strong>
+                        <span class="ms-2">{{ assignment.due_date|date:"M d, Y H:i" }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <strong>Status:</strong>
+                        <span class="badge bg-{% if submission %}success{% else %}secondary{% endif %} ms-2">
+                            {% if submission %}Submitted{% else %}Not Started{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'courses:assignment_list' course_pk=course.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Assignments
+                        </a>
+                        <a href="{% url 'courses:course_detail' pk=course.pk %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-journal me-2"></i>Course Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Multiple choice selection
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.querySelectorAll('.option-label').forEach(label => {
+                label.classList.remove('selected');
+            });
+            if (this.checked) {
+                this.closest('.option-label').classList.add('selected');
+            }
+        });
+    });
+
+    // Code editor enhancements
+    const codeEditor = document.querySelector('.code-editor');
+    if (codeEditor) {
+        // Auto-indent and basic syntax highlighting
+        codeEditor.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                
+                // Insert tab
+                this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 4;
+            }
+        });
+    }
+
+    // Form submission confirmation
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Submitting...';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

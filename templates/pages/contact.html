@@ -1,0 +1,1032 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact Us - CodeLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3f37c9;
+        --accent-color: #4cc9f0;
+        --success-color: #4bb543;
+        --dark-color: #1d3557;
+        --light-color: #f8f9fa;
+    }
+    
+    .contact-hero {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 100px 0;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .contact-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+        animation: float 20s linear infinite;
+    }
+    
+    @keyframes float {
+        0% { transform: translateY(0px) rotate(0deg); }
+        100% { transform: translateY(-100px) rotate(360deg); }
+    }
+    
+    .contact-card {
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        border-radius: 16px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+    }
+    
+    .contact-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+    }
+    
+    .contact-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .contact-card:hover .contact-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #eef2f7;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background: #fafbfc;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15);
+        background: white;
+        transform: translateY(-2px);
+    }
+    
+    .faq-accordion .accordion-button {
+        background-color: #f8f9fa;
+        border: 2px solid #eef2f7;
+        border-radius: 12px !important;
+        padding: 1.25rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .faq-accordion .accordion-button:not(.collapsed) {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        border-color: var(--primary-color);
+        box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
+    }
+    
+    .faq-accordion .accordion-button::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%234361ee'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+        transition: all 0.3s ease;
+    }
+    
+    .faq-accordion .accordion-button:not(.collapsed)::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+        transform: rotate(-180deg);
+    }
+    
+    .faq-accordion .accordion-body {
+        padding: 1.5rem;
+        background: white;
+        border-radius: 0 0 12px 12px;
+        border: 2px solid #eef2f7;
+        border-top: none;
+    }
+    
+    .contact-stats {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        color: white;
+        padding: 2rem;
+        margin-top: -50px;
+        position: relative;
+        z-index: 2;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    .social-links a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 45px;
+        height: 45px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        margin-right: 0.75rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+        color: var(--primary-color) !important;
+        text-decoration: none;
+    }
+    
+    .social-links a:hover {
+        background: var(--primary-color);
+        color: white !important;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+    }
+    
+    .quick-help-item {
+        border: none;
+        border-radius: 12px;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+    }
+    
+    .quick-help-item:hover {
+        background: white;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transform: translateX(8px);
+    }
+    
+    .quick-help-item a {
+        padding: 1rem 1.25rem;
+        text-decoration: none;
+        color: #495057;
+        font-weight: 500;
+        display: block;
+    }
+    
+    .quick-help-item:hover a {
+        color: var(--primary-color);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 1rem 2rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(67, 97, 238, 0.4);
+    }
+
+    /* Support Team Section */
+    .team-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 80px 0;
+    }
+    
+    .team-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .team-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    }
+    
+    .team-avatar {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        color: white;
+        font-size: 2rem;
+    }
+    
+    /* Enhanced Mobile Responsiveness */
+    @media (max-width: 1200px) {
+        .contact-hero {
+            padding: 80px 0;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+        }
+    }
+    
+    @media (max-width: 992px) {
+        .contact-hero {
+            padding: 60px 0;
+        }
+        
+        .contact-info-card {
+            margin-bottom: 2rem;
+        }
+        
+        .contact-stats {
+            margin-top: 2rem;
+        }
+        
+        .stat-item {
+            margin-bottom: 1.5rem;
+        }
+        
+        .team-section {
+            padding: 60px 0;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .contact-hero {
+            padding: 50px 0;
+            text-align: center;
+        }
+        
+        .display-4 {
+            font-size: 2.25rem;
+        }
+        
+        .contact-icon {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 1rem;
+        }
+        
+        .btn-lg {
+            padding: 0.875rem 1.75rem;
+            font-size: 1rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .contact-stats {
+            padding: 1.5rem;
+        }
+        
+        .team-section {
+            padding: 50px 0;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .contact-hero {
+            padding: 40px 0;
+        }
+        
+        .display-4 {
+            font-size: 1.75rem;
+        }
+        
+        .lead {
+            font-size: 1rem;
+        }
+        
+        .contact-card {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-control, .form-select {
+            padding: 10px 14px;
+        }
+        
+        .faq-accordion .accordion-button {
+            padding: 1rem;
+            font-size: 0.95rem;
+        }
+        
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            margin-right: 0.5rem;
+        }
+        
+        .team-section {
+            padding: 40px 0;
+        }
+        
+        .team-card {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+    
+    @media (max-width: 380px) {
+        .contact-hero .row > div {
+            margin-bottom: 1.5rem;
+        }
+        
+        .contact-hero .d-flex {
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            width: 100%;
+        }
+    }
+    
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .contact-card, .quick-help-item, .team-card {
+            background-color: #1e1e1e;
+            color: #e9ecef;
+        }
+        
+        .form-control, .form-select {
+            background-color: #2d2d2d;
+            border-color: #3d3d3d;
+            color: #e9ecef;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background-color: #2d2d2d;
+        }
+        
+        .faq-accordion .accordion-button {
+            background-color: #2d2d2d;
+            border-color: #3d3d3d;
+            color: #e9ecef;
+        }
+        
+        .faq-accordion .accordion-body {
+            background-color: #2d2d2d;
+            border-color: #3d3d3d;
+            color: #adb5bd;
+        }
+        
+        .quick-help-item {
+            background-color: #2d2d2d;
+        }
+        
+        .quick-help-item a {
+            color: #adb5bd;
+        }
+        
+        .social-links a {
+            background-color: #2d2d2d;
+        }
+        
+        .team-section {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Enhanced Hero Section -->
+<section class="contact-hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold mb-4">Let's Start a Conversation</h1>
+                <p class="lead mb-4">We're here to help you on your coding journey. Reach out with any questions, feedback, or just to say hello!</p>
+                <div class="row mt-5 g-4">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3">
+                                <i class="bi bi-telephone fs-4"></i>
+                            </div>
+                            <div class="text-start">
+                                <h6 class="mb-0 fw-bold">Call Us</h6>
+                                <small>+ (254)70-766-4316</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3">
+                                <i class="bi bi-envelope fs-4"></i>
+                            </div>
+                            <div class="text-start">
+                                <h6 class="mb-0 fw-bold">Email Us</h6>
+                                <small>support@codelab.com</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3">
+                                <i class="bi bi-clock fs-4"></i>
+                            </div>
+                            <div class="text-start">
+                                <h6 class="mb-0 fw-bold">Response Time</h6>
+                                <small>Within 24 hours</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Stats -->
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="contact-stats">
+                <div class="row text-center">
+                    <div class="col-md-3 col-6">
+                        <div class="stat-item">
+                            <span class="stat-number">24/7</span>
+                            <div class="stat-label">Support Available</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="stat-item">
+                            <span class="stat-number">98%</span>
+                            <div class="stat-label">Satisfaction Rate</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="stat-item">
+                            <span class="stat-number">2h</span>
+                            <div class="stat-label">Avg. Response Time</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="stat-item">
+                            <span class="stat-number">10k+</span>
+                            <div class="stat-label">Students Helped</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Form & Information -->
+<div class="container py-5">
+    <div class="row g-5">
+        <!-- Contact Information -->
+        <div class="col-lg-4">
+            <div class="card contact-card contact-info-card h-100">
+                <div class="card-body p-4">
+                    <h3 class="h4 mb-4 fw-bold">Contact Information</h3>
+                    
+                    <div class="d-flex mb-4">
+                        <div class="flex-shrink-0">
+                            <div class="contact-icon text-white">
+                                <i class="bi bi-geo-alt fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="h6 mb-1 fw-semibold">Address</h5>
+                            <p class="text-muted mb-0">
+                                2129 Sokomoko Street<br>
+                                Kitale City, KTL 30200<br>
+                                Kenya
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-4">
+                        <div class="flex-shrink-0">
+                            <div class="contact-icon text-white">
+                                <i class="bi bi-telephone fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="h6 mb-1 fw-semibold">Phone</h5>
+                            <p class="text-muted mb-0">
+                                + (254)70-766-4316<br>
+                                <small>Mon-Fri 9am-6pm EAT</small>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-4">
+                        <div class="flex-shrink-0">
+                            <div class="contact-icon text-white">
+                                <i class="bi bi-envelope fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="h6 mb-1 fw-semibold">Email</h5>
+                            <p class="text-muted mb-0">
+                                support@codelab.com<br>
+                                help@codelab.com
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <div class="contact-icon text-white">
+                                <i class="bi bi-clock fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="h6 mb-1 fw-semibold">Support Hours</h5>
+                            <p class="text-muted mb-0">
+                                Monday - Friday: 9AM - 6PM<br>
+                                Saturday: 10AM - 4PM<br>
+                                Sunday: Closed
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Social Links -->
+                    <h5 class="h6 mb-3 fw-semibold">Follow Us</h5>
+                    <div class="social-links">
+                        <a href="#" class="text-primary" title="Facebook" data-bs-toggle="tooltip">
+                            <i class="bi bi-facebook fs-5"></i>
+                        </a>
+                        <a href="#" class="text-primary" title="Twitter" data-bs-toggle="tooltip">
+                            <i class="bi bi-twitter fs-5"></i>
+                        </a>
+                        <a href="#" class="text-primary" title="LinkedIn" data-bs-toggle="tooltip">
+                            <i class="bi bi-linkedin fs-5"></i>
+                        </a>
+                        <a href="#" class="text-primary" title="Instagram" data-bs-toggle="tooltip">
+                            <i class="bi bi-instagram fs-5"></i>
+                        </a>
+                        <a href="#" class="text-primary" title="GitHub" data-bs-toggle="tooltip">
+                            <i class="bi bi-github fs-5"></i>
+                        </a>
+                        <a href="#" class="text-primary" title="YouTube" data-bs-toggle="tooltip">
+                            <i class="bi bi-youtube fs-5"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Help Links -->
+            <div class="card contact-card mt-4">
+                <div class="card-body p-4">
+                    <h4 class="h5 mb-3 fw-bold">Quick Help</h4>
+                    <div class="list-group list-group-flush">
+                        <div class="quick-help-item">
+                            <a href="#">
+                                <i class="bi bi-question-circle me-2 text-primary"></i>
+                                Frequently Asked Questions
+                            </a>
+                        </div>
+                        <div class="quick-help-item">
+                            <a href="#">
+                                <i class="bi bi-book me-2 text-primary"></i>
+                                Documentation & Guides
+                            </a>
+                        </div>
+                        <div class="quick-help-item">
+                            <a href="#">
+                                <i class="bi bi-chat-dots me-2 text-primary"></i>
+                                Community Forum
+                            </a>
+                        </div>
+                        <div class="quick-help-item">
+                            <a href="#">
+                                <i class="bi bi-patch-question me-2 text-primary"></i>
+                                Technical Support
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="col-lg-8">
+            <div class="card contact-card h-100">
+                <div class="card-body p-4 p-md-5">
+                    <h3 class="h4 mb-4 fw-bold">Send us a Message</h3>
+                    
+                    {% if messages %}
+                    <div class="mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            <i class="bi 
+                                {% if message.tags == 'success' %}bi-check-circle-fill
+                                {% elif message.tags == 'warning' %}bi-exclamation-triangle-fill
+                                {% elif message.tags == 'error' or message.tags == 'danger' %}bi-x-circle-fill
+                                {% else %}bi-info-circle-fill{% endif %} 
+                                me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" action="{% url 'pages:contact' %}" id="contactForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label fw-semibold">Full Name *</label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       value="{{ user.get_full_name|default:'' }}" required
+                                       placeholder="Enter your full name">
+                                <div class="invalid-feedback">Please provide your name.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label fw-semibold">Email Address *</label>
+                                <input type="email" class="form-control" id="email" name="email"
+                                       value="{{ user.email|default:'' }}" required
+                                       placeholder="Enter your email">
+                                <div class="invalid-feedback">Please provide a valid email.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="subject" class="form-label fw-semibold">Subject *</label>
+                            <select class="form-select" id="subject" name="subject" required>
+                                <option value="" selected disabled>Select a topic</option>
+                                <option value="general">General Inquiry</option>
+                                <option value="technical">Technical Support</option>
+                                <option value="billing">Billing & Payments</option>
+                                <option value="course">Course Content</option>
+                                <option value="feedback">Feedback & Suggestions</option>
+                                <option value="partnership">Partnership Opportunities</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <div class="invalid-feedback">Please select a subject.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="course" class="form-label fw-semibold">Related Course (Optional)</label>
+                            <select class="form-select" id="course" name="course">
+                                <option value="" selected>Not related to a specific course</option>
+                                {% for course in courses %}
+                                <option value="{{ course.id }}">{{ course.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="message" class="form-label fw-semibold">Message *</label>
+                            <textarea class="form-control" id="message" name="message" rows="6" 
+                                      placeholder="Please describe your inquiry in detail..." required></textarea>
+                            <div class="form-text">
+                                Please be as detailed as possible so we can help you better. Minimum 20 characters.
+                            </div>
+                            <div class="invalid-feedback">Please provide a detailed message (at least 20 characters).</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="newsletter" name="newsletter" checked>
+                                <label class="form-check-label" for="newsletter">
+                                    Send me updates about new courses and features (optional)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                <i class="bi bi-send me-2"></i>Send Message
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- FAQ Section -->
+            <div class="mt-5">
+                <h3 class="h4 mb-4 fw-bold">Frequently Asked Questions</h3>
+                <div class="accordion faq-accordion" id="faqAccordion">
+                    <!-- FAQ Item 1 -->
+                    <div class="accordion-item mb-3">
+                        <h2 class="accordion-header" id="faqHeading1">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#faqCollapse1" aria-expanded="true" aria-controls="faqCollapse1">
+                                How do I reset my password?
+                            </button>
+                        </h2>
+                        <div id="faqCollapse1" class="accordion-collapse collapse show" 
+                             aria-labelledby="faqHeading1" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                You can reset your password by clicking on "Forgot Password" on the login page. 
+                                We'll send you an email with instructions to reset your password securely.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- FAQ Item 2 -->
+                    <div class="accordion-item mb-3">
+                        <h2 class="accordion-header" id="faqHeading2">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#faqCollapse2" aria-expanded="false" aria-controls="faqCollapse2">
+                                Can I download course materials?
+                            </button>
+                        </h2>
+                        <div id="faqCollapse2" class="accordion-collapse collapse" 
+                             aria-labelledby="faqHeading2" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes, most course materials including code files, PDFs, and resources are available 
+                                for download within each lesson. Look for the download button in the lesson content area.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- FAQ Item 3 -->
+                    <div class="accordion-item mb-3">
+                        <h2 class="accordion-header" id="faqHeading3">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#faqCollapse3" aria-expanded="false" aria-controls="faqCollapse3">
+                                Do you offer certificates for completed courses?
+                            </button>
+                        </h2>
+                        <div id="faqCollapse3" class="accordion-collapse collapse" 
+                             aria-labelledby="faqHeading3" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes! Upon successful completion of a course, including all assignments and quizzes, 
+                                you'll receive a verifiable certificate that you can share on LinkedIn and other professional platforms.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 4 -->
+                    <div class="accordion-item mb-3">
+                        <h2 class="accordion-header" id="faqHeading4">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#faqCollapse4" aria-expanded="false" aria-controls="faqCollapse4">
+                                What's your refund policy?
+                            </button>
+                        </h2>
+                        <div id="faqCollapse4" class="accordion-collapse collapse" 
+                             aria-labelledby="faqHeading4" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                We offer a 30-day money-back guarantee for all courses. If you're not satisfied 
+                                with a course, contact us within 30 days of purchase for a full refund, no questions asked.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 5 -->
+                    <div class="accordion-item mb-3">
+                        <h2 class="accordion-header" id="faqHeading5">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#faqCollapse5" aria-expanded="false" aria-controls="faqCollapse5">
+                                Are the courses self-paced?
+                            </button>
+                        </h2>
+                        <div id="faqCollapse5" class="accordion-collapse collapse" 
+                             aria-labelledby="faqHeading5" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes, all our courses are self-paced. You can learn at your own convenience and 
+                                access the course materials anytime, anywhere. There are no deadlines for completion.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Support Team Section -->
+<section class="team-section">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="display-5 fw-bold mb-3">Meet Our Support Team</h2>
+                <p class="lead text-muted">Our dedicated team is here to help you succeed in your coding journey</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="team-card">
+                    <div class="team-avatar">
+                        <i class="bi bi-headset"></i>
+                    </div>
+                    <h4 class="h5 mb-2">Technical Support</h4>
+                    <p class="text-muted mb-3">Get help with technical issues, course access, and platform features</p>
+                    <div class="text-primary">
+                        <small>Available 24/7 via email</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="team-card">
+                    <div class="team-avatar">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <h4 class="h5 mb-2">Course Guidance</h4>
+                    <p class="text-muted mb-3">Need help choosing the right course or learning path? We're here to guide you</p>
+                    <div class="text-primary">
+                        <small>Mon-Fri 9AM-6PM</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="team-card">
+                    <div class="team-avatar">
+                        <i class="bi bi-chat-dots"></i>
+                    </div>
+                    <h4 class="h5 mb-2">Community Support</h4>
+                    <p class="text-muted mb-3">Join our community forums to get help from instructors and fellow students</p>
+                    <div class="text-primary">
+                        <small>Always available</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Enhanced form validation
+    const contactForm = document.getElementById('contactForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    contactForm.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Reset previous validation states
+        const formInputs = contactForm.querySelectorAll('.form-control, .form-select');
+        formInputs.forEach(input => {
+            input.classList.remove('is-invalid');
+        });
+        
+        // Validate name
+        const name = document.getElementById('name').value.trim();
+        if (name.length < 2) {
+            document.getElementById('name').classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // Validate email
+        const email = document.getElementById('email').value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            document.getElementById('email').classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // Validate subject
+        const subject = document.getElementById('subject').value;
+        if (!subject) {
+            document.getElementById('subject').classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // Validate message
+        const message = document.getElementById('message').value.trim();
+        if (message.length < 20) {
+            document.getElementById('message').classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            
+            // Create a custom alert
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-warning alert-dismissible fade show mt-3';
+            alertDiv.innerHTML = `
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Please correct the errors in the form before submitting.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insert after the form
+            contactForm.parentNode.insertBefore(alertDiv, contactForm.nextSibling);
+            
+            // Focus on the first invalid field
+            const firstInvalid = contactForm.querySelector('.is-invalid');
+            if (firstInvalid) {
+                firstInvalid.focus();
+            }
+            
+            // Auto-dismiss alert after 5 seconds
+            setTimeout(() => {
+                if (alertDiv) {
+                    const bsAlert = new bootstrap.Alert(alertDiv);
+                    bsAlert.close();
+                }
+            }, 5000);
+        } else {
+            // Add loading state to button
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Sending...';
+            submitBtn.disabled = true;
+        }
+    });
+
+    // Real-time validation
+    const messageField = document.getElementById('message');
+    messageField.addEventListener('input', function() {
+        if (this.value.trim().length >= 20) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } else {
+            this.classList.remove('is-valid');
+        }
+    });
+
+    // Subject change effect
+    const subjectSelect = document.getElementById('subject');
+    subjectSelect.addEventListener('change', function() {
+        this.classList.remove('is-invalid');
+        this.classList.add('is-valid');
+    });
+
+    // Add animation to elements on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // Observe contact cards and stats
+    document.querySelectorAll('.contact-card, .contact-stats, .faq-accordion, .team-card').forEach(element => {
+        element.style.opacity = '0';
+        element.style.transform = 'translateY(30px)';
+        element.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(element);
+    });
+
+    // Add character counter for message field
+    const messageCounter = document.createElement('div');
+    messageCounter.className = 'form-text text-end';
+    messageCounter.id = 'messageCounter';
+    messageCounter.textContent = '0/500 characters';
+    messageField.parentNode.appendChild(messageCounter);
+
+    messageField.addEventListener('input', function() {
+        const count = this.value.length;
+        messageCounter.textContent = `${count}/500 characters`;
+        
+        if (count > 500) {
+            messageCounter.className = 'form-text text-end text-danger';
+        } else if (count >= 20) {
+            messageCounter.className = 'form-text text-end text-success';
+        } else {
+            messageCounter.className = 'form-text text-end';
+        }
+    });
+
+    // Add smooth scrolling for FAQ items
+    document.querySelectorAll('.accordion-button').forEach(button => {
+        button.addEventListener('click', function() {
+            setTimeout(() => {
+                this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 300);
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,1445 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Profile Settings - CodeLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3a0ca3;
+        --accent-color: #4cc9f0;
+        --dark-color: #1e1e2d;
+        --light-color: #f8f9fa;
+        --success-color: #4ade80;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --gray-100: #f8f9fa;
+        --gray-200: #e9ecef;
+        --gray-300: #dee2e6;
+        --gray-400: #ced4da;
+        --gray-500: #adb5bd;
+        --gray-600: #6c757d;
+        --gray-700: #495057;
+        --gray-800: #343a40;
+        --gray-900: #212529;
+    }
+
+    /* Modern CSS Reset */
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Profile Hero Section */
+    .profile-hero {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 80px 0 60px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .profile-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><polygon fill="%23ffffff" fill-opacity="0.05" points="1000,1000 0,1000 0,0 500,500"/></svg>');
+        background-size: cover;
+        animation: float 20s ease-in-out infinite;
+    }
+    
+    .profile-hero-content {
+        position: relative;
+        z-index: 2;
+    }
+    
+    /* Profile Cards */
+    .profile-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+        background: white;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+    }
+    
+    .profile-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+    
+    /* Avatar Upload */
+    .avatar-upload {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .avatar-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        border: 4px solid white;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        object-fit: cover;
+        background: linear-gradient(135deg, var(--gray-200) 0%, var(--gray-300) 100%);
+        transition: all 0.3s ease;
+    }
+    
+    .avatar-preview:hover {
+        transform: scale(1.05);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+    }
+    
+    .avatar-upload-label {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        border: 2px solid white;
+    }
+    
+    .avatar-upload-label:hover {
+        background: var(--secondary-color);
+        transform: scale(1.1) rotate(10deg);
+        box-shadow: 0 6px 15px rgba(67, 97, 238, 0.4);
+    }
+    
+    /* Navigation Tabs */
+    .nav-pills .nav-link {
+        border-radius: 12px;
+        margin-bottom: 0.75rem;
+        padding: 1rem 1.25rem;
+        color: var(--gray-700);
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+    }
+    
+    .nav-pills .nav-link i {
+        margin-right: 0.75rem;
+        font-size: 1.1rem;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+    }
+    
+    .nav-pills .nav-link:hover:not(.active) {
+        background-color: var(--gray-100);
+        color: var(--primary-color);
+        border-color: var(--gray-300);
+        transform: translateX(5px);
+    }
+    
+    .tab-pane {
+        padding: 2rem 0;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    /* Stats Cards */
+    .stats-card {
+        text-align: center;
+        padding: 1.5rem;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+        color: white;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+    }
+    
+    .stats-number {
+        font-size: 2.25rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(to right, #fff, #e2e8f0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline-block;
+    }
+    
+    .badge-profile {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+    
+    /* Activity Timeline */
+    .activity-item {
+        border-left: 3px solid var(--primary-color);
+        padding-left: 1.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    
+    .activity-item:hover {
+        border-left-color: var(--secondary-color);
+        transform: translateX(5px);
+    }
+    
+    .activity-item::before {
+        content: '';
+        position: absolute;
+        left: -7px;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px var(--primary-color);
+        transition: all 0.3s ease;
+    }
+    
+    .activity-item:hover::before {
+        background: var(--secondary-color);
+        box-shadow: 0 0 0 2px var(--secondary-color);
+        transform: scale(1.2);
+    }
+    
+    /* Security Alerts */
+    .security-alert {
+        background: linear-gradient(135deg, #fff9db 0%, #fff3cd 100%);
+        border: 1px solid #ffeaa7;
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .security-alert::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--warning-color);
+    }
+    
+    /* Form Sections */
+    .form-section {
+        background-color: var(--gray-50);
+        border-radius: 12px;
+        padding: 1.75rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--gray-200);
+        transition: all 0.3s ease;
+    }
+    
+    .form-section:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .form-section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .form-section-header i {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        color: var(--primary-color);
+    }
+    
+    /* Form Controls */
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1px solid var(--gray-300);
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Toggle Switches */
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .form-check-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+    }
+    
+    .form-switch .form-check-input {
+        width: 3rem;
+        height: 1.5rem;
+    }
+    
+    /* Buttons */
+    .btn {
+        border-radius: 10px;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border: none;
+        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(67, 97, 238, 0.4);
+    }
+    
+    /* Table Styles */
+    .table {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 0 1px var(--gray-200);
+    }
+    
+    .table th {
+        background-color: var(--gray-100);
+        border-bottom: 2px solid var(--gray-300);
+        font-weight: 600;
+        color: var(--gray-700);
+        padding: 1rem;
+    }
+    
+    .table td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+    
+    /* Animations */
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0) translateX(0);
+        }
+        50% {
+            transform: translateY(-20px) translateX(10px);
+        }
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+    
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+    
+    /* Progress indicators */
+    .profile-completion {
+        margin-bottom: 2rem;
+    }
+    
+    .completion-text {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--gray-700);
+    }
+    
+    .progress {
+        height: 8px;
+        border-radius: 10px;
+        background-color: var(--gray-200);
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        border-radius: 10px;
+        transition: width 1s ease-in-out;
+    }
+    
+    /* Focus styles for accessibility */
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+        border-radius: 4px;
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 1199.98px) {
+        .display-4 {
+            font-size: 2.75rem;
+        }
+        
+        .avatar-preview {
+            width: 140px;
+            height: 140px;
+        }
+    }
+    
+    @media (max-width: 991.98px) {
+        .profile-hero {
+            padding: 60px 0 40px;
+            text-align: center;
+        }
+        
+        .display-4 {
+            font-size: 2.5rem;
+        }
+        
+        .avatar-preview {
+            width: 130px;
+            height: 130px;
+        }
+        
+        .nav-pills {
+            flex-direction: row;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+            scrollbar-width: thin;
+        }
+        
+        .nav-pills .nav-link {
+            white-space: nowrap;
+            margin-right: 0.75rem;
+            margin-bottom: 0;
+            flex-shrink: 0;
+        }
+        
+        .tab-pane {
+            padding: 1.5rem 0;
+        }
+        
+        .stats-card {
+            padding: 1.25rem;
+        }
+        
+        .stats-number {
+            font-size: 2rem;
+        }
+        
+        .form-section {
+            padding: 1.5rem;
+        }
+    }
+    
+    @media (max-width: 767.98px) {
+        .profile-hero {
+            padding: 50px 0 30px;
+        }
+        
+        .display-4 {
+            font-size: 2.25rem;
+        }
+        
+        .avatar-preview {
+            width: 120px;
+            height: 120px;
+        }
+        
+        .avatar-upload-label {
+            width: 40px;
+            height: 40px;
+            bottom: 8px;
+            right: 8px;
+        }
+        
+        .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+        
+        .form-section {
+            padding: 1.25rem;
+        }
+        
+        .activity-item {
+            padding-left: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+    
+    @media (max-width: 575.98px) {
+        .profile-hero {
+            padding: 40px 0 20px;
+        }
+        
+        .display-4 {
+            font-size: 2rem;
+        }
+        
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+        }
+        
+        .avatar-upload-label {
+            width: 36px;
+            height: 36px;
+            bottom: 5px;
+            right: 5px;
+        }
+        
+        .stats-number {
+            font-size: 1.75rem;
+        }
+        
+        .form-section {
+            padding: 1rem;
+        }
+        
+        .nav-pills .nav-link {
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .tab-pane {
+            padding: 1rem 0;
+        }
+    }
+    
+    @media (max-width: 400px) {
+        .profile-hero {
+            padding: 30px 0 15px;
+        }
+        
+        .display-4 {
+            font-size: 1.75rem;
+        }
+        
+        .avatar-preview {
+            width: 90px;
+            height: 90px;
+        }
+        
+        .btn-lg {
+            padding: 0.625rem 1.25rem;
+            font-size: 0.9rem;
+        }
+    }
+    
+    /* Reduced motion for accessibility */
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Skip to main content for accessibility -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- Hero Section -->
+<section class="profile-hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8 profile-hero-content">
+                <h1 class="display-4 fw-bold mb-3">Profile Settings</h1>
+                <p class="lead mb-0">Manage your account settings and preferences</p>
+                
+                <!-- Profile Completion Progress -->
+                <div class="profile-completion mt-4">
+                    <div class="completion-text">
+                        <span>Profile Completion</span>
+                        <span id="completion-percentage">{{ profile_completion }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: {{ profile_completion }}%" 
+                             aria-valuenow="{{ profile_completion }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end mt-4 mt-md-0">
+                <a href="{% url 'users:dashboard' %}" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Profile Content -->
+<div class="container py-5" id="main-content">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-lg-3 mb-4">
+            <!-- Profile Summary -->
+            <div class="profile-card">
+                <div class="card-body text-center">
+                    <div class="avatar-upload mb-3">
+                        {% if user.profile.profile_picture %}
+                        <img src="{{ user.profile.profile_picture.url }}" 
+                             alt="{{ user.get_full_name }}" 
+                             class="avatar-preview"
+                             id="avatar-preview">
+                        {% else %}
+                        <div class="avatar-preview d-flex align-items-center justify-content-center bg-secondary text-white" id="avatar-preview">
+                            <i class="bi bi-person-fill" style="font-size: 3rem;"></i>
+                        </div>
+                        {% endif %}
+                        <label for="id_profile_picture" class="avatar-upload-label" aria-label="Change profile picture">
+                            <i class="bi bi-camera"></i>
+                        </label>
+                    </div>
+                    
+                    <h5 id="profile-name">{{ user.get_full_name|default:user.username }}</h5>
+                    <p class="text-muted mb-2">{{ user.email }}</p>
+                    
+                    <div class="d-flex justify-content-center gap-1 mb-3">
+                        {% if user.is_staff %}
+                        <span class="badge bg-success badge-profile">
+                            <i class="bi bi-award me-1"></i>Staff
+                        </span>
+                        {% endif %}
+                        <span class="badge bg-primary badge-profile">
+                            <i class="bi bi-patch-check me-1"></i>Verified
+                        </span>
+                    </div>
+                    
+                    <div class="stats-card">
+                        <div class="stats-number">{{ total_courses }}</div>
+                        <div>Courses Enrolled</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-number">{{ completed_courses }}</div>
+                        <div>Courses Completed</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="profile-card">
+                <div class="card-body">
+                    <ul class="nav nav-pills flex-column" id="profileTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#personal" type="button" role="tab" aria-controls="personal" aria-selected="true">
+                                <i class="bi bi-person me-2"></i>Personal Info
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="preferences-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#preferences" type="button" role="tab" aria-controls="preferences" aria-selected="false">
+                                <i class="bi bi-gear me-2"></i>Preferences
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="security-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#security" type="button" role="tab" aria-controls="security" aria-selected="false">
+                                <i class="bi bi-shield-lock me-2"></i>Security
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="profile-card">
+                <div class="card-body">
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="profileTabsContent">
+                        <!-- Personal Information Tab -->
+                        <div class="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
+                            <h3 class="h4 mb-4">Personal Information</h3>
+                            
+                            {% if messages %}
+                            <div class="mb-4">
+                                {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    <i class="bi {% if message.tags == 'success' %}bi-check-circle{% else %}bi-exclamation-triangle{% endif %} me-2"></i>{{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <form method="POST" enctype="multipart/form-data" id="profile-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="profile">
+                                
+                                <!-- Hidden file input for avatar -->
+                                <input type="file" name="profile_picture" accept="image/*" id="id_profile_picture" style="display: none;">
+                                
+                                <div class="form-section">
+                                    <div class="form-section-header">
+                                        <i class="bi bi-person-badge"></i>
+                                        <h5 class="mb-0">Basic Information</h5>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label for="first_name" class="form-label">First Name</label>
+                                                <input type="text" 
+                                                       name="first_name" 
+                                                       value="{{ user.first_name }}" 
+                                                       class="form-control {% if user_form.first_name.errors %}is-invalid{% endif %}" 
+                                                       id="first_name"
+                                                       placeholder="Enter your first name"
+                                                       required>
+                                                {% if user_form.first_name.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in user_form.first_name.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label for="last_name" class="form-label">Last Name</label>
+                                                <input type="text" 
+                                                       name="last_name" 
+                                                       value="{{ user.last_name }}" 
+                                                       class="form-control {% if user_form.last_name.errors %}is-invalid{% endif %}" 
+                                                       id="last_name"
+                                                       placeholder="Enter your last name"
+                                                       required>
+                                                {% if user_form.last_name.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in user_form.last_name.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label for="username" class="form-label">Username</label>
+                                                <input type="text" 
+                                                       name="username" 
+                                                       value="{{ user.username }}" 
+                                                       class="form-control {% if user_form.username.errors %}is-invalid{% endif %}" 
+                                                       id="username"
+                                                       placeholder="Enter your username"
+                                                       required>
+                                                {% if user_form.username.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in user_form.username.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                                <small class="form-text text-muted">
+                                                    This will be used for your profile URL and login.
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label for="email" class="form-label">Email</label>
+                                                <input type="email" 
+                                                       name="email" 
+                                                       value="{{ user.email }}" 
+                                                       class="form-control {% if user_form.email.errors %}is-invalid{% endif %}" 
+                                                       id="email"
+                                                       placeholder="Enter your email address"
+                                                       required>
+                                                {% if user_form.email.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in user_form.email.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                                <small class="form-text text-muted">
+                                                    We'll never share your email with anyone else.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <div class="form-section-header">
+                                        <i class="bi bi-info-circle"></i>
+                                        <h5 class="mb-0">Profile Details</h5>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label for="bio" class="form-label">Bio</label>
+                                                <textarea name="bio" 
+                                                          class="form-control {% if profile_form.bio.errors %}is-invalid{% endif %}" 
+                                                          id="bio" 
+                                                          rows="4"
+                                                          placeholder="Tell us about yourself...">{{ user.profile.bio|default:'' }}</textarea>
+                                                {% if profile_form.bio.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in profile_form.bio.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                                <small class="form-text text-muted d-flex justify-content-between">
+                                                    <span>Brief description for your profile.</span>
+                                                    <span id="bio-char-count">0/500 characters</span>
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label for="location" class="form-label">Location</label>
+                                                <input type="text" 
+                                                       name="location" 
+                                                       value="{{ user.profile.location|default:'' }}" 
+                                                       class="form-control {% if profile_form.location.errors %}is-invalid{% endif %}" 
+                                                       id="location"
+                                                       placeholder="Your city or country">
+                                                {% if profile_form.location.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in profile_form.location.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label for="birth_date" class="form-label">Birth Date</label>
+                                                <input type="date" 
+                                                       name="birth_date" 
+                                                       value="{{ user.profile.birth_date|date:'Y-m-d'|default:'' }}" 
+                                                       class="form-control {% if profile_form.birth_date.errors %}is-invalid{% endif %}" 
+                                                       id="birth_date">
+                                                {% if profile_form.birth_date.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in profile_form.birth_date.errors %}
+                                                    {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-end align-items-stretch align-items-sm-center">
+                                    <a href="{% url 'users:dashboard' %}" class="btn btn-outline-secondary btn-lg order-2 order-sm-1">
+                                        Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary btn-lg order-1 order-sm-2">
+                                        <i class="bi bi-check-circle me-2"></i>Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Preferences Tab -->
+                        <div class="tab-pane fade" id="preferences" role="tabpanel" aria-labelledby="preferences-tab">
+                            <h3 class="h4 mb-4">Preferences</h3>
+                            
+                            <form method="POST" id="preferences-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="preferences">
+                                
+                                <div class="form-section">
+                                    <div class="form-section-header">
+                                        <i class="bi bi-bell"></i>
+                                        <h5 class="mb-0">Notification Preferences</h5>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch mb-4">
+                                                <input class="form-check-input" type="checkbox" name="email_notifications" 
+                                                       id="email_notifications" {% if user.profile.email_notifications %}checked{% endif %}>
+                                                <label class="form-check-label fw-semibold" for="email_notifications">
+                                                    Email Notifications
+                                                </label>
+                                                <small class="form-text text-muted d-block mt-1">
+                                                    Receive email updates about your courses and account
+                                                </small>
+                                            </div>
+                                            <div class="form-check form-switch mb-4">
+                                                <input class="form-check-input" type="checkbox" name="course_updates" 
+                                                       id="course_updates" {% if user.profile.course_updates %}checked{% endif %}>
+                                                <label class="form-check-label fw-semibold" for="course_updates">
+                                                    Course Updates
+                                                </label>
+                                                <small class="form-text text-muted d-block mt-1">
+                                                    Get notified when courses you're enrolled in are updated
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch mb-4">
+                                                <input class="form-check-input" type="checkbox" name="marketing_emails" 
+                                                       id="marketing_emails" {% if user.profile.marketing_emails %}checked{% endif %}>
+                                                <label class="form-check-label fw-semibold" for="marketing_emails">
+                                                    Marketing Emails
+                                                </label>
+                                                <small class="form-text text-muted d-block mt-1">
+                                                    Receive promotional emails and special offers
+                                                </small>
+                                            </div>
+                                            <div class="form-check form-switch mb-4">
+                                                <input class="form-check-input" type="checkbox" name="newsletter" 
+                                                       id="newsletter" {% if user.profile.newsletter %}checked{% endif %}>
+                                                <label class="form-check-label fw-semibold" for="newsletter">
+                                                    CodeLab Newsletter
+                                                </label>
+                                                <small class="form-text text-muted d-block mt-1">
+                                                    Weekly newsletter with coding tips and industry news
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <div class="form-section-header">
+                                        <i class="bi bi-palette"></i>
+                                        <h5 class="mb-0">Display Preferences</h5>
+                                    </div>
+                                    <div class="alert alert-info mb-4">
+                                        <div class="d-flex">
+                                            <i class="bi bi-info-circle me-2 mt-1"></i>
+                                            <div>
+                                                <strong>Language Setting:</strong> This sets your preferred language for the interface. 
+                                                Full multilingual support is coming soon!
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label for="theme" class="form-label">Theme</label>
+                                                <select class="form-select" name="theme" id="theme">
+                                                    <option value="light" {% if user.profile.theme == 'light' %}selected{% endif %}>Light</option>
+                                                    <option value="dark" {% if user.profile.theme == 'dark' %}selected{% endif %}>Dark</option>
+                                                    <option value="auto" {% if user.profile.theme == 'auto' or not user.profile.theme %}selected{% endif %}>Auto (System)</option>
+                                                </select>
+                                                <small class="form-text text-muted">
+                                                    Choose your preferred color theme
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label for="language" class="form-label">Language</label>
+                                                <select class="form-select" name="language" id="language">
+                                                    <option value="en" {% if user.profile.language == 'en' or not user.profile.language %}selected{% endif %}>English</option>
+                                                    <option value="es" {% if user.profile.language == 'es' %}selected{% endif %}>Spanish</option>
+                                                    <option value="fr" {% if user.profile.language == 'fr' %}selected{% endif %}>French</option>
+                                                    <option value="de" {% if user.profile.language == 'de' %}selected{% endif %}>German</option>
+                                                </select>
+                                                <small class="form-text text-muted">
+                                                    Interface language (display only)
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-3 justify-content-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-circle me-2"></i>Save Preferences
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Security Tab -->
+                        <div class="tab-pane fade" id="security" role="tabpanel" aria-labelledby="security-tab">
+                            <h3 class="h4 mb-4">Security Settings</h3>
+                            
+                            <div class="security-alert">
+                                <div class="d-flex">
+                                    <i class="bi bi-shield-check text-warning me-2 mt-1"></i>
+                                    <div>
+                                        <h6 class="alert-heading mb-2">Security Status</h6>
+                                        {% if user.profile.last_password_change %}
+                                        <p class="mb-0">Last password change: <strong>{{ user.profile.last_password_change|timesince }}</strong> ago</p>
+                                        {% else %}
+                                        <p class="mb-0">You haven't changed your password yet.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <div class="form-section-header">
+                                    <i class="bi bi-key"></i>
+                                    <h5 class="mb-0">Password Management</h5>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <p class="text-muted mb-3">
+                                            Change your password regularly to keep your account secure.
+                                            Use a strong password with letters, numbers, and symbols.
+                                        </p>
+                                        <a href="{% url 'users:password_change' %}" class="btn btn-outline-primary">
+                                            <i class="bi bi-arrow-repeat me-2"></i>Change Password
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <div class="form-section-header">
+                                    <i class="bi bi-clock-history"></i>
+                                    <h5 class="mb-0">Login History</h5>
+                                </div>
+                                {% if login_history %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Date & Time</th>
+                                                <th>IP Address</th>
+                                                <th>Device/Browser</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for login in login_history %}
+                                            <tr>
+                                                <td>{{ login.timestamp|date:"M d, Y H:i" }}</td>
+                                                <td><code>{{ login.ip_address }}</code></td>
+                                                <td>{{ login.user_agent|truncatewords:3 }}</td>
+                                                <td>
+                                                    {% if login.success %}
+                                                    <span class="badge bg-success">Success</span>
+                                                    {% else %}
+                                                    <span class="badge bg-danger">Failed</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <p class="text-muted">No login history available.</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-section">
+                                <div class="form-section-header">
+                                    <i class="bi bi-shield-exclamation"></i>
+                                    <h5 class="mb-0">Account Security</h5>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded">
+                                            <div>
+                                                <h6 class="mb-1">Two-Factor Authentication</h6>
+                                                <p class="text-muted mb-0">
+                                                    Add an extra layer of security to your account
+                                                </p>
+                                            </div>
+                                            <span class="badge {% if user.profile.two_factor_enabled %}bg-success{% else %}bg-secondary{% endif %}">
+                                                {% if user.profile.two_factor_enabled %}
+                                                <i class="bi bi-check-circle me-1"></i>Enabled
+                                                {% else %}
+                                                <i class="bi bi-x-circle me-1"></i>Disabled
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                            <div>
+                                                <h6 class="mb-1">Session Management</h6>
+                                                <p class="text-muted mb-0">
+                                                    Manage your active sessions
+                                                </p>
+                                            </div>
+                                            <span class="badge bg-info">
+                                                <i class="bi bi-laptop me-1"></i>Coming Soon
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="profile-card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Recent Activity</h5>
+                    
+                    {% if recent_activity %}
+                        {% for activity in recent_activity %}
+                        <div class="activity-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ activity.get_action_display }}</h6>
+                                    <p class="text-muted mb-0">{{ activity.details }}</p>
+                                </div>
+                                <small class="text-muted">{{ activity.timestamp|timesince }} ago</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="activity-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">Profile Created</h6>
+                                <p class="text-muted mb-0">Welcome to CodeLab! Your journey begins here.</p>
+                            </div>
+                            <small class="text-muted">{{ user.date_joined|timesince }} ago</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if recent_activity %}
+                    <div class="text-center mt-4">
+                        <a href="{% url 'users:activity_log' %}" class="btn btn-outline-primary">View All Activity</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Avatar preview functionality
+    const avatarInput = document.getElementById('id_profile_picture');
+    const avatarPreview = document.getElementById('avatar-preview');
+    const uploadLabel = document.querySelector('.avatar-upload-label');
+    
+    if (uploadLabel && avatarInput) {
+        uploadLabel.addEventListener('click', function(e) {
+            e.preventDefault();
+            avatarInput.click();
+        });
+    }
+    
+    if (avatarInput) {
+        avatarInput.style.display = 'none';
+        
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    showToast('Please select a valid image file (JPEG, PNG, GIF, WebP)', 'error');
+                    return;
+                }
+                
+                if (file.size > 5 * 1024 * 1024) {
+                    showToast('Please select an image smaller than 5MB', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (avatarPreview && avatarPreview.tagName === 'IMG') {
+                        avatarPreview.src = e.target.result;
+                    } else {
+                        const previewContainer = document.querySelector('.avatar-upload');
+                        const newPreview = document.createElement('img');
+                        newPreview.src = e.target.result;
+                        newPreview.className = 'avatar-preview';
+                        newPreview.id = 'avatar-preview';
+                        newPreview.alt = 'Profile preview';
+                        
+                        const placeholder = previewContainer.querySelector('.avatar-preview.bg-secondary');
+                        if (placeholder) {
+                            previewContainer.replaceChild(newPreview, placeholder);
+                        }
+                    }
+                    
+                    // Update profile completion
+                    updateProfileCompletion(5);
+                    showToast('Profile picture updated successfully!', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    // Form submission handling for main profile form
+    const profileForm = document.getElementById('profile-form');
+    if (profileForm) {
+        profileForm.addEventListener('submit', function(e) {
+            const submitButton = this.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.innerHTML = '<i class="bi bi-arrow-repeat spinner-border spinner-border-sm me-2"></i>Saving...';
+                submitButton.disabled = true;
+            }
+        });
+    }
+    
+    // Form submission handling for preferences form
+    const preferencesForm = document.getElementById('preferences-form');
+    if (preferencesForm) {
+        preferencesForm.addEventListener('submit', function(e) {
+            const submitButton = this.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.innerHTML = '<i class="bi bi-arrow-repeat spinner-border spinner-border-sm me-2"></i>Saving...';
+                submitButton.disabled = true;
+            }
+            
+            // Submit via AJAX for better UX
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch('', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Preferences saved successfully!', 'success');
+                } else {
+                    showToast('Error saving preferences', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error saving preferences', 'error');
+            })
+            .finally(() => {
+                if (submitButton) {
+                    submitButton.innerHTML = '<i class="bi bi-check-circle me-2"></i>Save Preferences';
+                    submitButton.disabled = false;
+                }
+            });
+        });
+    }
+    
+    // Real-time name update preview
+    const firstNameInput = document.getElementById('first_name');
+    const lastNameInput = document.getElementById('last_name');
+    const profileName = document.querySelector('#profile-name');
+    
+    function updateNamePreview() {
+        const firstName = firstNameInput.value.trim();
+        const lastName = lastNameInput.value.trim();
+        const fullName = firstName && lastName ? `${firstName} ${lastName}` : '{{ user.username }}';
+        
+        if (profileName) {
+            profileName.textContent = fullName;
+        }
+        
+        // Update profile completion based on name fields
+        let completionPoints = 0;
+        if (firstName) completionPoints += 5;
+        if (lastName) completionPoints += 5;
+        
+        updateProfileCompletion(completionPoints);
+    }
+    
+    if (firstNameInput && lastNameInput) {
+        firstNameInput.addEventListener('input', updateNamePreview);
+        lastNameInput.addEventListener('input', updateNamePreview);
+    }
+    
+    // Character counter for bio
+    const bioTextarea = document.getElementById('bio');
+    if (bioTextarea) {
+        const charCount = document.getElementById('bio-char-count');
+        
+        bioTextarea.addEventListener('input', function() {
+            const count = this.value.length;
+            if (charCount) {
+                charCount.textContent = `${count}/500 characters`;
+                
+                if (count > 500) {
+                    charCount.classList.remove('text-muted');
+                    charCount.classList.add('text-danger');
+                } else {
+                    charCount.classList.remove('text-danger');
+                    charCount.classList.add('text-muted');
+                }
+            }
+            
+            // Update profile completion based on bio
+            let completionPoints = 0;
+            if (count > 0) completionPoints += 5;
+            if (count > 50) completionPoints += 5;
+            
+            updateProfileCompletion(completionPoints);
+        });
+        
+        // Initialize count
+        bioTextarea.dispatchEvent(new Event('input'));
+    }
+    
+    // Theme preview
+    const themeSelect = document.getElementById('theme');
+    if (themeSelect) {
+        themeSelect.addEventListener('change', function() {
+            // In a real implementation, you might want to preview the theme change
+            console.log('Theme changed to:', this.value);
+            showToast('Theme preference saved', 'info');
+        });
+    }
+    
+    // Tab persistence
+    const profileTabs = document.querySelectorAll('button[data-bs-toggle="tab"]');
+    profileTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabId = this.getAttribute('data-bs-target').substring(1);
+            localStorage.setItem('activeProfileTab', tabId);
+        });
+    });
+    
+    const activeTab = localStorage.getItem('activeProfileTab');
+    if (activeTab) {
+        const tabElement = document.getElementById(activeTab + '-tab');
+        if (tabElement) {
+            const tab = new bootstrap.Tab(tabElement);
+            tab.show();
+        }
+    }
+    
+    // Profile completion calculation and update
+    function updateProfileCompletion(points) {
+        const completionBar = document.querySelector('.progress-bar');
+        const completionText = document.getElementById('completion-percentage');
+        
+        if (completionBar && completionText) {
+            const currentCompletion = parseInt(completionBar.getAttribute('aria-valuenow'));
+            // In a real app, you would calculate this based on actual profile data
+            // For demo purposes, we're just updating the UI
+            completionText.textContent = `${currentCompletion}%`;
+        }
+    }
+    
+    // Toast notification function
+    function showToast(message, type = 'info') {
+        // Remove any existing toasts
+        const existingToasts = document.querySelectorAll('.custom-toast-container');
+        existingToasts.forEach(toast => toast.remove());
+        
+        const toastContainer = document.createElement('div');
+        toastContainer.className = 'custom-toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '1060';
+        
+        toastContainer.innerHTML = `
+            <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center">
+                        <i class="bi ${type === 'success' ? 'bi-check-circle' : type === 'error' ? 'bi-exclamation-triangle' : 'bi-info-circle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(toastContainer);
+        const toastElement = toastContainer.querySelector('.toast');
+        const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 4000 });
+        toast.show();
+        
+        // Remove from DOM after hide
+        toastElement.addEventListener('hidden.bs.toast', function() {
+            toastContainer.remove();
+        });
+    }
+    
+    // Initialize tooltips if any
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Auto-save functionality for forms (optional)
+    let saveTimeout;
+    function setupAutoSave(form, saveFunction) {
+        const inputs = form.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(saveFunction, 2000); // Save after 2 seconds of inactivity
+            });
+        });
+    }
+    
+    // Initialize auto-save for profile form
+    if (profileForm) {
+        setupAutoSave(profileForm, function() {
+            console.log('Auto-saving profile...');
+            // In a real implementation, you would submit the form via AJAX
+        });
+    }
+});
+</script>
+{% endblock %}

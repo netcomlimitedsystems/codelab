@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <title>Verify Your CodeLab Account</title>
+    <style>
+        /* Reset styles for email compatibility */
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #f5f7fb;
+            padding: 20px 0;
+        }
+        .main {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        .container {
+            width: 100%;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        a {
+            color: #4361ee;
+            text-decoration: none;
+        }
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 1.4;
+            text-align: center;
+        }
+        /* Responsive styles */
+        @media only screen and (max-width: 620px) {
+            .main {
+                width: 100% !important;
+                border-radius: 0 !important;
+            }
+            .container {
+                width: 100% !important;
+                padding: 0 10px !important;
+            }
+            .btn {
+                width: 100% !important;
+                display: block !important;
+            }
+            .header img {
+                height: 40px !important;
+            }
+            .footer-content {
+                text-align: center !important;
+            }
+        }
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .wrapper {
+                background-color: #0a0a0a !important;
+            }
+            .main {
+                background-color: #1a1a1a !important;
+                color: #e0e0e0 !important;
+            }
+            .footer {
+                background-color: #2d2d2d !important;
+                color: #b0b0b0 !important;
+            }
+            .btn {
+                background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%) !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <center class="wrapper">
+        <table class="main" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+            <!-- Header -->
+            <tr>
+                <td class="header" style="background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%); padding: 30px 20px; text-align: center;">
+                    <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                        <tr>
+                            <td style="text-align: center;">
+                                <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">
+                                    <span style="color: #ffffff;">CodeLab</span>
+                                </h1>
+                                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">
+                                    Verify Your Email Address
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+            <!-- Content -->
+            <tr>
+                <td class="container" style="padding: 40px 30px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                        <!-- Greeting -->
+                        <tr>
+                            <td style="padding-bottom: 20px;">
+                                <h2 style="color: #333333; margin: 0; font-size: 24px; font-weight: 600;">
+                                    Hi {{ user.first_name|default:user.username }},
+                                </h2>
+                            </td>
+                        </tr>
+
+                        <!-- Main Message -->
+                        <tr>
+                            <td style="padding-bottom: 25px;">
+                                <p style="color: #666666; margin: 0 0 15px 0; font-size: 16px; line-height: 1.6;">
+                                    Welcome to <strong>CodeLab</strong>! We're excited to have you join our community of learners and developers.
+                                </p>
+                                <p style="color: #666666; margin: 0 0 25px 0; font-size: 16px; line-height: 1.6;">
+                                    To complete your registration and start your coding journey, please verify your email address by clicking the button below:
+                                </p>
+                            </td>
+                        </tr>
+
+                        <!-- Activation Button -->
+                        <tr>
+                            <td style="padding-bottom: 30px; text-align: center;">
+                                <a href="{{ activation_link }}" class="btn" style="color: #ffffff; text-decoration: none; display: inline-block;">
+                                    Verify Email Address
+                                </a>
+                            </td>
+                        </tr>
+
+                        <!-- Alternative Link -->
+                        <tr>
+                            <td style="padding-bottom: 25px;">
+                                <p style="color: #999999; margin: 0; font-size: 14px; line-height: 1.5;">
+                                    Or copy and paste this link in your browser:
+                                </p>
+                                <p style="color: #4361ee; margin: 10px 0 0 0; font-size: 14px; line-height: 1.4; word-break: break-all;">
+                                    {{ activation_link }}
+                                </p>
+                            </td>
+                        </tr>
+
+                        <!-- Security Notice -->
+                        <tr>
+                            <td style="padding-bottom: 20px;">
+                                <div style="background-color: #f8f9fa; border-left: 4px solid #4361ee; padding: 15px; border-radius: 4px;">
+                                    <p style="color: #666666; margin: 0; font-size: 14px; line-height: 1.5;">
+                                        <strong>Security Notice:</strong> This verification link will expire in 24 hours for security reasons. 
+                                        If you didn't create an account with CodeLab, please ignore this email.
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+            <!-- Support Section -->
+            <tr>
+                <td style="background-color: #f8f9fa; padding: 25px 30px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                        <tr>
+                            <td>
+                                <h3 style="color: #333333; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">
+                                    Need Help?
+                                </h3>
+                                <p style="color: #666666; margin: 0 0 10px 0; font-size: 14px; line-height: 1.5;">
+                                    If you're having trouble verifying your account, please contact our support team:
+                                </p>
+                                <p style="color: #4361ee; margin: 0; font-size: 14px;">
+                                    <a href="mailto:support@codelab.com" style="color: #4361ee; text-decoration: none;">
+                                        support@codelab.com
+                                    </a>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+                <td class="footer" style="background-color: #1d3557; color: #ffffff; padding: 25px 30px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                        <tr>
+                            <td class="footer-content" style="text-align: center;">
+                                <!-- Social Links -->
+                                <table cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto 15px auto;">
+                                    <tr>
+                                        <td style="padding: 0 8px;">
+                                            <a href="#" style="color: #ffffff; text-decoration: none; display: inline-block;">
+                                                <span style="color: #ffffff;">Website</span>
+                                            </a>
+                                        </td>
+                                        <td style="padding: 0 8px;">
+                                            <a href="#" style="color: #ffffff; text-decoration: none; display: inline-block;">
+                                                <span style="color: #ffffff;">Twitter</span>
+                                            </a>
+                                        </td>
+                                        <td style="padding: 0 8px;">
+                                            <a href="#" style="color: #ffffff; text-decoration: none; display: inline-block;">
+                                                <span style="color: #ffffff;">GitHub</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                                
+                                <!-- Copyright -->
+                                <p style="color: rgba(255,255,255,0.8); margin: 0 0 10px 0; font-size: 12px; line-height: 1.4;">
+                                    &copy; 2025 CodeLab. All rights reserved.
+                                </p>
+                                
+                                <!-- Address -->
+                                <p style="color: rgba(255,255,255,0.7); margin: 0; font-size: 12px; line-height: 1.4;">
+                                    2129 Sokomoko Street, Kitale City, Kenya 30200
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </center>
+</body>
+</html>

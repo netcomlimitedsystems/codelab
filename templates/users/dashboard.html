@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - CodeLab{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="display-6">Welcome back, {{ user.first_name|default:user.username }}! 👋</h1>
+                            <p class="lead mb-0">Continue your learning journey</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <h3 class="mb-0">{{ in_progress_courses.count }}</h3>
+                                        <small>Active Courses</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <h3 class="mb-0">{{ completed_courses.count }}</h3>
+                                        <small>Completed</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Sidebar - Quick Stats & Profile -->
+        <div class="col-lg-3 mb-4">
+            <!-- User Profile Card -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    {% if user.profile.profile_picture %}
+                        <img src="{{ user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle mb-3" width="80" height="80">
+                    {% else %}
+                        <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="bi bi-person-fill text-white" style="font-size: 2rem;"></i>
+                        </div>
+                    {% endif %}
+                    <h5>{{ user.get_full_name|default:user.username }}</h5>
+                    <p class="text-muted">{{ user.email }}</p>
+                    <a href="{% url 'users:profile' %}" class="btn btn-outline-primary btn-sm w-100">Edit Profile</a>
+                </div>
+            </div>
+
+            <!-- Learning Statistics -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Learning Statistics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Courses Enrolled</span>
+                        <span class="badge bg-primary">{{ in_progress_courses.count|add:completed_courses.count }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>In Progress</span>
+                        <span class="badge bg-warning">{{ in_progress_courses.count }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Completed</span>
+                        <span class="badge bg-success">{{ completed_courses.count }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Learning Hours</span>
+                        <span class="badge bg-info">{{ total_learning_hours }}h</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'courses:course_list' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-search"></i> Browse Courses
+                        </a>
+                        {% if user.is_authenticated and user.instructor %}
+                        <a href="{% url 'courses:instructor_dashboard' %}" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-easel"></i> Instructor Dashboard
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'users:profile' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-gear"></i> Account Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="col-lg-9">
+            <!-- Continue Learning Section -->
+            {% if in_progress_courses %}
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3>Continue Learning</h3>
+                        <a href="{% url 'courses:course_list' %}" class="btn btn-outline-primary btn-sm">Browse All Courses</a>
+                    </div>
+
+                    <div class="row">
+                        {% for enrollment in in_progress_courses|slice:":3" %}
+                        <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="card course-card h-100">
+                                <div class="position-relative">
+                                    <img src="{{ enrollment.course.thumbnail.url }}" class="card-img-top" alt="{{ enrollment.course.title }}" style="height: 160px; object-fit: cover;">
+                                    <span class="position-absolute top-0 end-0 m-2 badge 
+                                        {% if enrollment.course.difficulty == 'beginner' %}bg-success
+                                        {% elif enrollment.course.difficulty == 'intermediate' %}bg-warning
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ enrollment.course.difficulty|title }}
+                                    </span>
+                                </div>
+                                <div class="card-body d-flex flex-column">
+                                    <h6 class="card-title">{{ enrollment.course.title }}</h6>
+                                    <p class="card-text flex-grow-1 small text-muted">
+                                        {{ enrollment.course.description|truncatewords:15 }}
+                                    </p>
+                                    <a href="{% url 'courses:course_detail' enrollment.course.pk %}" class="btn btn-primary w-100 btn-sm">
+                                        Continue Course
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Pending Assignments -->
+            {% if pending_assignments %}
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h3 class="mb-3">Pending Assignments</h3>
+                    <div class="row">
+                        {% for assignment in pending_assignments %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ assignment.title }}</h6>
+                                    <p class="small text-muted mb-2">Course: {{ assignment.course.title }}</p>
+                                    <p class="card-text text-truncate">{{ assignment.description|truncatewords:15 }}</p>
+                                    {% if assignment.due_date %}
+                                    <small class="text-muted">Due: {{ assignment.due_date|date:"M d, Y H:i" }}</small><br>
+                                    {% endif %}
+                                    <a href="{% url 'courses:assignment_detail' course_pk=assignment.course.pk assignment_pk=assignment.pk %}" class="btn btn-outline-primary btn-sm mt-2">
+                                        Start Assignment
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Completed Courses -->
+            {% if completed_courses %}
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h4 class="mb-3">Completed Courses</h4>
+                    <div class="row">
+                        {% for enrollment in completed_courses %}
+                        <div class="col-lg-6 mb-3">
+                            <div class="card">
+                                <div class="card-body d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="card-title">{{ enrollment.course.title }}</h6>
+                                        <small class="text-muted">Completed on {{ enrollment.enrolled_at|date:"F d, Y" }}</small>
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="bi bi-download"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="{% url 'courses:download_certificate' enrollment.course.pk %}"><i class="bi bi-download"></i> Download Certificate</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'courses:course_detail' enrollment.course.pk %}"><i class="bi bi-arrow-repeat"></i> Review Course</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recommended Courses -->
+            <div class="row">
+                <div class="col-12">
+                    <h4 class="mb-3">Recommended For You</h4>
+                    <div class="row">
+                        {% for course in featured_courses|slice:":3" %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 text-center">
+                                <div class="card-body">
+                                    <i class="bi bi-code-square display-4 text-primary mb-3"></i>
+                                    <h6 class="card-title">{{ course.title }}</h6>
+                                    <p class="card-text small text-muted">{{ course.description|truncatewords:10 }}</p>
+                                    <a href="{% url 'courses:course_detail' course.pk %}" class="btn btn-outline-primary btn-sm">Explore</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Hover animation for course cards
+    document.querySelectorAll('.course-card').forEach(card => {
+        card.addEventListener('mouseenter', () => card.style.transform = 'translateY(-5px)');
+        card.addEventListener('mouseleave', () => card.style.transform = 'translateY(0)');
+    });
+
+    // Animate progress bars
+    document.querySelectorAll('.progress-bar').forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0';
+        setTimeout(() => bar.style.width = width, 500);
+    });
+});
+</script>
+{% endblock %}

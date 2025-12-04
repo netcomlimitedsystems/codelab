@@ -1,0 +1,515 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ lesson.title }} - {{ course.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .lesson-content {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        line-height: 1.7;
+        color: #2c3e50;
+        font-size: 16px;
+    }
+    
+    .lesson-content h1 {
+        color: #2c3e50;
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin: 2rem 0 1.5rem 0;
+        border-bottom: 3px solid #3498db;
+        padding-bottom: 0.75rem;
+    }
+    
+    .lesson-content h2 {
+        color: #2c3e50;
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin: 1.75rem 0 1rem 0;
+        border-left: 4px solid #3498db;
+        padding-left: 1rem;
+    }
+    
+    .lesson-content h3 {
+        color: #2c3e50;
+        font-size: 1.375rem;
+        font-weight: 600;
+        margin: 1.5rem 0 0.75rem 0;
+    }
+    
+    .lesson-content h4, .lesson-content h5, .lesson-content h6 {
+        color: #2c3e50;
+        font-weight: 600;
+        margin: 1.25rem 0 0.5rem 0;
+    }
+    
+    .lesson-content p {
+        margin: 1rem 0;
+        line-height: 1.8;
+    }
+    
+    .lesson-content strong {
+        font-weight: 700;
+        color: #2c3e50;
+        background: linear-gradient(transparent 60%, #ffeaa7 60%);
+        padding: 0.1rem 0.2rem;
+    }
+    
+    .lesson-content em {
+        font-style: italic;
+        color: #e17055;
+    }
+    
+    .lesson-content ul, .lesson-content ol {
+        margin: 1rem 0;
+        padding-left: 2rem;
+    }
+    
+    .lesson-content li {
+        margin: 0.5rem 0;
+        line-height: 1.6;
+    }
+    
+    .lesson-content ul li {
+        list-style-type: disc;
+    }
+    
+    .lesson-content ol li {
+        list-style-type: decimal;
+    }
+    
+    .lesson-content blockquote {
+        border-left: 4px solid #3498db;
+        background: #f8f9fa;
+        padding: 1.25rem 1.5rem;
+        margin: 1.5rem 0;
+        font-style: italic;
+        color: #7f8c8d;
+        border-radius: 0 8px 8px 0;
+    }
+    
+    .lesson-content code {
+        background: #2d3436;
+        color: #dfe6e9;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-family: 'Fira Code', 'Monaco', 'Cascadia Code', monospace;
+        font-size: 0.9rem;
+        border: 1px solid #636e72;
+    }
+    
+    /* Code block styling */
+    .lesson-content pre {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        overflow-x: auto;
+        border: 1px solid #444;
+        font-family: 'Fira Code', 'Monaco', 'Cascadia Code', monospace;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        white-space: pre;
+    }
+    
+    .lesson-content pre code {
+        background: none;
+        padding: 0;
+        border: none;
+        color: inherit;
+        font-size: inherit;
+        white-space: pre;
+    }
+    
+    /* Pygments syntax highlighting */
+    .highlight {
+        background: #1e1e1e;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        overflow: hidden;
+    }
+    
+    .highlight pre {
+        background: transparent;
+        margin: 0;
+        padding: 1.5rem;
+        border: none;
+        white-space: pre;
+        overflow-x: auto;
+    }
+    
+    /* Syntax highlighting colors - Pygments compatible */
+    .highlight .hll { background-color: #2d2d2d; }
+    .highlight .c { color: #6a9955; font-style: italic; } /* Comment */
+    .highlight .err { color: #f44747; background-color: #2d2d2d; } /* Error */
+    .highlight .k { color: #569cd6; } /* Keyword */
+    .highlight .l { color: #b5cea8; } /* Literal */
+    .highlight .n { color: #d4d4d4; } /* Name */
+    .highlight .o { color: #d4d4d4; } /* Operator */
+    .highlight .p { color: #d4d4d4; } /* Punctuation */
+    .highlight .ch { color: #6a9955; font-style: italic; } /* Comment.Hashbang */
+    .highlight .cm { color: #6a9955; font-style: italic; } /* Comment.Multiline */
+    .highlight .cp { color: #6a9955; } /* Comment.Preproc */
+    .highlight .cpf { color: #6a9955; font-style: italic; } /* Comment.PreprocFile */
+    .highlight .c1 { color: #6a9955; font-style: italic; } /* Comment.Single */
+    .highlight .cs { color: #6a9955; font-style: italic; } /* Comment.Special */
+    .highlight .gd { color: #f44747; } /* Generic.Deleted */
+    .highlight .ge { font-style: italic; } /* Generic.Emph */
+    .highlight .gr { color: #f44747; } /* Generic.Error */
+    .highlight .gh { color: #6796e6; font-weight: bold; } /* Generic.Heading */
+    .highlight .gi { color: #608b4e; } /* Generic.Inserted */
+    .highlight .go { color: #808080; } /* Generic.Output */
+    .highlight .gp { color: #d4d4d4; } /* Generic.Prompt */
+    .highlight .gs { font-weight: bold; } /* Generic.Strong */
+    .highlight .gu { color: #6796e6; font-weight: bold; } /* Generic.Subheading */
+    .highlight .gt { color: #f44747; } /* Generic.Traceback */
+    .highlight .kc { color: #569cd6; } /* Keyword.Constant */
+    .highlight .kd { color: #569cd6; } /* Keyword.Declaration */
+    .highlight .kn { color: #569cd6; } /* Keyword.Namespace */
+    .highlight .kp { color: #569cd6; } /* Keyword.Pseudo */
+    .highlight .kr { color: #569cd6; } /* Keyword.Reserved */
+    .highlight .kt { color: #569cd6; } /* Keyword.Type */
+    .highlight .ld { color: #ce9178; } /* Literal.Date */
+    .highlight .m { color: #b5cea8; } /* Literal.Number */
+    .highlight .s { color: #ce9178; } /* Literal.String */
+    .highlight .na { color: #9cdcfe; } /* Name.Attribute */
+    .highlight .nb { color: #d4d4d4; } /* Name.Builtin */
+    .highlight .nc { color: #4ec9b0; } /* Name.Class */
+    .highlight .no { color: #569cd6; } /* Name.Constant */
+    .highlight .nd { color: #d4d4d4; } /* Name.Decorator */
+    .highlight .ni { color: #d4d4d4; } /* Name.Entity */
+    .highlight .ne { color: #569cd6; } /* Name.Exception */
+    .highlight .nf { color: #dcdcaa; } /* Name.Function */
+    .highlight .nl { color: #d4d4d4; } /* Name.Label */
+    .highlight .nn { color: #4ec9b0; } /* Name.Namespace */
+    .highlight .nx { color: #d4d4d4; } /* Name.Other */
+    .highlight .py { color: #d4d4d4; } /* Name.Property */
+    .highlight .nt { color: #569cd6; } /* Name.Tag */
+    .highlight .nv { color: #d4d4d4; } /* Name.Variable */
+    .highlight .ow { color: #569cd6; } /* Operator.Word */
+    .highlight .pm { color: #d4d4d4; } /* Punctuation.Marker */
+    .highlight .w { color: #d4d4d4; } /* Text.Whitespace */
+    .highlight .mb { color: #b5cea8; } /* Literal.Number.Bin */
+    .highlight .mf { color: #b5cea8; } /* Literal.Number.Float */
+    .highlight .mh { color: #b5cea8; } /* Literal.Number.Hex */
+    .highlight .mi { color: #b5cea8; } /* Literal.Number.Integer */
+    .highlight .mo { color: #b5cea8; } /* Literal.Number.Oct */
+    .highlight .sa { color: #ce9178; } /* Literal.String.Affix */
+    .highlight .sb { color: #ce9178; } /* Literal.String.Backtick */
+    .highlight .sc { color: #ce9178; } /* Literal.String.Char */
+    .highlight .dl { color: #ce9178; } /* Literal.String.Delimiter */
+    .highlight .sd { color: #6a9955; font-style: italic; } /* Literal.String.Doc */
+    .highlight .s2 { color: #ce9178; } /* Literal.String.Double */
+    .highlight .se { color: #ce9178; } /* Literal.String.Escape */
+    .highlight .sh { color: #ce9178; } /* Literal.String.Heredoc */
+    .highlight .si { color: #ce9178; } /* Literal.String.Interpol */
+    .highlight .sx { color: #ce9178; } /* Literal.String.Other */
+    .highlight .sr { color: #ce9178; } /* Literal.String.Regex */
+    .highlight .s1 { color: #ce9178; } /* Literal.String.Single */
+    .highlight .ss { color: #ce9178; } /* Literal.String.Symbol */
+    .highlight .bp { color: #d4d4d4; } /* Name.Builtin.Pseudo */
+    .highlight .fm { color: #dcdcaa; } /* Name.Function.Magic */
+    .highlight .vc { color: #d4d4d4; } /* Name.Variable.Class */
+    .highlight .vg { color: #d4d4d4; } /* Name.Variable.Global */
+    .highlight .vi { color: #d4d4d4; } /* Name.Variable.Instance */
+    .highlight .vm { color: #d4d4d4; } /* Name.Variable.Magic */
+    .highlight .il { color: #b5cea8; } /* Literal.Number.Integer.Long */
+
+    .lesson-content a {
+        color: #3498db;
+        text-decoration: none;
+        border-bottom: 1px solid #3498db;
+        transition: all 0.2s ease;
+    }
+    
+    .lesson-content a:hover {
+        color: #2980b9;
+        border-bottom-color: #2980b9;
+    }
+    
+    .lesson-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.5rem 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .lesson-content table th,
+    .lesson-content table td {
+        border: 1px solid #bdc3c7;
+        padding: 0.875rem;
+        text-align: left;
+    }
+    
+    .lesson-content table th {
+        background: #3498db;
+        color: white;
+        font-weight: 600;
+    }
+    
+    .lesson-content table tr:nth-child(even) {
+        background: #f8f9fa;
+    }
+    
+    .lesson-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .lesson-content hr {
+        border: none;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #3498db, transparent);
+        margin: 2rem 0;
+    }
+
+    .completion-badge {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .mark-complete-btn {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .mark-complete-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+
+    .mark-complete-btn:disabled {
+        background: #6c757d;
+        transform: none;
+        box-shadow: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Lesson Content -->
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'courses:course_detail' pk=course.pk %}">{{ course.title }}</a></li>
+                    <li class="breadcrumb-item active">{{ lesson.title }}</li>
+                </ol>
+            </nav>
+
+            <div class="card">
+                <div class="card-header bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h1 class="h3 mb-0">{{ lesson.title }}</h1>
+                        {% if lesson_completed %}
+                        <span class="completion-badge">
+                            <i class="bi bi-check-circle-fill"></i>
+                            Completed
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% if lesson.duration_minutes %}
+                    <small class="text-muted">
+                        <i class="bi bi-clock me-1"></i>{{ lesson.duration_minutes }} minutes
+                    </small>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if lesson.video_url %}
+                    <div class="ratio ratio-16x9 mb-4">
+                        <iframe src="{{ lesson.video_url }}" allowfullscreen></iframe>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Processed Markdown Content -->
+                    <div class="lesson-content">
+                        {% if lesson.content_html %}
+                            {{ lesson.content_html|safe }}
+                        {% else %}
+                            <p class="text-muted">No content available for this lesson.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Mark Complete Button -->
+                    {% if not lesson_completed %}
+                    <div class="mt-4 pt-4 border-top">
+                        <form method="post" action="{% url 'courses:mark_lesson_complete' course_pk=course.pk lesson_pk=lesson.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn mark-complete-btn">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Mark as Complete
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Lesson Navigation -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        {% if previous_lesson %}
+                        <a href="{% url 'courses:lesson_detail' course_pk=course.pk lesson_pk=previous_lesson.pk %}" 
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-left me-2"></i>Previous: {{ previous_lesson.title }}
+                        </a>
+                        {% else %}
+                        <span></span>
+                        {% endif %}
+                        
+                        {% if next_lesson %}
+                        <a href="{% url 'courses:lesson_detail' course_pk=course.pk lesson_pk=next_lesson.pk %}" 
+                           class="btn btn-primary">
+                            Next: {{ next_lesson.title }}<i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                        {% else %}
+                        <a href="{% url 'courses:complete_course' course_pk=course.pk %}" 
+                           class="btn btn-success">
+                            Complete Course<i class="bi bi-check-circle ms-2"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Course Progress -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Course Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Progress</span>
+                            <span>{{ progress_percentage }}%</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" style="width: {{ progress_percentage }}%"></div>
+                        </div>
+                    </div>
+                    <p class="small text-muted mb-0">
+                        {{ completed_lessons }} of {{ total_lessons }} lessons completed
+                    </p>
+                </div>
+            </div>
+
+            <!-- Course Lessons -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Course Lessons</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for lesson_item in course.lessons.all %}
+                        <a href="{% url 'courses:lesson_detail' course_pk=course.pk lesson_pk=lesson_item.pk %}" 
+                           class="list-group-item list-group-item-action {% if lesson_item.pk == lesson.pk %}active{% endif %}">
+                            <div class="d-flex align-items-center">
+                                {% if lesson_item.pk in completed_lesson_ids %}
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                {% else %}
+                                <i class="bi bi-circle me-2"></i>
+                                {% endif %}
+                                <span class="{% if lesson_item.pk == lesson.pk %}text-white{% endif %}">
+                                    {{ lesson_item.title }}
+                                </span>
+                                {% if lesson_item.duration_minutes %}
+                                <small class="ms-auto text-muted {% if lesson_item.pk == lesson.pk %}text-white{% endif %}">
+                                    {{ lesson_item.duration_minutes }}m
+                                </small>
+                                {% endif %}
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'courses:course_detail' pk=course.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Course
+                        </a>
+                        {% if request.user == course.instructor.user %}
+                        <a href="{% url 'courses:edit_lesson' course_pk=course.pk lesson_pk=lesson.pk %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-pencil me-2"></i>Edit Lesson
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add copy functionality to code blocks
+    document.querySelectorAll('pre code').forEach(function(codeBlock) {
+        const button = document.createElement('button');
+        button.className = 'btn btn-sm btn-outline-secondary position-absolute';
+        button.style.top = '0.5rem';
+        button.style.right = '0.5rem';
+        button.innerHTML = '<i class="bi bi-clipboard"></i>';
+        button.title = 'Copy code';
+        
+        const pre = codeBlock.parentElement;
+        pre.style.position = 'relative';
+        pre.appendChild(button);
+        
+        button.addEventListener('click', function() {
+            navigator.clipboard.writeText(codeBlock.textContent).then(function() {
+                button.innerHTML = '<i class="bi bi-check"></i>';
+                button.classList.remove('btn-outline-secondary');
+                button.classList.add('btn-success');
+                setTimeout(function() {
+                    button.innerHTML = '<i class="bi bi-clipboard"></i>';
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-outline-secondary');
+                }, 2000);
+            });
+        });
+    });
+
+    // Smooth scroll for anchor links in content
+    document.querySelectorAll('.lesson-content a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

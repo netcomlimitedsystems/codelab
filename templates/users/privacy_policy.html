@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+          <h2 class="text-center mb-4 fw-bold text-primary">Privacy Policy</h2>
+          <p class="text-muted text-center mb-5">Last updated: September 2025</p>
+          <p>At <strong>CodeLab</strong>, your privacy is our top priority. We protect your personal information while providing a secure learning experience.</p>
+
+          <h3>Information We Collect</h3>
+          <ul>
+            <li>Account info: name, email, password during registration</li>
+            <li>Learning activity: course progress, quiz results</li>
+            <li>Payment details for course enrollment (secured by trusted providers)</li>
+          </ul>
+
+          <h3>How We Use Your Information</h3>
+          <ul>
+            <li>Provide access to courses and materials</li>
+            <li>Personalize learning and recommend relevant content</li>
+            <li>Send updates, announcements, and promotions</li>
+          </ul>
+
+          <h3>Data Security</h3>
+          <p>We implement industry-standard measures to secure your data. Sensitive info like passwords and payment data is encrypted and stored safely.</p>
+
+          <h3>Third-Party Services</h3>
+          <p>We may use trusted third-party services for analytics, payments, or communication. They are required to comply with privacy laws.</p>
+
+          <h3>Cookies</h3>
+          <p>We use cookies to improve website functionality. You can manage cookies in your browser settings.</p>
+
+          <h3>Your Rights</h3>
+          <p>You can access, update, or request deletion of your personal data anytime via <a href="mailto:support@netcomlimitedsystems@gmail.com">support@CodeLab.com</a>.</p>
+
+          {% if not user.is_authenticated %}
+          <div class="text-center mt-5">
+            <a href="{% url 'users:login' %}" class="btn btn-primary px-4 me-2">Accept & Continue</a>
+            <a href="{% url 'users:register' %}" class="btn btn-outline-secondary px-4">Back to Register</a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.card {
+  animation: fadeSlideIn 0.7s ease forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}

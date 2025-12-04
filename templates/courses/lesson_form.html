@@ -1,0 +1,826 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Lesson - CodeLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    .lesson-form-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 40px 0;
+    }
+    
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .content-editor {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .editor-toolbar {
+        background: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 0.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        align-items: center;
+    }
+    
+    .editor-toolbar button {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .editor-toolbar button:hover {
+        background: #e9ecef;
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+    
+    .editor-toolbar .divider {
+        width: 1px;
+        height: 24px;
+        background: #dee2e6;
+        margin: 0 0.5rem;
+    }
+    
+    .editor-content {
+        min-height: 400px;
+        padding: 1.5rem;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        line-height: 1.6;
+        font-size: 16px;
+        border: none;
+        resize: vertical;
+        width: 100%;
+    }
+    
+    .editor-content:focus {
+        outline: none;
+    }
+    
+    /* Real-time formatting styles */
+    .formatting-preview {
+        min-height: 400px;
+        padding: 1.5rem;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        line-height: 1.6;
+        font-size: 16px;
+        background: white;
+    }
+    
+    /* Preview styling */
+    .formatting-preview h1 {
+        color: #2c3e50;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 1.5rem 0 1rem 0;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 0.5rem;
+    }
+    
+    .formatting-preview h2 {
+        color: #2c3e50;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 1.25rem 0 0.75rem 0;
+        border-left: 4px solid #3498db;
+        padding-left: 0.75rem;
+    }
+    
+    .formatting-preview h3 {
+        color: #2c3e50;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 1rem 0 0.5rem 0;
+    }
+    
+    .formatting-preview p {
+        margin: 0.75rem 0;
+        color: #2c3e50;
+    }
+    
+    .formatting-preview strong {
+        font-weight: 700;
+        color: #2c3e50;
+        background: linear-gradient(transparent 60%, #ffeaa7 60%);
+    }
+    
+    .formatting-preview em {
+        font-style: italic;
+        color: #e17055;
+    }
+    
+    .formatting-preview ul, .formatting-preview ol {
+        margin: 0.75rem 0;
+        padding-left: 1.5rem;
+    }
+    
+    .formatting-preview li {
+        margin: 0.25rem 0;
+        color: #2c3e50;
+    }
+    
+    .formatting-preview ul li {
+        list-style-type: disc;
+    }
+    
+    .formatting-preview ol li {
+        list-style-type: decimal;
+    }
+    
+    .formatting-preview blockquote {
+        border-left: 4px solid #3498db;
+        background: #f8f9fa;
+        padding: 1rem 1.5rem;
+        margin: 1rem 0;
+        font-style: italic;
+        color: #7f8c8d;
+    }
+    
+    .formatting-preview code {
+        background: #2d3436;
+        color: #dfe6e9;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-family: 'Fira Code', 'Monaco', 'Cascadia Code', monospace;
+        font-size: 0.875rem;
+        border: 1px solid #636e72;
+    }
+    
+    .formatting-preview pre {
+        background: #2d3436;
+        color: #dfe6e9;
+        padding: 1.25rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+        overflow-x: auto;
+        border: 1px solid #636e72;
+        font-family: 'Fira Code', 'Monaco', 'Cascadia Code', monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+    
+    .formatting-preview pre code {
+        background: none;
+        padding: 0;
+        border: none;
+        color: inherit;
+    }
+    
+    .formatting-preview a {
+        color: #3498db;
+        text-decoration: none;
+        border-bottom: 1px solid #3498db;
+        transition: all 0.2s ease;
+    }
+    
+    .formatting-preview a:hover {
+        color: #2980b9;
+        border-bottom-color: #2980b9;
+    }
+    
+    .formatting-preview table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+    }
+    
+    .formatting-preview table th,
+    .formatting-preview table td {
+        border: 1px solid #bdc3c7;
+        padding: 0.75rem;
+        text-align: left;
+    }
+    
+    .formatting-preview table th {
+        background: #3498db;
+        color: white;
+        font-weight: 600;
+    }
+    
+    .formatting-preview table tr:nth-child(even) {
+        background: #f8f9fa;
+    }
+    
+    .tab-content {
+        border: 1px solid #dee2e6;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+    }
+    
+    .nav-tabs .nav-link.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .sidebar-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .format-help {
+        background: #e8f4fd;
+        border: 1px solid #3498db;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .format-help h6 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .format-help code {
+        background: #2d3436;
+        color: #dfe6e9;
+        padding: 0.1rem 0.3rem;
+        border-radius: 3px;
+        font-size: 0.8rem;
+        font-family: monospace;
+    }
+    
+    @media (max-width: 768px) {
+        .editor-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .editor-toolbar .divider {
+            display: none;
+        }
+        
+        .editor-toolbar button {
+            width: 100%;
+            justify-content: center;
+            margin-bottom: 0.25rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="lesson-form-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'courses:instructor_dashboard' %}" class="text-white">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'courses:manage_lessons' course_pk=course.pk %}" class="text-white">Manage Lessons</a></li>
+                        <li class="breadcrumb-item active text-white" aria-current="page">
+                            {% if form.instance.pk %}Edit{% else %}Create{% endif %} Lesson
+                        </li>
+                    </ol>
+                </nav>
+                <h1 class="display-5 fw-bold mb-3">
+                    {% if form.instance.pk %}
+                    Edit Lesson
+                    {% else %}
+                    Create New Lesson
+                    {% endif %}
+                </h1>
+                <p class="lead mb-0">
+                    {% if form.instance.pk %}
+                    Update "{{ form.instance.title }}" for "{{ course.title }}"
+                    {% else %}
+                    Add a new lesson to "{{ course.title }}"
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-4 mt-md-0">
+                <a href="{% url 'courses:manage_lessons' course_pk=course.pk %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Lessons
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Lesson Form -->
+<div class="container py-5">
+    <div class="row">
+        <!-- Main Form Content -->
+        <div class="col-lg-8">
+            <form method="post" id="lessonForm">
+                {% csrf_token %}
+                
+                <!-- Basic Information Section -->
+                <div class="form-section">
+                    <h4><i class="bi bi-info-circle me-2"></i>Basic Information</h4>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">
+                                    Lesson Title <span class="text-danger">*</span>
+                                </label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.title.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.order.id_for_label }}" class="form-label">Order</label>
+                                {{ form.order }}
+                                {% if form.order.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.order.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.duration_minutes.id_for_label }}" class="form-label">Duration (minutes)</label>
+                                {{ form.duration_minutes }}
+                                {% if form.duration_minutes.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.duration_minutes.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.video_url.id_for_label }}" class="form-label">Video URL</label>
+                                {{ form.video_url }}
+                                {% if form.video_url.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.video_url.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lesson Content Section -->
+                <div class="form-section">
+                    <h4><i class="bi bi-journal-text me-2"></i>Lesson Content</h4>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Lesson Content <span class="text-danger">*</span></label>
+                        
+                        <!-- Tab Navigation -->
+                        <ul class="nav nav-tabs" id="contentTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="editor-tab" data-bs-toggle="tab" data-bs-target="#editor" type="button" role="tab">
+                                    <i class="bi bi-pencil me-1"></i>Editor
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="preview-tab" data-bs-toggle="tab" data-bs-target="#preview" type="button" role="tab">
+                                    <i class="bi bi-eye me-1"></i>Live Preview
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <!-- Tab Content -->
+                        <div class="tab-content" id="contentTabsContent">
+                            <!-- Editor Tab -->
+                            <div class="tab-pane fade show active" id="editor" role="tabpanel">
+                                <div class="content-editor">
+                                    <div class="editor-toolbar">
+                                        <button type="button" onclick="formatText('h1')" title="Heading 1">
+                                            <i class="bi bi-type-h1"></i> H1
+                                        </button>
+                                        <button type="button" onclick="formatText('h2')" title="Heading 2">
+                                            <i class="bi bi-type-h2"></i> H2
+                                        </button>
+                                        <button type="button" onclick="formatText('h3')" title="Heading 3">
+                                            <i class="bi bi-type-h3"></i> H3
+                                        </button>
+                                        <div class="divider"></div>
+                                        <button type="button" onclick="formatText('bold')" title="Bold">
+                                            <i class="bi bi-type-bold"></i>
+                                        </button>
+                                        <button type="button" onclick="formatText('italic')" title="Italic">
+                                            <i class="bi bi-type-italic"></i>
+                                        </button>
+                                        <div class="divider"></div>
+                                        <button type="button" onclick="formatText('ul')" title="Bullet List">
+                                            <i class="bi bi-list-ul"></i>
+                                        </button>
+                                        <button type="button" onclick="formatText('ol')" title="Numbered List">
+                                            <i class="bi bi-list-ol"></i>
+                                        </button>
+                                        <div class="divider"></div>
+                                        <button type="button" onclick="formatText('code')" title="Inline Code">
+                                            <i class="bi bi-code-slash"></i>
+                                        </button>
+                                        <button type="button" onclick="formatText('codeblock')" title="Code Block">
+                                            <i class="bi bi-code-square"></i>
+                                        </button>
+                                        <div class="divider"></div>
+                                        <button type="button" onclick="formatText('link')" title="Insert Link">
+                                            <i class="bi bi-link"></i>
+                                        </button>
+                                        <button type="button" onclick="formatText('quote')" title="Blockquote">
+                                            <i class="bi bi-chat-quote"></i>
+                                        </button>
+                                        <button type="button" onclick="formatText('table')" title="Insert Table">
+                                            <i class="bi bi-table"></i>
+                                        </button>
+                                    </div>
+                                    {{ form.content }}
+                                </div>
+                                
+                                <!-- Formatting Help -->
+                                <div class="format-help">
+                                    <h6><i class="bi bi-magic me-1"></i>Formatting Help</h6>
+                                    <div class="row small">
+                                        <div class="col-md-6">
+                                            <strong>Headings:</strong><br>
+                                            <code># H1</code> <code>## H2</code> <code>### H3</code>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Text:</strong><br>
+                                            <code>**bold**</code> <code>*italic*</code> <code>`code`</code>
+                                        </div>
+                                        <div class="col-md-6 mt-2">
+                                            <strong>Lists:</strong><br>
+                                            <code>- item</code> <code>1. item</code>
+                                        </div>
+                                        <div class="col-md-6 mt-2">
+                                            <strong>Links:</strong><br>
+                                            <code>[text](url)</code>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if form.content.errors %}
+                                <div class="text-danger small mt-2">
+                                    {{ form.content.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Preview Tab -->
+                            <div class="tab-pane fade" id="preview" role="tabpanel">
+                                <div class="formatting-preview" id="contentPreview">
+                                    <!-- Preview will be generated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-section">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <a href="{% url 'courses:manage_lessons' course_pk=course.pk %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="save_draft" class="btn btn-outline-primary">
+                                <i class="bi bi-save me-2"></i>Save Draft
+                            </button>
+                            <button type="submit" name="publish" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {% if form.instance.pk %}Update Lesson{% else %}Create Lesson{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Course Info -->
+            <div class="sidebar-card">
+                <h5><i class="bi bi-journal-bookmark me-2"></i>Course Information</h5>
+                <div class="d-flex align-items-center mb-3">
+                    {% if course.thumbnail %}
+                    <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" 
+                         class="rounded me-3" width="50" height="50" style="object-fit: cover;">
+                    {% else %}
+                    <div class="bg-secondary rounded d-flex align-items-center justify-content-center me-3" 
+                         style="width: 50px; height: 50px;">
+                        <i class="bi bi-journal-text text-white"></i>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <h6 class="mb-0">{{ course.title }}</h6>
+                        <small class="text-muted">{{ course.category.name }}</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Guidelines -->
+            <div class="sidebar-card">
+                <h5><i class="bi bi-lightbulb me-2"></i>Formatting Tips</h5>
+                <div class="small">
+                    <div class="mb-3">
+                        <strong>Code Blocks:</strong>
+                        <p class="mb-1">Use triple backticks for code blocks:</p>
+                        <code>```python<br>print("Hello World")<br>```</code>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Syntax Highlighting:</strong>
+                        <p class="mb-1">Specify language after backticks:</p>
+                        <code>```javascript</code>, <code>```python</code>, <code>```html</code>
+                    </div>
+                    <div>
+                        <strong>Best Practices:</strong>
+                        <ul class="mt-1 mb-0">
+                            <li>Use headings to structure content</li>
+                            <li>Highlight code with proper formatting</li>
+                            <li>Use lists for step-by-step instructions</li>
+                            <li>Add examples in code blocks</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Character Count -->
+            <div class="sidebar-card">
+                <h5><i class="bi bi-graph-up me-2"></i>Content Stats</h5>
+                <div class="small">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Word Count:</span>
+                        <span id="wordCount">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Character Count:</span>
+                        <span id="charCount">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Reading Time:</span>
+                        <span id="readingTime">0 min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const contentTextarea = document.getElementById('{{ form.content.id_for_label }}');
+    const previewPane = document.getElementById('contentPreview');
+    const wordCountElement = document.getElementById('wordCount');
+    const charCountElement = document.getElementById('charCount');
+    const readingTimeElement = document.getElementById('readingTime');
+
+    // Initialize character count
+    updateContentStats();
+
+    // Update preview and stats when content changes
+    contentTextarea.addEventListener('input', function() {
+        updateContentStats();
+        updatePreview();
+    });
+
+    // Update preview when switching to preview tab
+    document.getElementById('preview-tab').addEventListener('click', function() {
+        updatePreview();
+    });
+
+    function updateContentStats() {
+        const content = contentTextarea.value;
+        // Remove markdown syntax for word count
+        const cleanContent = content.replace(/#{1,6}\s/g, '')
+                                   .replace(/\*\*(.*?)\*\*/g, '$1')
+                                   .replace(/\*(.*?)\*/g, '$1')
+                                   .replace(/`(.*?)`/g, '$1')
+                                   .replace(/\[(.*?)\]\(.*?\)/g, '$1');
+        
+        const wordCount = cleanContent.trim() ? cleanContent.trim().split(/\s+/).length : 0;
+        const charCount = content.length;
+        const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+
+        wordCountElement.textContent = wordCount.toLocaleString();
+        charCountElement.textContent = charCount.toLocaleString();
+        readingTimeElement.textContent = readingTime + ' min';
+    }
+
+    function updatePreview() {
+        const content = contentTextarea.value;
+        let htmlContent = parseMarkdown(content);
+        previewPane.innerHTML = htmlContent || '<p class="text-muted"><em>Start typing to see preview...</em></p>';
+    }
+
+    function parseMarkdown(text) {
+        // Enhanced markdown parser with syntax highlighting
+        return text
+            // Headers
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
+            .replace(/^##### (.*$)/gim, '<h5>$1</h5>')
+            .replace(/^###### (.*$)/gim, '<h6>$1</h6>')
+            
+            // Bold and Italic
+            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+            .replace(/_(.*?)_/gim, '<em>$1</em>')
+            
+            // Code
+            .replace(/`(.*?)`/gim, '<code>$1</code>')
+            
+            // Code blocks with syntax highlighting
+            .replace(/```(\w+)?\n([\s\S]*?)```/gim, function(match, language, code) {
+                const lang = language || 'text';
+                return `<pre><code class="language-${lang}">${escapeHtml(code.trim())}</code></pre>`;
+            })
+            
+            // Blockquotes
+            .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
+            
+            // Lists
+            .replace(/^\s*[-*] (.*$)/gim, '<ul><li>$1</li></ul>')
+            .replace(/^\s*\d\. (.*$)/gim, '<ol><li>$1</li></ol>')
+            .replace(/<\/ul>\s*<ul>/g, '')
+            .replace(/<\/ol>\s*<ol>/g, '')
+            
+            // Links
+            .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank">$1</a>')
+            
+            // Images
+            .replace(/!\[(.*?)\]\((.*?)\)/gim, '<img src="$2" alt="$1" style="max-width: 100%; border-radius: 8px; margin: 1rem 0;">')
+            
+            // Horizontal Rule
+            .replace(/^\s*---\s*$/gim, '<hr>')
+            
+            // Paragraphs (handle line breaks)
+            .split('\n\n')
+            .map(paragraph => {
+                if (!paragraph.match(/^<(\/)?(h|ul|ol|blockquote|pre|hr)/)) {
+                    return `<p>${paragraph.replace(/\n/g, '<br>')}</p>`;
+                }
+                return paragraph;
+            })
+            .join('');
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Initialize preview
+    updatePreview();
+});
+
+// Enhanced formatting functions
+function formatText(command) {
+    const textarea = document.getElementById('{{ form.content.id_for_label }}');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    
+    let formattedText = '';
+    let newCursorPos = start;
+    
+    switch(command) {
+        case 'h1':
+            formattedText = `# ${selectedText || 'Heading 1'}\n\n`;
+            newCursorPos = start + 2;
+            break;
+        case 'h2':
+            formattedText = `## ${selectedText || 'Heading 2'}\n\n`;
+            newCursorPos = start + 3;
+            break;
+        case 'h3':
+            formattedText = `### ${selectedText || 'Heading 3'}\n\n`;
+            newCursorPos = start + 4;
+            break;
+        case 'bold':
+            formattedText = `**${selectedText || 'bold text'}**`;
+            newCursorPos = selectedText ? start + 2 : start + 2;
+            break;
+        case 'italic':
+            formattedText = `*${selectedText || 'italic text'}*`;
+            newCursorPos = selectedText ? start + 1 : start + 1;
+            break;
+        case 'ul':
+            formattedText = `- ${selectedText || 'list item'}\n- another item`;
+            newCursorPos = selectedText ? start + 2 : start + 2;
+            break;
+        case 'ol':
+            formattedText = `1. ${selectedText || 'list item'}\n2. another item`;
+            newCursorPos = selectedText ? start + 3 : start + 3;
+            break;
+        case 'code':
+            formattedText = `\`${selectedText || 'code'}\``;
+            newCursorPos = selectedText ? start + 1 : start + 1;
+            break;
+        case 'codeblock':
+            const language = prompt('Enter programming language (optional):', 'python');
+            const lang = language ? language + '\n' : '';
+            formattedText = `\`\`\`${lang}${selectedText || '// Your code here'}\n\`\`\``;
+            newCursorPos = selectedText ? start + 4 + (language ? language.length : 0) : start + 4 + (language ? language.length : 0);
+            break;
+        case 'link':
+            const url = prompt('Enter URL:', 'https://');
+            formattedText = `[${selectedText || 'link text'}](${url || 'https://example.com'})`;
+            newCursorPos = selectedText ? start + 1 : start + 1;
+            break;
+        case 'quote':
+            formattedText = `> ${selectedText || 'Quote text'}`;
+            newCursorPos = start + 2;
+            break;
+        case 'table':
+            formattedText = `| Header 1 | Header 2 | Header 3 |\n|----------|----------|----------|\n| Cell 1   | Cell 2   | Cell 3   |\n| Cell 4   | Cell 5   | Cell 6   |`;
+            newCursorPos = start;
+            break;
+    }
+    
+    textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+    textarea.focus();
+    textarea.setSelectionRange(newCursorPos, newCursorPos + (selectedText ? selectedText.length : 0));
+    
+    // Trigger input event to update stats and preview
+    textarea.dispatchEvent(new Event('input'));
+}
+
+// Auto-resize textarea
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+// Add syntax highlighting (you can enhance this further with a proper highlighter)
+function highlightCodeBlocks() {
+    document.querySelectorAll('pre code').forEach(block => {
+        // Simple keyword highlighting - you might want to use a library like Prism.js or Highlight.js
+        const code = block.textContent;
+        const language = block.className.replace('language-', '');
+        
+        // Basic syntax highlighting for common languages
+        if (language === 'python') {
+            block.innerHTML = code.replace(/(def|class|if|else|elif|for|while|return|import|from|as|True|False|None)(?=\W)/g, '<span style="color: #569cd6;">$1</span>')
+                                 .replace(/(["'])(.*?)\1/g, '<span style="color: #ce9178;">$1$2$1</span>')
+                                 .replace(/(#.*$)/gm, '<span style="color: #6a9955;">$1</span>');
+        } else if (language === 'javascript') {
+            block.innerHTML = code.replace(/(function|var|let|const|if|else|for|while|return|class|export|import)(?=\W)/g, '<span style="color: #569cd6;">$1</span>')
+                                 .replace(/(["'])(.*?)\1/g, '<span style="color: #ce9178;">$1$2$1</span>')
+                                 .replace(/\/\/.*$/gm, '<span style="color: #6a9955;">$&</span>');
+        }
+    });
+}
+
+// Update preview with syntax highlighting
+const originalUpdatePreview = updatePreview;
+updatePreview = function() {
+    originalUpdatePreview();
+    highlightCodeBlocks();
+};
+
+// Form validation
+document.getElementById('lessonForm').addEventListener('submit', function(e) {
+    const title = document.getElementById('{{ form.title.id_for_label }}').value.trim();
+    const content = document.getElementById('{{ form.content.id_for_label }}').value.trim();
+    
+    if (!title) {
+        e.preventDefault();
+        alert('Please enter a lesson title.');
+        return;
+    }
+    
+    if (!content) {
+        e.preventDefault();
+        alert('Please add some content to the lesson.');
+        return;
+    }
+});
+</script>
+{% endblock %}

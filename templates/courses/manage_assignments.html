@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Assignments - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'courses:instructor_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'courses:course_detail' pk=course.pk %}">{{ course.title }}</a></li>
+                    <li class="breadcrumb-item active">Manage Assignments</li>
+                </ol>
+            </nav>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Manage Assignments</h1>
+                <a href="{% url 'courses:create_assignment' course_pk=course.pk %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Create Assignment
+                </a>
+            </div>
+
+            {% if assignments %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Course Assignments</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Points</th>
+                                    <th>Status</th>
+                                    <th>Submissions</th>
+                                    <th>Due Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for assignment in assignments %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ assignment.title }}</strong>
+                                        {% if assignment.description %}
+                                        <br><small class="text-muted">{{ assignment.description|truncatewords:10 }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if assignment.assignment_type == 'multiple_choice' %}info{% elif assignment.assignment_type == 'code' %}warning{% else %}secondary{% endif %}">
+                                            {{ assignment.get_assignment_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ assignment.points }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if assignment.is_published %}success{% else %}secondary{% endif %}">
+                                            {% if assignment.is_published %}Published{% else %}Draft{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'courses:view_submissions' assignment_pk=assignment.pk %}" 
+                                           class="text-decoration-none">
+                                            {{ assignment.submissions.count }} submissions
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if assignment.due_date %}
+                                        {{ assignment.due_date|date:"M d, Y" }}
+                                        {% else %}
+                                        <span class="text-muted">No due date</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'courses:assignment_detail' course_pk=course.pk assignment_pk=assignment.pk %}" 
+                                               class="btn btn-outline-primary" title="View">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="#" class="btn btn-outline-secondary" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'courses:view_submissions' assignment_pk=assignment.pk %}" 
+                                               class="btn btn-outline-info" title="Submissions">
+                                                <i class="bi bi-list-check"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-journal-text display-1 text-muted"></i>
+                <h3 class="mt-3">No Assignments Created</h3>
+                <p class="text-muted">Create your first assignment to get started.</p>
+                <a href="{% url 'courses:create_assignment' course_pk=course.pk %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-plus-circle me-2"></i>Create First Assignment
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

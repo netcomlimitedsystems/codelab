@@ -1,0 +1,517 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Lessons - {{ course.title }} - CodeLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    .lesson-management-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 40px 0;
+    }
+    
+    .lesson-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .lesson-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+    
+    .lesson-order {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 1rem;
+    }
+    
+    .lesson-actions {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .lesson-card:hover .lesson-actions {
+        opacity: 1;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+    
+    .empty-state-icon {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+    
+    .duration-badge {
+        background: #e3f2fd;
+        color: #1976d2;
+        font-size: 0.75rem;
+    }
+    
+    .content-preview {
+        max-height: 60px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    
+    @media (max-width: 768px) {
+        .lesson-actions {
+            opacity: 1;
+        }
+        
+        .lesson-card {
+            margin-bottom: 1rem;
+        }
+        
+        .lesson-order {
+            width: 35px;
+            height: 35px;
+            font-size: 0.875rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="lesson-management-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'courses:instructor_dashboard' %}" class="text-white">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'courses:course_detail' pk=course.pk %}" class="text-white">{{ course.title }}</a></li>
+                        <li class="breadcrumb-item active text-white" aria-current="page">Manage Lessons</li>
+                    </ol>
+                </nav>
+                <h1 class="display-5 fw-bold mb-3">Manage Lessons</h1>
+                <p class="lead mb-0">Organize and manage lessons for "{{ course.title }}"</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-4 mt-md-0">
+                <a href="{% url 'courses:create_lesson' course_pk=course.pk %}" class="btn btn-light btn-lg me-2">
+                    <i class="bi bi-plus-circle me-2"></i>Add Lesson
+                </a>
+                <a href="{% url 'courses:course_detail' pk=course.pk %}" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-eye me-2"></i>View Course
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Overview -->
+<div class="container py-4">
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h3 class="text-primary mb-1">{{ lessons.count }}</h3>
+                            <p class="text-muted mb-0">Total Lessons</p>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-flex">
+                                <i class="bi bi-journal-text text-primary fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h3 class="text-success mb-1">{{ total_duration }} min</h3>
+                            <p class="text-muted mb-0">Total Duration</p>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3 d-inline-flex">
+                                <i class="bi bi-clock text-success fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h3 class="text-info mb-1">{{ videos_count }}</h3>
+                            <p class="text-muted mb-0">Video Lessons</p>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-3 d-inline-flex">
+                                <i class="bi bi-camera-video text-info fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h3 class="text-warning mb-1">{{ course.enrollment_count|default:"0" }}</h3>
+                            <p class="text-muted mb-0">Enrolled Students</p>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3 d-inline-flex">
+                                <i class="bi bi-people text-warning fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lessons Management -->
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Course Lessons</h4>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'courses:create_lesson' course_pk=course.pk %}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1"></i>New Lesson
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if lessons %}
+                    <div class="alert alert-info d-flex align-items-center mb-4">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <div>
+                            Lessons are displayed in the order they will appear to students.
+                        </div>
+                    </div>
+                    
+                    <div id="lessons-container">
+                        {% for lesson in lessons %}
+                        <div class="card lesson-card mb-3" data-lesson-id="{{ lesson.id }}">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start">
+                                    <div class="lesson-order">
+                                        {{ forloop.counter }}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h5 class="card-title mb-0">{{ lesson.title }}</h5>
+                                            <div class="lesson-actions">
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                        <i class="bi bi-three-dots"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a class="dropdown-item" href="{% url 'courses:lesson_detail' course_pk=course.pk lesson_pk=lesson.pk %}">
+                                                                <i class="bi bi-eye me-2"></i>View
+                                                            </a>
+                                                        </li>
+                                                        {% if 'courses.edit_lesson' in perms %}
+                                                        <li>
+                                                            <a class="dropdown-item" href="{% url 'courses:edit_lesson' course_pk=course.pk lesson_pk=lesson.pk %}">
+                                                                <i class="bi bi-pencil me-2"></i>Edit
+                                                            </a>
+                                                        </li>
+                                                        {% endif %}
+                                                        {% if lesson.video_url %}
+                                                        <li>
+                                                            <a class="dropdown-item" href="{{ lesson.video_url }}" target="_blank">
+                                                                <i class="bi bi-camera-video me-2"></i>Watch Video
+                                                            </a>
+                                                        </li>
+                                                        {% endif %}
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        {% if 'courses.delete_lesson' in perms %}
+                                                        <li>
+                                                            <a class="dropdown-item text-danger" href="#" onclick="confirmDelete({{ lesson.id }}, '{{ lesson.title|escapejs }}')">
+                                                                <i class="bi bi-trash me-2"></i>Delete
+                                                            </a>
+                                                        </li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-2">
+                                            {% if lesson.video_url %}
+                                            <span class="badge duration-badge me-2">
+                                                <i class="bi bi-camera-video me-1"></i>Video
+                                            </span>
+                                            {% endif %}
+                                            {% if lesson.duration_minutes %}
+                                            <span class="badge bg-light text-dark me-2">
+                                                <i class="bi bi-clock me-1"></i>{{ lesson.duration_minutes }} min
+                                            </span>
+                                            {% endif %}
+                                            <span class="badge bg-light text-dark">
+                                                <i class="bi bi-calendar me-1"></i>{{ lesson.created_at|date:"M d, Y" }}
+                                            </span>
+                                        </div>
+                                        
+                                        {% if lesson.content %}
+                                        <p class="card-text text-muted content-preview mb-2">
+                                            {{ lesson.content|striptags|truncatewords:30 }}
+                                        </p>
+                                        {% else %}
+                                        <p class="card-text text-muted mb-2">
+                                            <em>No content added yet</em>
+                                        </p>
+                                        {% endif %}
+                                        
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                Order: {{ lesson.order }}
+                                            </small>
+                                            <div class="d-flex gap-1">
+                                                {% if not forloop.first %}
+                                                <form method="post" action="{% url 'courses:update_lesson_order' %}" style="display: inline;">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="lesson_id" value="{{ lesson.id }}">
+                                                    <input type="hidden" name="direction" value="up">
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                                        <i class="bi bi-arrow-up"></i>
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                                {% if not forloop.last %}
+                                                <form method="post" action="{% url 'courses:update_lesson_order' %}" style="display: inline;">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="lesson_id" value="{{ lesson.id }}">
+                                                    <input type="hidden" name="direction" value="down">
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                                        <i class="bi bi-arrow-down"></i>
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-journal-plus empty-state-icon"></i>
+                        <h4>No Lessons Yet</h4>
+                        <p class="text-muted mb-4">Start building your course by adding the first lesson.</p>
+                        <a href="{% url 'courses:create_lesson' course_pk=course.pk %}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-plus-circle me-2"></i>Create First Lesson
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Course Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Course Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if course.thumbnail %}
+                        <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" 
+                             class="rounded me-3" width="60" height="60" style="object-fit: cover;">
+                        {% else %}
+                        <div class="bg-secondary rounded d-flex align-items-center justify-content-center me-3" 
+                             style="width: 60px; height: 60px;">
+                            <i class="bi bi-journal-text text-white"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h6 class="mb-0">{{ course.title }}</h6>
+                            <small class="text-muted">{{ course.category.name }}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Status:</strong>
+                        {% if course.is_published %}
+                        <span class="badge bg-success ms-2">Published</span>
+                        {% else %}
+                        <span class="badge bg-warning ms-2">Draft</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Difficulty:</strong>
+                        <span class="badge bg-info ms-2">{{ course.get_difficulty_display }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Duration:</strong>
+                        <span class="ms-2">{{ course.duration_hours }} hours</span>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'courses:edit_course' pk=course.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-pencil me-2"></i>Edit Course Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'courses:create_lesson' course_pk=course.pk %}" class="list-group-item list-group-item-action border-0 px-0">
+                            <i class="bi bi-journal-plus me-2 text-primary"></i>
+                            Add New Lesson
+                        </a>
+                        <a href="{% url 'courses:course_detail' pk=course.pk %}" class="list-group-item list-group-item-action border-0 px-0">
+                            <i class="bi bi-eye me-2 text-primary"></i>
+                            Preview Course
+                        </a>
+                        <a href="{% url 'courses:instructor_dashboard' %}" class="list-group-item list-group-item-action border-0 px-0">
+                            <i class="bi bi-grid me-2 text-primary"></i>
+                            Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tips & Guidelines -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Lesson Creation Tips</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6><i class="bi bi-lightbulb me-2 text-warning"></i>Best Practices</h6>
+                        <ul class="small text-muted mb-0 ps-3">
+                            <li>Keep lessons focused and concise</li>
+                            <li>Include practical examples</li>
+                            <li>Add video content when possible</li>
+                            <li>Use clear, descriptive titles</li>
+                        </ul>
+                    </div>
+                    <div class="mb-3">
+                        <h6><i class="bi bi-clock me-2 text-info"></i>Ideal Duration</h6>
+                        <p class="small text-muted mb-0">Aim for 5-15 minutes per lesson for optimal engagement.</p>
+                    </div>
+                    <div>
+                        <h6><i class="bi bi-list-ol me-2 text-success"></i>Organization</h6>
+                        <p class="small text-muted mb-0">Arrange lessons in logical progression from basic to advanced concepts.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the lesson "<strong id="lessonTitleToDelete"></strong>"?</p>
+                <p class="text-danger small">This action cannot be undone. All lesson progress data will be lost.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Lesson</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function confirmDelete(lessonId, lessonTitle) {
+    document.getElementById('lessonTitleToDelete').textContent = lessonTitle;
+    document.getElementById('deleteForm').action = "{% url 'courses:delete_lesson' course_pk=course.pk lesson_pk=0 %}".replace('0', lessonId);
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.querySelector('.container.py-4').insertBefore(alertDiv, document.querySelector('.container.py-4').firstChild);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Add keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+            case 'n':
+                e.preventDefault();
+                window.location.href = "{% url 'courses:create_lesson' course_pk=course.pk %}";
+                break;
+        }
+    }
+});
+</script>
+{% endblock %}

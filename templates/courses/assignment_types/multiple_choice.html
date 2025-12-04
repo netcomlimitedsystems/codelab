@@ -1,0 +1,64 @@
+<div class="multiple-choice-assignment">
+    <h5>Question</h5>
+    <div class="card mb-4">
+        <div class="card-body">
+            <p class="card-text">{{ question.question_text|linebreaks }}</p>
+        </div>
+    </div>
+
+    {% if not submission %}
+    <form method="post">
+        {% csrf_token %}
+        <h5 class="mb-3">Select your answer:</h5>
+        
+        <div class="options-container">
+            <label class="option-label">
+                <input type="radio" name="selected_answer" value="A" required>
+                <strong>A.</strong> {{ question.option_a }}
+            </label>
+            
+            <label class="option-label">
+                <input type="radio" name="selected_answer" value="B">
+                <strong>B.</strong> {{ question.option_b }}
+            </label>
+            
+            <label class="option-label">
+                <input type="radio" name="selected_answer" value="C">
+                <strong>C.</strong> {{ question.option_c }}
+            </label>
+            
+            <label class="option-label">
+                <input type="radio" name="selected_answer" value="D">
+                <strong>D.</strong> {{ question.option_d }}
+            </label>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-send me-2"></i>Submit Answer
+            </button>
+        </div>
+    </form>
+    {% else %}
+        <!-- Show results after submission -->
+        <div class="submission-result {% if submission.is_correct %}success{% else %}error{% endif %}">
+            <h6>
+                <i class="bi bi-{% if submission.is_correct %}check-circle{% else %}x-circle{% endif %} me-2"></i>
+                Your Answer: {{ submission.multiple_choice_submission.selected_answer }}
+            </h6>
+            <p class="mb-2">
+                {% if submission.is_correct %}
+                ✅ Correct! Well done.
+                {% else %}
+                ❌ Incorrect. The correct answer is <strong>{{ question.correct_answer }}</strong>
+                {% endif %}
+            </p>
+            {% if question.explanation %}
+            <div class="mt-3">
+                <strong>Explanation:</strong>
+                <p class="mb-0 mt-1">{{ question.explanation|linebreaks }}</p>
+            </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>

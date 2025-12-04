@@ -1,0 +1,776 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit Course - {{ form.instance.title }}{% else %}Create New Course - CodeLab{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .course-form-hero {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 60px 0;
+    }
+    
+    .form-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-top: -50px;
+        position: relative;
+        z-index: 10;
+    }
+    
+    .form-section {
+        border-bottom: 1px solid #e9ecef;
+        padding: 2rem 0;
+    }
+    
+    .form-section:last-child {
+        border-bottom: none;
+    }
+    
+    .form-section-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--primary-color);
+    }
+    
+    .preview-card {
+        border: 2px dashed #dee2e6;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .preview-card:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .thumbnail-preview {
+        width: 100%;
+        height: 200px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+    
+    .thumbnail-preview img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: cover;
+    }
+    
+    .form-help-text {
+        background-color: #f8f9fa;
+        border-left: 4px solid var(--primary-color);
+        padding: 1rem;
+        border-radius: 0 8px 8px 0;
+        margin-bottom: 1.5rem;
+    }
+    
+    .step-indicator {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+    }
+    
+    .step {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        min-width: 120px;
+    }
+    
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-right: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .step.active .step-number {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .step.completed .step-number {
+        background-color: var(--success-color);
+        color: white;
+    }
+    
+    .step-text {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6c757d;
+    }
+    
+    .step.active .step-text {
+        color: var(--primary-color);
+    }
+    
+    .step.completed .step-text {
+        color: var(--success-color);
+    }
+    
+    .step-connector {
+        flex: 1;
+        height: 2px;
+        background-color: #e9ecef;
+        margin: 0 1rem;
+    }
+    
+    .step:last-child .step-connector {
+        display: none;
+    }
+    
+    .form-actions {
+        background-color: #f8f9fa;
+        border-radius: 0 0 15px 15px;
+        padding: 1.5rem;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    /* Rich text editor enhancements */
+    .django-ckeditor-widget {
+        width: 100% !important;
+    }
+    
+    /* File upload styling */
+    .custom-file-upload {
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-color: #f8f9fa;
+    }
+    
+    .custom-file-upload:hover {
+        border-color: var(--primary-color);
+        background-color: #e3f2fd;
+    }
+    
+    .custom-file-upload.dragover {
+        border-color: var(--primary-color);
+        background-color: #e3f2fd;
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .course-form-hero {
+            padding: 40px 0;
+            text-align: center;
+        }
+        
+        .form-card {
+            margin-top: -30px;
+        }
+        
+        .display-4 {
+            font-size: 2rem;
+        }
+        
+        .step-indicator {
+            padding-bottom: 1rem;
+        }
+        
+        .step {
+            min-width: 100px;
+        }
+        
+        .step-text {
+            font-size: 0.75rem;
+        }
+        
+        .form-section {
+            padding: 1.5rem 0;
+        }
+        
+        .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .course-form-hero {
+            padding: 30px 0;
+        }
+        
+        .display-4 {
+            font-size: 1.75rem;
+        }
+        
+        .step-number {
+            width: 35px;
+            height: 35px;
+            font-size: 0.875rem;
+        }
+        
+        .form-help-text {
+            padding: 0.75rem;
+        }
+        
+        .custom-file-upload {
+            padding: 1.5rem;
+        }
+    }
+    
+    @media (max-width: 400px) {
+        .step-indicator {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .step {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        
+        .step-connector {
+            display: none;
+        }
+        
+        .btn-lg {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-actions .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="course-form-hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4 fw-bold mb-3">
+                    {% if form.instance.pk %}
+                    Edit Course
+                    {% else %}
+                    Create New Course
+                    {% endif %}
+                </h1>
+                <p class="lead mb-0">
+                    {% if form.instance.pk %}
+                    Update your course content and settings
+                    {% else %}
+                    Share your knowledge with thousands of students worldwide
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-4 mt-md-0">
+                <a href="{% url 'courses:instructor_dashboard' %}" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Course Form -->
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card form-card">
+                <div class="card-body p-4 p-md-5">
+                    <!-- Progress Steps -->
+                    <div class="step-indicator">
+                        <div class="step active">
+                            <div class="step-number">1</div>
+                            <div class="step-text">Basic Info</div>
+                            <div class="step-connector"></div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-text">Curriculum</div>
+                            <div class="step-connector"></div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-text">Pricing</div>
+                            <div class="step-connector"></div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <div class="step-text">Publish</div>
+                        </div>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Form Help Text -->
+                        <div class="form-help-text">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-info-circle text-primary me-2 mt-1"></i>
+                                <div>
+                                    <strong>Pro Tip:</strong> Complete all required fields and provide detailed information 
+                                    to make your course more attractive to students. You can save as draft and come back later.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Basic Information Section -->
+                        <div class="form-section">
+                            <div class="form-section-header">
+                                <h3 class="h4 mb-0">
+                                    <i class="bi bi-info-circle me-2 text-primary"></i>
+                                    Course Basic Information
+                                </h3>
+                                <p class="text-muted mb-0 mt-1">Tell students about your course</p>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <!-- Course Title -->
+                                    <div class="mb-4">
+                                        {{ form.title|as_crispy_field }}
+                                        <div class="form-text">
+                                            Make it catchy and descriptive. Example: "Complete Python Bootcamp: From Zero to Hero"
+                                        </div>
+                                    </div>
+
+                                    <!-- Course Description -->
+                                    <div class="mb-4">
+                                        {{ form.description|as_crispy_field }}
+                                        <div class="form-text">
+                                            Describe what students will learn, who the course is for, and what they'll be able to do after completing it.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <!-- Thumbnail Upload -->
+                                    <div class="mb-4">
+                                        <label class="form-label">{{ form.thumbnail.label }} *</label>
+                                        
+                                        {% if form.instance.thumbnail %}
+                                        <div class="thumbnail-preview mb-3">
+                                            <img src="{{ form.instance.thumbnail.url }}" alt="Current thumbnail" id="thumbnail-preview">
+                                        </div>
+                                        {% else %}
+                                        <div class="thumbnail-preview mb-3">
+                                            <i class="bi bi-image text-muted display-4" id="thumbnail-placeholder"></i>
+                                            <img src="" alt="Thumbnail preview" id="thumbnail-preview" style="display: none;">
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="custom-file-upload" id="thumbnail-upload-area">
+                                            <i class="bi bi-cloud-arrow-up display-6 text-muted mb-3"></i>
+                                            <p class="mb-2">Click to upload thumbnail</p>
+                                            <small class="text-muted">Recommended: 1280x720 pixels (16:9 ratio)</small>
+                                            {{ form.thumbnail }}
+                                        </div>
+                                        {% if form.thumbnail.errors %}
+                                        <div class="alert alert-danger mt-2">
+                                            {{ form.thumbnail.errors }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Course Details Section -->
+                        <div class="form-section">
+                            <div class="form-section-header">
+                                <h3 class="h4 mb-0">
+                                    <i class="bi bi-gear me-2 text-primary"></i>
+                                    Course Details
+                                </h3>
+                                <p class="text-muted mb-0 mt-1">Configure course settings and structure</p>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <!-- Category -->
+                                    <div class="mb-4">
+                                        {{ form.category|as_crispy_field }}
+                                    </div>
+
+                                    <!-- Difficulty Level -->
+                                    <div class="mb-4">
+                                        {{ form.difficulty|as_crispy_field }}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <!-- Duration -->
+                                    <div class="mb-4">
+                                        {{ form.duration_hours|as_crispy_field }}
+                                        <div class="form-text">
+                                            Total estimated hours to complete the course
+                                        </div>
+                                    </div>
+
+                                    <!-- Price -->
+                                    <div class="mb-4">
+                                        {{ form.price|as_crispy_field }}
+                                        <div class="form-text">
+                                            Set to $0 for a free course
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Course Preview Section -->
+                        <div class="form-section">
+                            <div class="form-section-header">
+                                <h3 class="h4 mb-0">
+                                    <i class="bi bi-eye me-2 text-primary"></i>
+                                    Course Preview
+                                </h3>
+                                <p class="text-muted mb-0 mt-1">See how your course will appear to students</p>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card preview-card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <div class="thumbnail-preview bg-light">
+                                                        {% if form.instance.thumbnail %}
+                                                        <img src="{{ form.instance.thumbnail.url }}" alt="Course thumbnail" id="live-thumbnail-preview">
+                                                        {% else %}
+                                                        <i class="bi bi-image text-muted display-4" id="live-thumbnail-placeholder"></i>
+                                                        <img src="" alt="Course thumbnail" id="live-thumbnail-preview" style="display: none;">
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-8">
+                                                    <h5 id="live-title-preview" class="card-title">
+                                                        {% if form.instance.title %}
+                                                        {{ form.instance.title }}
+                                                        {% else %}
+                                                        Your Course Title Will Appear Here
+                                                        {% endif %}
+                                                    </h5>
+                                                    <p id="live-description-preview" class="card-text text-muted">
+                                                        {% if form.instance.description %}
+                                                        {{ form.instance.description|truncatewords:30 }}
+                                                        {% else %}
+                                                        Your course description will appear here. Make it engaging and informative.
+                                                        {% endif %}
+                                                    </p>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <span class="badge bg-primary me-2" id="live-difficulty-preview">
+                                                                {% if form.instance.difficulty %}
+                                                                {{ form.instance.difficulty|title }}
+                                                                {% else %}
+                                                                Beginner
+                                                                {% endif %}
+                                                            </span>
+                                                            <span class="badge bg-secondary" id="live-duration-preview">
+                                                                {% if form.instance.duration_hours %}
+                                                                {{ form.instance.duration_hours }}h
+                                                                {% else %}
+                                                                0h
+                                                                {% endif %}
+                                                            </span>
+                                                        </div>
+                                                        <strong class="text-primary" id="live-price-preview">
+                                                            ${% if form.instance.price %}{{ form.instance.price }}{% else %}0{% endif %}
+                                                        </strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="save_draft" name="save_draft">
+                                        <label class="form-check-label" for="save_draft">
+                                            Save as draft (course won't be published)
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 text-md-end">
+                                    <a href="{% url 'courses:instructor_dashboard' %}" class="btn btn-outline-secondary btn-lg me-2">
+                                        Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        {% if form.instance.pk %}
+                                        <i class="bi bi-check-circle me-2"></i>Update Course
+                                        {% else %}
+                                        <i class="bi bi-plus-circle me-2"></i>Create Course
+                                        {% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-question-circle text-primary me-2"></i>
+                        Need Help Creating Your Course?
+                    </h5>
+                    <div class="row mt-3">
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-camera-video text-primary me-3 mt-1"></i>
+                                <div>
+                                    <h6 class="mb-1">Video Guidelines</h6>
+                                    <p class="text-muted small mb-0">Learn best practices for creating engaging course videos</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-pencil text-primary me-3 mt-1"></i>
+                                <div>
+                                    <h6 class="mb-1">Content Tips</h6>
+                                    <p class="text-muted small mb-0">Get advice on structuring your course content</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-graph-up text-primary me-3 mt-1"></i>
+                                <div>
+                                    <h6 class="mb-1">Marketing Guide</h6>
+                                    <p class="text-muted small mb-0">Tips for promoting your course to students</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Thumbnail preview functionality
+    const thumbnailInput = document.getElementById('id_thumbnail');
+    const thumbnailPreview = document.getElementById('thumbnail-preview');
+    const thumbnailPlaceholder = document.getElementById('thumbnail-placeholder');
+    const liveThumbnailPreview = document.getElementById('live-thumbnail-preview');
+    const liveThumbnailPlaceholder = document.getElementById('live-thumbnail-placeholder');
+    const thumbnailUploadArea = document.getElementById('thumbnail-upload-area');
+
+    // Handle file selection
+    thumbnailInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                thumbnailPreview.src = e.target.result;
+                thumbnailPreview.style.display = 'block';
+                if (thumbnailPlaceholder) thumbnailPlaceholder.style.display = 'none';
+                
+                liveThumbnailPreview.src = e.target.result;
+                liveThumbnailPreview.style.display = 'block';
+                if (liveThumbnailPlaceholder) liveThumbnailPlaceholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Drag and drop functionality
+    thumbnailUploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+
+    thumbnailUploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+    });
+
+    thumbnailUploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            thumbnailInput.files = files;
+            thumbnailInput.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // Live preview updates
+    const titleInput = document.getElementById('id_title');
+    const descriptionInput = document.getElementById('id_description');
+    const difficultyInput = document.getElementById('id_difficulty');
+    const durationInput = document.getElementById('id_duration_hours');
+    const priceInput = document.getElementById('id_price');
+
+    const liveTitlePreview = document.getElementById('live-title-preview');
+    const liveDescriptionPreview = document.getElementById('live-description-preview');
+    const liveDifficultyPreview = document.getElementById('live-difficulty-preview');
+    const liveDurationPreview = document.getElementById('live-duration-preview');
+    const livePricePreview = document.getElementById('live-price-preview');
+
+    // Update live preview on input changes
+    if (titleInput) {
+        titleInput.addEventListener('input', function() {
+            liveTitlePreview.textContent = this.value || 'Your Course Title Will Appear Here';
+        });
+    }
+
+    if (descriptionInput) {
+        descriptionInput.addEventListener('input', function() {
+            const text = this.value || 'Your course description will appear here. Make it engaging and informative.';
+            liveDescriptionPreview.textContent = text.length > 150 ? text.substring(0, 150) + '...' : text;
+        });
+    }
+
+    if (difficultyInput) {
+        difficultyInput.addEventListener('change', function() {
+            liveDifficultyPreview.textContent = this.options[this.selectedIndex].text;
+        });
+    }
+
+    if (durationInput) {
+        durationInput.addEventListener('input', function() {
+            liveDurationPreview.textContent = this.value + 'h';
+        });
+    }
+
+    if (priceInput) {
+        priceInput.addEventListener('input', function() {
+            livePricePreview.textContent = '$' + (this.value || '0');
+        });
+    }
+
+    // Form validation enhancements
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        const requiredFields = form.querySelectorAll('[required]');
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.classList.add('is-invalid');
+                
+                // Add error message if not exists
+                if (!field.nextElementSibling || !field.nextElementSibling.classList.contains('invalid-feedback')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback';
+                    errorDiv.textContent = 'This field is required.';
+                    field.parentNode.appendChild(errorDiv);
+                }
+            } else {
+                field.classList.remove('is-invalid');
+                field.classList.add('is-valid');
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+            
+            // Scroll to first error
+            const firstError = form.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+            
+            // Show alert
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+            alertDiv.innerHTML = `
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Please fill in all required fields before submitting.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            form.insertBefore(alertDiv, form.firstChild);
+        }
+    });
+
+    // Character counters
+    const textAreas = form.querySelectorAll('textarea');
+    textAreas.forEach(textarea => {
+        const counter = document.createElement('div');
+        counter.className = 'form-text text-end';
+        counter.textContent = `0/${textarea.getAttribute('maxlength') || 'No limit'}`;
+        textarea.parentNode.appendChild(counter);
+
+        textarea.addEventListener('input', function() {
+            const maxLength = this.getAttribute('maxlength');
+            if (maxLength) {
+                const currentLength = this.value.length;
+                counter.textContent = `${currentLength}/${maxLength}`;
+                
+                if (currentLength > maxLength * 0.9) {
+                    counter.className = 'form-text text-end text-warning';
+                } else {
+                    counter.className = 'form-text text-end';
+                }
+            }
+        });
+    });
+
+    // Auto-save draft (basic implementation)
+    let autoSaveTimer;
+    const formInputs = form.querySelectorAll('input, textarea, select');
+    
+    formInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                // In a real application, you would send an AJAX request to save the draft
+                console.log('Auto-saving draft...');
+                
+                // Show saving indicator
+                const saveIndicator = document.createElement('div');
+                saveIndicator.className = 'alert alert-info alert-dismissible fade show mt-3';
+                saveIndicator.innerHTML = `
+                    <i class="bi bi-check-circle me-2"></i>
+                    Draft saved automatically.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                form.insertBefore(saveIndicator, form.firstChild);
+                
+                // Auto-dismiss after 3 seconds
+                setTimeout(() => {
+                    if (saveIndicator) {
+                        const bsAlert = new bootstrap.Alert(saveIndicator);
+                        bsAlert.close();
+                    }
+                }, 3000);
+            }, 2000);
+        });
+    });
+});
+</script>
+{% endblock %}

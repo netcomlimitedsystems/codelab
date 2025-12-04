@@ -1,0 +1,687 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ course.title }} - CodeLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    .course-hero {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 60px 0;
+    }
+    
+    .course-content-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .instructor-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .lesson-item {
+        border-left: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .lesson-item:hover {
+        border-left-color: var(--primary-color);
+        background-color: #f8f9fa;
+    }
+    
+    .lesson-item.active {
+        border-left-color: var(--primary-color);
+        background-color: #e3f2fd;
+    }
+    
+    .progress-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: conic-gradient(var(--primary-color) 0% 25%, #e9ecef 25% 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+    }
+    
+    .progress-circle-inner {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+    
+    .enrollment-card {
+        position: sticky;
+        top: 100px;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .badge-difficulty {
+        font-size: 0.875rem;
+    }
+    
+    .badge-beginner { background-color: #28a745; }
+    .badge-intermediate { background-color: #ffc107; color: #000; }
+    .badge-advanced { background-color: #dc3545; }
+    
+    .course-thumbnail {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .feature-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .feature-list li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .feature-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .feature-list i {
+        color: var(--primary-color);
+        margin-right: 0.5rem;
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .course-hero {
+            padding: 40px 0;
+            text-align: center;
+        }
+        
+        .display-4 {
+            font-size: 2rem;
+        }
+        
+        .enrollment-card {
+            position: static;
+            margin-top: 2rem;
+        }
+        
+        .progress-circle {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .progress-circle-inner {
+            width: 40px;
+            height: 40px;
+            font-size: 0.875rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .course-hero {
+            padding: 30px 0;
+        }
+        
+        .display-4 {
+            font-size: 1.75rem;
+        }
+        
+        .lead {
+            font-size: 1rem;
+        }
+        
+        .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="course-hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'pages:home' %}" class="text-white">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'courses:course_list' %}" class="text-white">Courses</a></li>
+                        <li class="breadcrumb-item active text-white" aria-current="page">{{ course.title }}</li>
+                    </ol>
+                </nav>
+                
+                <h1 class="display-4 fw-bold mb-3">{{ course.title }}</h1>
+                <p class="lead mb-4">{{ course.description }}</p>
+                
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                    <div class="d-flex align-items-center">
+                        {% if course.instructor.user.profile.profile_picture %}
+                        <img src="{{ course.instructor.user.profile.profile_picture.url }}" 
+                             alt="{{ course.instructor.user.get_full_name }}"
+                             class="rounded-circle me-2" width="40" height="40">
+                        {% else %}
+                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" 
+                             style="width: 40px; height: 40px;">
+                            <i class="bi bi-person text-white"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <span class="text-white-50 d-block">Instructor</span>
+                            <strong class="text-white">{{ course.instructor.user.get_full_name|default:course.instructor.user.username }}</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="vr text-white-50"></div>
+                    
+                    <div>
+                        <span class="text-white-50 d-block">Category</span>
+                        <strong class="text-white">{{ course.category.name }}</strong>
+                    </div>
+                    
+                    <div class="vr text-white-50"></div>
+                    
+                    <div>
+                        <span class="text-white-50 d-block">Level</span>
+                        <span class="badge {% if course.difficulty == 'beginner' %}badge-beginner{% elif course.difficulty == 'intermediate' %}badge-intermediate{% else %}badge-advanced{% endif %}">
+                            {{ course.difficulty|title }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 text-center mt-4 mt-lg-0">
+                <img src="{{ course.thumbnail.url }}" 
+                     alt="{{ course.title }}" 
+                     class="course-thumbnail img-fluid"
+                     style="max-height: 200px;">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Course Content -->
+<div class="container py-5">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Course Overview -->
+            <div class="course-content-card">
+                <div class="card-body">
+                    <h3 class="h4 mb-4">Course Overview</h3>
+                    
+                    <div class="row text-center mb-4">
+                        <div class="col-md-3">
+                            <div class="progress-circle">
+                                <div class="progress-circle-inner">
+                                     {{ progress_percentage }}%
+                                </div>
+                            </div>
+                            <h6>Progress</h6>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-primary">
+                                <i class="bi bi-play-circle display-6"></i>
+                            </div>
+                            <h6>{{ lessons|length }} Lessons</h6>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-primary">
+                                <i class="bi bi-clock display-6"></i>
+                            </div> 
+                            <h6>{{ course.duration_hours }} Hours</h6>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-primary">
+                                <i class="bi bi-bar-chart display-6"></i>
+                            </div>
+                            <h6>{{ course.difficulty|title }}</h6>
+                        </div>
+                    </div>
+                    
+                    <h5>What You'll Learn</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="feature-list">
+                                <li><i class="bi bi-check-circle"></i> Master fundamental concepts</li>
+                                <li><i class="bi bi-check-circle"></i> Build real-world projects</li>
+                                <li><i class="bi bi-check-circle"></i> Develop problem-solving skills</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="feature-list">
+                                <li><i class="bi bi-check-circle"></i> Gain practical experience</li>
+                                <li><i class="bi bi-check-circle"></i> Prepare for job interviews</li>
+                                <li><i class="bi bi-check-circle"></i> Join a community of learners</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Curriculum -->
+            <div class="course-content-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="h4 mb-0">Course Curriculum</h3>
+                        <span class="badge bg-primary">{{ lessons|length }} lessons</span>
+                    </div>
+                    
+                    {% if lessons %}
+                    <div class="list-group list-group-flush">
+                        {% for lesson in lessons %}
+                        <div class="list-group-item lesson-item {% if forloop.first %}active{% endif %}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ lesson.title }}</h6>
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock"></i> {{ lesson.duration_minutes }} minutes
+                                        {% if lesson.video_url %}
+                                        • <i class="bi bi-play-circle"></i> Video
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div>
+                                    {% if is_enrolled %}
+                                    <a href="{% url 'courses:lesson_detail' course.pk lesson.pk %}" 
+                                       class="btn btn-primary btn-sm">
+                                        {% if forloop.first %}Start Lesson{% else %}View Lesson{% endif %}
+                                    </a>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Enroll to access</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-journal-text display-1 text-muted"></i>
+                        <p class="text-muted mt-3">No lessons available yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Instructor Information -->
+            <div class="course-content-card">
+                <div class="card-body">
+                    <h3 class="h4 mb-4">About the Instructor</h3>
+                    
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-3">
+                            {% if course.instructor.user.profile.profile_picture %}
+                            <img src="{{ course.instructor.user.profile.profile_picture.url }}" 
+                                 alt="{{ course.instructor.user.get_full_name }}"
+                                 class="rounded-circle mb-3" width="120" height="120">
+                            {% else %}
+                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" 
+                                 style="width: 120px; height: 120px;">
+                                <i class="bi bi-person text-white" style="font-size: 3rem;"></i>
+                            </div>
+                            {% endif %}
+                            <h5>{{ course.instructor.user.get_full_name|default:course.instructor.user.username }}</h5>
+                            <p class="text-muted">Instructor</p>
+                        </div>
+                        
+                        <div class="col-md-9">
+                            <p>{{ course.instructor.bio|default:"Experienced instructor with passion for teaching and sharing knowledge." }}</p>
+                            
+                            <div class="row text-center mt-4">
+                                <div class="col-4">
+                                    <h5 class="text-primary">{{ instructor_course_count|default:"5" }}</h5>
+                                    <small class="text-muted">Courses</small>
+                                </div>
+                                <div class="col-4">
+                                    <h5 class="text-primary">{{ instructor_student_count|default:"1000" }}+</h5>
+                                    <small class="text-muted">Students</small>
+                                </div>
+                                <div class="col-4">
+                                    <h5 class="text-primary">4.8</h5>
+                                    <small class="text-muted">Rating</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Reviews -->
+            <div class="course-content-card">
+                <div class="card-body">
+                    <h3 class="h4 mb-4">Student Reviews</h3>
+                    
+                    <div class="row align-items-center mb-4">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="text-warning me-3">
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-half"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-0">4.5</h4>
+                                    <small class="text-muted">Based on 124 reviews</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <a href="#" class="btn btn-outline-primary">Write a Review</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Sample Reviews -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-0">John Smith</h6>
+                                            <small class="text-muted">Web Developer</small>
+                                        </div>
+                                        <div class="text-warning">
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                        </div>
+                                    </div>
+                                    <p class="mb-0">"This course completely transformed my understanding of the subject. The instructor explains complex topics in a very simple way."</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-0">Sarah Johnson</h6>
+                                            <small class="text-muted">Data Scientist</small>
+                                        </div>
+                                        <div class="text-warning">
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star"></i>
+                                        </div>
+                                    </div>
+                                    <p class="mb-0">"Great course with practical examples. The projects helped me build a strong portfolio that impressed my employers."</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar - Enrollment & Actions -->
+        <div class="col-lg-4">
+            <div class="enrollment-card">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h3 class="h2 text-primary mb-2">
+                            {% if course.price == 0 %}
+                            FREE
+                            {% else %}
+                            ${{ course.price }}
+                            {% endif %}
+                        </h3>
+                        <p class="text-muted">One-time payment</p>
+                    </div>
+                    
+                    {% if is_enrolled %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle"></i> You are enrolled in this course
+                    </div>
+                    
+                    {% if lessons %}
+                    <a href="{% url 'courses:lesson_detail' course.pk lessons.0.pk %}" class="btn btn-success w-100 mb-3">
+                        <i class="bi bi-play-circle me-2"></i>Continue Learning
+                    </a>
+                    {% endif %}
+                    
+                    {% else %}
+                    <form method="POST" action="{% url 'courses:enroll_course' course.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary w-100 mb-3 btn-lg">
+                            <i class="bi bi-cart-plus me-2"></i>
+                            {% if course.price == 0 %}
+                            Enroll for Free
+                            {% else %}
+                            Enroll Now
+                            {% endif %}
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    <div class="text-center mb-4">
+                        <small class="text-muted">30-day money-back guarantee</small>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6 class="mb-3">This course includes:</h6>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-play-circle"></i> {{ lessons|length }} on-demand lessons</li>
+                        <li><i class="bi bi-file-text"></i> Downloadable resources</li>
+                        <li><i class="bi bi-infinity"></i> Full lifetime access</li>
+                        <li><i class="bi bi-phone"></i> Access on mobile and desktop</li>
+                        <li><i class="bi bi-trophy"></i> Certificate of completion</li>
+                        <li><i class="bi bi-question-circle"></i> Instructor support</li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <small class="text-muted">
+                            <i class="bi bi-people"></i> 
+                            {{ enrollment_count|default:"0" }} students enrolled
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Share Course -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="card-title">Share this course</h6>
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-twitter"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-linkedin"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-envelope"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Courses -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="card-title">You might also like</h6>
+                    
+                    {% if related_courses %}
+                    {% for related_course in related_courses|slice:":2" %}
+                    <div class="card mb-3">
+                        <div class="row g-0">
+                            <div class="col-4">
+                                <img src="{{ related_course.thumbnail.url }}" 
+                                     class="img-fluid rounded-start h-100" 
+                                     alt="{{ related_course.title }}"
+                                     style="object-fit: cover;">
+                            </div>
+                            <div class="col-8">
+                                <div class="card-body p-2">
+                                    <h6 class="card-title">{{ related_course.title|truncatewords:4 }}</h6>
+                                    <p class="card-text">
+                                        <small class="text-primary">
+                                            ${{ related_course.price }}
+                                        </small>
+                                    </p>
+                                    <a href="{% url 'courses:course_detail' related_course.pk %}" class="btn btn-outline-primary btn-sm w-100">
+                                        View
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted small">No related courses found.</p>
+                    {% endif %}
+                    
+                    <a href="{% url 'courses:course_list' %}" class="btn btn-outline-primary btn-sm w-100">
+                        Browse All Courses
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FAQ Section -->
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <h3 class="h2 text-center mb-5">Frequently Asked Questions</h3>
+                
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq1">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse1">
+                                Can I take this course if I'm a complete beginner?
+                            </button>
+                        </h2>
+                        <div id="faqCollapse1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes! This course is designed for {{ course.difficulty }} level students. 
+                                {% if course.difficulty == 'beginner' %}No prior experience is required.
+                                {% elif course.difficulty == 'intermediate' %}Some basic knowledge is recommended.
+                                {% else %}This course is designed for advanced learners with substantial prior experience.{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq2">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse2">
+                                How long do I have access to the course?
+                            </button>
+                        </h2>
+                        <div id="faqCollapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                You have lifetime access to the course materials. You can learn at your own pace and revisit the content anytime.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq3">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse3">
+                                Will I receive a certificate after completion?
+                            </button>
+                        </h2>
+                        <div id="faqCollapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes, upon successfully completing all lessons and assignments, you'll receive a verifiable certificate that you can share on LinkedIn and other platforms.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq4">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse4">
+                                What if I'm not satisfied with the course?
+                            </button>
+                        </h2>
+                        <div id="faqCollapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                We offer a 30-day money-back guarantee. If you're not satisfied with the course, you can request a full refund within 30 days of purchase.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Lesson item interactions
+    const lessonItems = document.querySelectorAll('.lesson-item');
+    lessonItems.forEach(item => {
+        item.addEventListener('click', function() {
+            lessonItems.forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    
+    // Enrollment button animation
+    const enrollButton = document.querySelector('button[type="submit"]');
+    if (enrollButton) {
+        enrollButton.addEventListener('click', function() {
+            this.innerHTML = '<i class="bi bi-arrow-repeat spinner-border spinner-border-sm me-2"></i>Processing...';
+            this.disabled = true;
+        });
+    }
+    
+    // Progress animation
+    const progressCircle = document.querySelector('.progress-circle');
+    if (progressCircle) {
+        setTimeout(() => {
+            progressCircle.style.background = 'conic-gradient(var(--primary-color) 0% 25%, #e9ecef 25% 100%)';
+        }, 500);
+    }
+    
+    // Share buttons
+    const shareButtons = document.querySelectorAll('.btn-outline-primary, .btn-outline-info, .btn-outline-danger');
+    shareButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const platform = this.querySelector('i').className.split('-')[1];
+            alert(`Sharing course on ${platform} would be implemented here.`);
+        });
+    });
+    
+    // Smooth scroll for FAQ
+    const faqButtons = document.querySelectorAll('.accordion-button');
+    faqButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+    });
+});
+</script>
+{% endblock %}

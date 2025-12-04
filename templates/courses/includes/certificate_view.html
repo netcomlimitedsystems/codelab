@@ -1,0 +1,202 @@
+<style>
+    body {
+        background: #0b0c10;
+        font-family: 'Poppins', sans-serif;
+        overflow: hidden;
+    }
+
+    .certificate-wrapper {
+        width: 100%;
+        max-width: 1100px;
+        margin: 2rem auto;
+        padding: 3rem 4rem;
+        border: 4px solid #FFD700;
+        border-radius: 15px;
+        position: relative;
+        background: linear-gradient(135deg, #0b0c10 0%, #1a1f2b 100%);
+        background-image: url("{% static 'images/cyber-bg.png' %}");
+        background-size: cover;
+        background-position: center;
+        box-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
+        color: #fff;
+    }
+
+    .certificate-wrapper::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        border-radius: 15px;
+        z-index: 0;
+    }
+
+    .certificate-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .certificate-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .certificate-header img {
+        width: 120px;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 0 8px #FFD700);
+    }
+
+    .certificate-header h2 {
+        font-size: 2.6rem;
+        font-weight: 700;
+        color: #FFD700;
+        text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+    }
+
+    .certificate-body {
+        text-align: center;
+        margin-top: 2rem;
+        line-height: 1.8;
+    }
+
+    .certificate-body h3 {
+        font-size: 1.2rem;
+        color: #ccc;
+        margin-bottom: 0.5rem;
+    }
+
+    .certificate-body .student-name {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #FFD700;
+        text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+    }
+
+    .certificate-body .course-name {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 1rem;
+    }
+
+    .certificate-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-top: 3rem;
+        color: #ccc;
+    }
+
+    .certificate-footer .signature {
+        text-align: center;
+    }
+
+    .certificate-footer img {
+        width: 120px;
+        height: auto;
+        filter: drop-shadow(0 0 6px #FFD700);
+    }
+
+    .certificate-footer .issuer {
+        font-weight: 700;
+        color: #FFD700;
+        margin-top: 0.5rem;
+    }
+
+    .certificate-footer .date {
+        font-size: 1rem;
+        color: #ddd;
+        text-align: right;
+    }
+
+    .download-section {
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .btn-download {
+        background: linear-gradient(135deg, #FFD700, #FFC400);
+        border: none;
+        color: #000;
+        font-weight: 600;
+        padding: 0.75rem 2rem;
+        border-radius: 30px;
+        transition: 0.3s ease;
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+
+    .btn-download:hover {
+        background: linear-gradient(135deg, #FFC400, #FFB000);
+        transform: translateY(-2px);
+    }
+
+    /* PRINT SETTINGS */
+    @page {
+        size: A4 landscape;
+        margin: 0;
+    }
+
+    @media print {
+        body {
+            background: none;
+        }
+
+        body * {
+            visibility: hidden;
+        }
+
+        .certificate-wrapper, .certificate-wrapper * {
+            visibility: visible;
+        }
+
+        .certificate-wrapper {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            box-shadow: none;
+            border: 4px solid #FFD700;
+        }
+
+        .download-section {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="certificate-wrapper">
+    <div class="certificate-content">
+        <div class="certificate-header">
+            <img src="{% static 'images/logo.png' %}" alt="CodeLab Logo">
+            <h2>Certificate of Completion</h2>
+        </div>
+
+        <div class="certificate-body">
+            {% for user in users %}
+            <h3>This certifies that</h3>
+            <div class="student-name">{{ user.username }} {{ user.last_name }}</div>
+            <h3>has successfully completed the course</h3>
+            <div class="course-name">“{{ course.title }}”</div>
+            <p>on {% now "F j, Y" %}</p>
+            {% endfor %}
+        </div>
+
+        <div class="certificate-footer">
+            <div class="signature">
+                <img src="{% static 'images/signature.png' %}" alt="Signature">
+                <div class="issuer">Saidi Dancan</div>
+                <small>Head of CodeLab</small>
+            </div>
+            <div class="date">
+                Certificate ID: CL-{{ course.id }}-{{ user.id }}-{% now "Ymd" %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="download-section">
+    <button class="btn-download" onclick="window.print()">Download Certificate</button>
+</div>
