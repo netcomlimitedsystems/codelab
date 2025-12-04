@@ -1,0 +1,1663 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | CodeLab Admin{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet">
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --warning-gradient: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+        --dark-bg: #1a1c23;
+        --dark-card: #242731;
+        --dark-border: #2a2d38;
+    }
+
+    .lesson-form-container {
+        background: var(--primary-gradient);
+        min-height: 100vh;
+        padding: 2rem 0;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    .lesson-form-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" opacity="0.05"><path fill="white" d="M500,250c138.07,0,250,111.93,250,250S638.07,750,500,750S250,638.07,250,500S361.93,250,500,250z"/></svg>') repeat;
+        pointer-events: none;
+    }
+
+    .lesson-form-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        z-index: 1;
+        backdrop-filter: blur(10px);
+    }
+
+    .lesson-form-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.3);
+    }
+
+    .lesson-header {
+        background: var(--secondary-gradient);
+        padding: 2.5rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .lesson-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: moveBackground 20s linear infinite;
+    }
+
+    @keyframes moveBackground {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(50px, 50px); }
+    }
+
+    .lesson-body {
+        padding: 3rem;
+    }
+
+    /* Dev Features Section */
+    .dev-features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .dev-feature-card {
+        background: linear-gradient(145deg, #f8fafc, #f1f5f9);
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dev-feature-card:hover {
+        transform: translateY(-4px);
+        border-color: #667eea;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
+    }
+
+    .dev-feature-card.active {
+        background: linear-gradient(145deg, #667eea, #764ba2);
+        border-color: #667eea;
+        color: white;
+    }
+
+    .dev-feature-icon {
+        width: 56px;
+        height: 56px;
+        background: rgba(102, 126, 234, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+        color: #667eea;
+    }
+
+    .dev-feature-card.active .dev-feature-icon {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    /* Code Editor */
+    .code-editor-container {
+        background: #282c34;
+        border-radius: 12px;
+        overflow: hidden;
+        margin: 1.5rem 0;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .code-editor-header {
+        background: #21252b;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #181a1f;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .code-editor-tabs {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .code-tab {
+        background: #2c313a;
+        color: #abb2bf;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    .code-tab.active {
+        background: #667eea;
+        color: white;
+    }
+
+    .code-language-selector {
+        background: #2c313a;
+        border: 1px solid #3e4451;
+        color: #abb2bf;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    /* AI Assistant */
+    .ai-assistant {
+        background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+        border: 2px dashed #667eea;
+        border-radius: 16px;
+        padding: 2rem;
+        margin: 2rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ai-assistant::before {
+        content: '🤖';
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 2rem;
+        opacity: 0.1;
+    }
+
+    .ai-suggestions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .ai-suggestion-btn {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        text-align: left;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .ai-suggestion-btn:hover {
+        border-color: #667eea;
+        transform: translateX(4px);
+    }
+
+    /* Responsive Grid System */
+    .responsive-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+
+    .grid-item {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .grid-item:hover {
+        border-color: #667eea;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Loading States */
+    .loading-skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+        border-radius: 8px;
+    }
+
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* Keyboard Shortcuts */
+    .keyboard-shortcut {
+        background: #2d3748;
+        color: #e2e8f0;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 0.75rem;
+        margin: 0 0.25rem;
+        border: 1px solid #4a5568;
+    }
+
+    /* Dark Mode */
+    [data-theme="dark"] .lesson-form-card,
+    .dark-mode .lesson-form-card {
+        background: var(--dark-card);
+        color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .grid-item,
+    .dark-mode .grid-item {
+        background: #2a2d38;
+        border-color: var(--dark-border);
+        color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .dev-feature-card,
+    .dark-mode .dev-feature-card {
+        background: linear-gradient(145deg, #2a2d38, #242731);
+        border-color: var(--dark-border);
+        color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .dev-feature-card.active,
+    .dark-mode .dev-feature-card.active {
+        background: var(--primary-gradient);
+    }
+
+    /* Mobile First Responsive Design */
+    @media (max-width: 768px) {
+        .lesson-body {
+            padding: 1.5rem;
+        }
+        
+        .lesson-header {
+            padding: 1.5rem;
+        }
+        
+        .dev-features-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .responsive-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .ai-suggestions {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .form-actions > div {
+            width: 100%;
+            justify-content: space-between;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .lesson-form-container {
+            padding: 1rem 0;
+        }
+        
+        .lesson-form-card {
+            border-radius: 16px;
+        }
+        
+        .code-editor-header {
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+        
+        .keyboard-shortcuts {
+            display: none;
+        }
+    }
+
+    /* Tablet Optimizations */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .dev-features-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .responsive-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    /* Touch Device Optimizations */
+    @media (hover: none) and (pointer: coarse) {
+        .editor-btn,
+        .dev-feature-card,
+        .ai-suggestion-btn {
+            padding: 1rem;
+            min-height: 44px;
+            min-width: 44px;
+        }
+        
+        input, select, textarea {
+            font-size: 16px !important;
+        }
+    }
+
+    /* Print Styles */
+    @media print {
+        .lesson-form-container {
+            background: white !important;
+        }
+        
+        .lesson-form-card {
+            box-shadow: none !important;
+            border: 1px solid #ddd;
+        }
+        
+        .no-print {
+            display: none !important;
+        }
+    }
+
+    /* Accessibility Improvements */
+    .focus-visible {
+        outline: 3px solid #667eea;
+        outline-offset: 2px;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 5px;
+        transition: background 0.3s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    [data-theme="dark"] ::-webkit-scrollbar-track,
+    .dark-mode ::-webkit-scrollbar-track {
+        background: #2a2d38;
+    }
+
+    [data-theme="dark"] ::-webkit-scrollbar-thumb,
+    .dark-mode ::-webkit-scrollbar-thumb {
+        background: #4a5568;
+    }
+
+    /* Animation Classes */
+    .fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+
+    .slide-up {
+        animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Status Indicators */
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+    }
+
+    .status-published { background: #10b981; }
+    .status-draft { background: #f59e0b; }
+    .status-review { background: #3b82f6; }
+    .status-archived { background: #6b7280; }
+
+    /* Progress Bar */
+    .progress-ring {
+        width: 60px;
+        height: 60px;
+    }
+
+    .progress-ring-circle {
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+        stroke-dasharray: 283;
+        stroke-dashoffset: 283;
+        transition: stroke-dashoffset 0.3s ease;
+    }
+
+    /* Tooltip */
+    .custom-tooltip {
+        position: relative;
+    }
+
+    .custom-tooltip::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1f2937;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+
+    .custom-tooltip:hover::after {
+        opacity: 1;
+        visibility: visible;
+        bottom: calc(100% + 8px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lesson-form-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12">
+                <!-- Quick Actions Bar -->
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-light" id="toggleDarkMode">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        <div class="keyboard-shortcuts d-none d-md-flex gap-2">
+                            <span class="text-white"><kbd class="keyboard-shortcut">Ctrl</kbd> + <kbd class="keyboard-shortcut">S</kbd> Save</span>
+                            <span class="text-white"><kbd class="keyboard-shortcut">Ctrl</kbd> + <kbd class="keyboard-shortcut">P</kbd> Preview</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-light" id="exportBtn">
+                            <i class="fas fa-download me-2"></i>Export
+                        </button>
+                        <button class="btn btn-outline-light" id="importBtn">
+                            <i class="fas fa-upload me-2"></i>Import
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Form Card -->
+                <div class="lesson-form-card fade-in">
+                    <!-- Header -->
+                    <div class="lesson-header">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                            <div>
+                                <h1 class="h3 mb-2">{{ title }}</h1>
+                                <p class="mb-0 opacity-75">Advanced lesson editor with developer features</p>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge bg-white text-info fs-6 px-3 py-2">
+                                    <i class="fas fa-graduation-cap me-2"></i>Lesson Builder v2.0
+                                </span>
+                                <div class="progress-ring">
+                                    <svg width="60" height="60">
+                                        <circle class="progress-ring-circle" stroke="#10b981" stroke-width="4" 
+                                                fill="transparent" r="28" cx="30" cy="30"/>
+                                    </svg>
+                                    <span class="position-absolute top-50 start-50 translate-middle fw-bold" id="progressText">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Form Body -->
+                    <div class="lesson-body">
+                        <!-- Developer Features -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">
+                                <i class="fas fa-code me-2"></i>Development Features
+                            </h5>
+                            <div class="dev-features-grid">
+                                <div class="dev-feature-card" data-feature="markdown">
+                                    <div class="dev-feature-icon">
+                                        <i class="fab fa-markdown"></i>
+                                    </div>
+                                    <h6 class="fw-bold">Markdown Editor</h6>
+                                    <p class="small text-muted mb-0">Write with markdown syntax</p>
+                                </div>
+                                <div class="dev-feature-card" data-feature="code">
+                                    <div class="dev-feature-icon">
+                                        <i class="fas fa-terminal"></i>
+                                    </div>
+                                    <h6 class="fw-bold">Code Snippets</h6>
+                                    <p class="small text-muted mb-0">Embed code with syntax highlighting</p>
+                                </div>
+                                <div class="dev-feature-card" data-feature="ai">
+                                    <div class="dev-feature-icon">
+                                        <i class="fas fa-robot"></i>
+                                    </div>
+                                    <h6 class="fw-bold">AI Assistant</h6>
+                                    <p class="small text-muted mb-0">Get AI-powered suggestions</p>
+                                </div>
+                                <div class="dev-feature-card" data-feature="version">
+                                    <div class="dev-feature-icon">
+                                        <i class="fas fa-history"></i>
+                                    </div>
+                                    <h6 class="fw-bold">Version Control</h6>
+                                    <p class="small text-muted mb-0">Track changes and revisions</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Assistant Section -->
+                        <div class="ai-assistant d-none" id="aiAssistant">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-robot me-2"></i>AI Writing Assistant
+                                </h6>
+                                <button class="btn btn-sm btn-outline-primary" id="refreshAI">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            <div class="ai-suggestions">
+                                <button class="ai-suggestion-btn" data-suggestion="outline">
+                                    Generate lesson outline
+                                </button>
+                                <button class="ai-suggestion-btn" data-suggestion="example">
+                                    Add code examples
+                                </button>
+                                <button class="ai-suggestion-btn" data-suggestion="quiz">
+                                    Create quiz questions
+                                </button>
+                                <button class="ai-suggestion-btn" data-suggestion="summary">
+                                    Write summary
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Main Form -->
+                        <form method="post" enctype="multipart/form-data" id="advancedLessonForm">
+                            {% csrf_token %}
+                            
+                            <!-- Course Selection with Tags -->
+                            <div class="form-group mb-4">
+                                <label class="form-label fw-bold mb-2">
+                                    <i class="fas fa-book me-2"></i>Course & Tags
+                                </label>
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <select name="course" class="form-select select2-enhanced" id="courseSelect" required>
+                                            <option value="">-- Choose a Course --</option>
+                                            {% for course in courses %}
+                                            <option value="{{ course.id }}" data-tags="{{ course.tags|join:',' }}">
+                                                {{ course.title }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input name="tags" class="form-control" id="tagsInput" placeholder="Add tags...">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Title & Meta -->
+                            <div class="responsive-grid">
+                                <div class="grid-item">
+                                    <label class="form-label fw-bold mb-2">
+                                        <i class="fas fa-heading me-2"></i>Lesson Title
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           name="title" 
+                                           id="titleInput" 
+                                           placeholder="Enter lesson title"
+                                           maxlength="255"
+                                           required
+                                           data-autosave="true">
+                                    <div class="form-text mt-2">
+                                        <span id="titleCount">0/255</span> characters
+                                    </div>
+                                </div>
+                                
+                                <div class="grid-item">
+                                    <label class="form-label fw-bold mb-2">
+                                        <i class="fas fa-sort-numeric-down me-2"></i>Order & Duration
+                                    </label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" 
+                                                   class="form-control" 
+                                                   name="order" 
+                                                   id="orderInput"
+                                                   value="1"
+                                                   min="1"
+                                                   max="100">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" 
+                                                   class="form-control" 
+                                                   name="duration" 
+                                                   id="durationInput"
+                                                   placeholder="Min"
+                                                   min="1"
+                                                   max="240">
+                                        </div>
+                                    </div>
+                                    <div class="form-text mt-2">Sequence and estimated duration</div>
+                                </div>
+                            </div>
+
+                            <!-- Content Editor with Markdown -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold mb-2">
+                                    <i class="fas fa-edit me-2"></i>Lesson Content
+                                </label>
+                                
+                                <!-- Editor Tabs -->
+                                <div class="code-editor-container" id="codeEditorContainer" style="display: none;">
+                                    <div class="code-editor-header">
+                                        <div class="code-editor-tabs">
+                                            <button type="button" class="code-tab active" data-language="markdown">
+                                                Markdown
+                                            </button>
+                                            <button type="button" class="code-tab" data-language="html">
+                                                HTML
+                                            </button>
+                                            <button type="button" class="code-tab" data-language="javascript">
+                                                JavaScript
+                                            </button>
+                                            <button type="button" class="code-tab" data-language="python">
+                                                Python
+                                            </button>
+                                        </div>
+                                        <select class="code-language-selector" id="codeLanguage">
+                                            <option value="markdown">Markdown</option>
+                                            <option value="html">HTML</option>
+                                            <option value="css">CSS</option>
+                                            <option value="javascript">JavaScript</option>
+                                            <option value="python">Python</option>
+                                            <option value="java">Java</option>
+                                            <option value="php">PHP</option>
+                                            <option value="sql">SQL</option>
+                                        </select>
+                                    </div>
+                                    <textarea id="codeEditor"></textarea>
+                                </div>
+                                
+                                <!-- Markdown Editor -->
+                                <textarea class="form-control" 
+                                          name="content" 
+                                          id="contentInput" 
+                                          rows="10"
+                                          placeholder="# Start writing your lesson content here...
+                                          
+Use markdown for formatting:
+- **Bold** and *italic* text
+- ```code blocks```
+- > Quotes
+- Lists
+- And more..."></textarea>
+                            </div>
+
+                            <!-- Video & Attachments -->
+                            <div class="responsive-grid">
+                                <div class="grid-item">
+                                    <label class="form-label fw-bold mb-2">
+                                        <i class="fas fa-video me-2"></i>Video Content
+                                    </label>
+                                    <input type="url" 
+                                           class="form-control" 
+                                           name="video_url" 
+                                           id="videoUrlInput"
+                                           placeholder="https://youtube.com/watch?v=..."
+                                           pattern="https://.*">
+                                    <div class="form-text">Supports YouTube, Vimeo, and MP4</div>
+                                    
+                                    <!-- Video Preview -->
+                                    <div class="video-preview mt-3 d-none" id="videoPreview">
+                                        <div class="ratio ratio-16x9">
+                                            <iframe src="" frameborder="0" allowfullscreen></iframe>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid-item">
+                                    <label class="form-label fw-bold mb-2">
+                                        <i class="fas fa-paperclip me-2"></i>Attachments
+                                    </label>
+                                    <div class="attachment-zone" id="attachmentZone">
+                                        <div class="text-center p-4">
+                                            <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
+                                            <p class="mb-2">Drag & drop files here</p>
+                                            <p class="small text-muted">or click to browse</p>
+                                            <input type="file" 
+                                                   class="d-none" 
+                                                   name="attachment" 
+                                                   id="attachmentInput"
+                                                   accept=".pdf,.doc,.docx,.ppt,.pptx,.zip,.md,.txt"
+                                                   multiple>
+                                        </div>
+                                    </div>
+                                    <div class="attachments-list mt-2" id="attachmentsList"></div>
+                                </div>
+                            </div>
+
+                            <!-- Advanced Options -->
+                            <div class="accordion mb-4" id="advancedOptions">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvanced">
+                                            <i class="fas fa-cog me-2"></i>Advanced Options
+                                        </button>
+                                    </h2>
+                                    <div id="collapseAdvanced" class="accordion-collapse collapse" data-bs-parent="#advancedOptions">
+                                        <div class="accordion-body">
+                                            <div class="row g-3">
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Difficulty Level</label>
+                                                    <select class="form-select" name="difficulty">
+                                                        <option value="beginner">Beginner</option>
+                                                        <option value="intermediate" selected>Intermediate</option>
+                                                        <option value="advanced">Advanced</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Prerequisites</label>
+                                                    <input type="text" class="form-control" name="prerequisites" placeholder="Comma separated">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Learning Objectives</label>
+                                                    <textarea class="form-control" name="objectives" rows="2" placeholder="One per line"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Status & Actions -->
+                            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top flex-wrap gap-3">
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a href="{% url 'accounts:admin_lesson_list_all' %}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left me-2"></i>Back
+                                    </a>
+                                    <button type="button" class="btn btn-outline-info" id="previewBtn">
+                                        <i class="fas fa-eye me-2"></i>Preview
+                                    </button>
+                                    <button type="button" class="btn btn-outline-dark" id="versionHistoryBtn">
+                                        <i class="fas fa-history me-2"></i>History
+                                    </button>
+                                </div>
+                                
+                                <div class="d-flex gap-3 align-items-center flex-wrap">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               name="is_published" 
+                                               id="statusSwitch"
+                                               checked>
+                                        <label class="form-check-label fw-bold" for="statusSwitch">
+                                            <span class="status-indicator status-published"></span>
+                                            Publish
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-outline-warning" id="saveDraftBtn">
+                                            <i class="fas fa-save me-2"></i>Save Draft
+                                        </button>
+                                        <button type="submit" class="btn btn-primary lesson-submit-btn">
+                                            <i class="fas fa-plus-circle me-2"></i>Create Lesson
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Live Preview Panel -->
+                <div class="lesson-form-card mt-4 d-none" id="livePreviewPanel">
+                    <div class="lesson-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-desktop me-2"></i>Live Preview
+                            <small class="opacity-75 ms-2">Updates in real-time</small>
+                        </h5>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="preview-section">
+                                    <h6>Desktop View</h6>
+                                    <div class="preview-device desktop">
+                                        <div class="preview-content" id="desktopPreview"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="preview-section">
+                                    <h6>Mobile View</h6>
+                                    <div class="preview-device mobile">
+                                        <div class="preview-content" id="mobilePreview"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+<script>
+class AdvancedLessonEditor {
+    constructor() {
+        this.initElements();
+        this.initEventListeners();
+        this.initEditor();
+        this.initAutoSave();
+        this.initDragDrop();
+        this.setupKeyboardShortcuts();
+        this.setupResponsiveListeners();
+    }
+
+    initElements() {
+        this.form = document.getElementById('advancedLessonForm');
+        this.titleInput = document.getElementById('titleInput');
+        this.contentInput = document.getElementById('contentInput');
+        this.courseSelect = document.getElementById('courseSelect');
+        this.tagsInput = document.getElementById('tagsInput');
+        this.previewBtn = document.getElementById('previewBtn');
+        this.saveDraftBtn = document.getElementById('saveDraftBtn');
+        this.aiAssistant = document.getElementById('aiAssistant');
+        this.codeEditorContainer = document.getElementById('codeEditorContainer');
+        this.progressCircle = document.querySelector('.progress-ring-circle');
+        this.progressText = document.getElementById('progressText');
+        
+        // Initialize Select2
+        $(this.courseSelect).select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Select a course'
+        });
+
+        // Initialize Tagify
+        this.tagify = new Tagify(this.tagsInput, {
+            whitelist: [],
+            dropdown: {
+                maxItems: 20,
+                classname: "tags-look",
+                enabled: 0,
+                closeOnSelect: false
+            }
+        });
+
+        // Initialize Markdown Editor
+        this.easyMDE = new EasyMDE({
+            element: this.contentInput,
+            spellChecker: false,
+            autosave: {
+                enabled: true,
+                uniqueId: "lesson-content",
+                delay: 1000,
+            },
+            toolbar: [
+                "bold", "italic", "heading", "|",
+                "quote", "unordered-list", "ordered-list", "|",
+                "link", "image", "|",
+                "preview", "side-by-side", "fullscreen", "|",
+                "guide"
+            ],
+            placeholder: "Start writing your lesson content here...",
+            status: false,
+            sideBySideFullscreen: false,
+            autoDownloadFontAwesome: false
+        });
+    }
+
+    initEventListeners() {
+        // Title character counter
+        this.titleInput.addEventListener('input', () => {
+            const count = this.titleInput.value.length;
+            document.getElementById('titleCount').textContent = `${count}/255`;
+            this.updateProgress();
+        });
+
+        // Developer features
+        document.querySelectorAll('.dev-feature-card').forEach(card => {
+            card.addEventListener('click', (e) => this.toggleFeature(e));
+        });
+
+        // AI suggestions
+        document.querySelectorAll('.ai-suggestion-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.handleAISuggestion(e));
+        });
+
+        // Form submission
+        this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+        
+        // Save draft
+        this.saveDraftBtn.addEventListener('click', () => this.saveDraft());
+        
+        // Preview
+        this.previewBtn.addEventListener('click', () => this.showPreview());
+        
+        // Video URL preview
+        document.getElementById('videoUrlInput').addEventListener('blur', () => this.previewVideo());
+        
+        // Dark mode toggle
+        document.getElementById('toggleDarkMode').addEventListener('click', () => this.toggleDarkMode());
+    }
+
+    initEditor() {
+        // Code editor tabs
+        document.querySelectorAll('.code-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const language = e.target.dataset.language;
+                this.switchCodeEditor(language);
+            });
+        });
+
+        // Language selector
+        document.getElementById('codeLanguage').addEventListener('change', (e) => {
+            this.updateCodeLanguage(e.target.value);
+        });
+    }
+
+    initAutoSave() {
+        let saveTimeout;
+        const elements = [this.titleInput, this.contentInput, this.courseSelect];
+        
+        elements.forEach(element => {
+            if (element !== this.contentInput) {
+                element.addEventListener('input', () => {
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(() => this.saveDraft(true), 2000);
+                });
+            }
+        });
+
+        // Auto-save for EasyMDE
+        this.easyMDE.codemirror.on('change', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => this.saveDraft(true), 2000);
+        });
+
+        // Load auto-saved draft
+        this.loadAutoSavedDraft();
+    }
+
+    initDragDrop() {
+        const dropZone = document.getElementById('attachmentZone');
+        const fileInput = document.getElementById('attachmentInput');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.add('drag-over');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('drag-over');
+            });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            this.handleFiles(files);
+        });
+
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            this.handleFiles(e.target.files);
+        });
+    }
+
+    handleFiles(files) {
+        const attachmentsList = document.getElementById('attachmentsList');
+        attachmentsList.innerHTML = '';
+
+        Array.from(files).forEach(file => {
+            if (file.size > 10 * 1024 * 1024) {
+                alert(`File ${file.name} is too large (max 10MB)`);
+                return;
+            }
+
+            const fileItem = document.createElement('div');
+            fileItem.className = 'd-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded';
+            fileItem.innerHTML = `
+                <div>
+                    <i class="fas fa-file me-2"></i>
+                    <span>${file.name}</span>
+                    <small class="text-muted ms-2">(${(file.size / 1024).toFixed(1)} KB)</small>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            attachmentsList.appendChild(fileItem);
+        });
+    }
+
+    toggleFeature(event) {
+        const card = event.currentTarget;
+        const feature = card.dataset.feature;
+        
+        // Toggle active state
+        card.classList.toggle('active');
+        
+        // Handle feature activation
+        switch(feature) {
+            case 'code':
+                this.codeEditorContainer.style.display = 
+                    card.classList.contains('active') ? 'block' : 'none';
+                break;
+            case 'ai':
+                this.aiAssistant.classList.toggle('d-none');
+                break;
+            case 'markdown':
+                this.toggleMarkdownGuide();
+                break;
+            case 'version':
+                this.showVersionHistory();
+                break;
+        }
+    }
+
+    handleAISuggestion(event) {
+        const suggestion = event.currentTarget.dataset.suggestion;
+        const content = this.easyMDE.value();
+        
+        // Simulate AI response
+        const suggestions = {
+            outline: '# Lesson Outline\n\n## Introduction\n## Main Concepts\n## Examples\n## Summary\n## Exercises',
+            example: '```python\ndef hello_world():\n    print("Hello, World!")\n\nhello_world()\n```',
+            quiz: '## Quiz Questions\n\n1. What is the main concept?\n2. How does it work?\n3. When would you use this?',
+            summary: '## Summary\n\nKey takeaways from this lesson...'
+        };
+
+        this.easyMDE.value(content + '\n\n' + suggestions[suggestion]);
+        this.showNotification('AI suggestion added!', 'success');
+    }
+
+    updateProgress() {
+        let progress = 0;
+        
+        // Title (20%)
+        if (this.titleInput.value.length >= 10) progress += 20;
+        
+        // Content (40%)
+        if (this.easyMDE.value().length >= 200) progress += 40;
+        
+        // Course (20%)
+        if (this.courseSelect.value) progress += 20;
+        
+        // Video or attachment (20%)
+        if (document.getElementById('videoUrlInput').value || 
+            document.getElementById('attachmentInput').files.length > 0) {
+            progress += 20;
+        }
+        
+        // Update progress ring
+        const circumference = 283;
+        const offset = circumference - (progress / 100) * circumference;
+        this.progressCircle.style.strokeDashoffset = offset;
+        this.progressText.textContent = `${progress}%`;
+        
+        // Color based on progress
+        if (progress < 30) {
+            this.progressCircle.style.stroke = '#ef4444';
+        } else if (progress < 70) {
+            this.progressCircle.style.stroke = '#f59e0b';
+        } else {
+            this.progressCircle.style.stroke = '#10b981';
+        }
+    }
+
+    saveDraft(auto = false) {
+        const draft = {
+            title: this.titleInput.value,
+            content: this.easyMDE.value(),
+            course: this.courseSelect.value,
+            videoUrl: document.getElementById('videoUrlInput').value,
+            order: document.getElementById('orderInput').value,
+            tags: this.tagify.value.map(tag => tag.value),
+            timestamp: new Date().toISOString()
+        };
+
+        localStorage.setItem('lessonDraft', JSON.stringify(draft));
+        
+        if (!auto) {
+            this.showNotification('Draft saved successfully!', 'success');
+            this.saveDraftBtn.innerHTML = '<i class="fas fa-check me-2"></i>Saved!';
+            setTimeout(() => {
+                this.saveDraftBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Draft';
+            }, 2000);
+        }
+    }
+
+    loadAutoSavedDraft() {
+        const saved = localStorage.getItem('lessonDraft');
+        if (saved && confirm('Load saved draft?')) {
+            const draft = JSON.parse(saved);
+            this.titleInput.value = draft.title || '';
+            this.easyMDE.value(draft.content || '');
+            this.courseSelect.value = draft.course || '';
+            $(this.courseSelect).trigger('change');
+            document.getElementById('videoUrlInput').value = draft.videoUrl || '';
+            document.getElementById('orderInput').value = draft.order || '1';
+            
+            if (draft.tags) {
+                this.tagify.removeAllTags();
+                draft.tags.forEach(tag => this.tagify.addTags(tag));
+            }
+            
+            this.updateProgress();
+        }
+    }
+
+    showPreview() {
+        const previewPanel = document.getElementById('livePreviewPanel');
+        previewPanel.classList.toggle('d-none');
+        
+        if (!previewPanel.classList.contains('d-none')) {
+            this.renderPreview();
+        }
+    }
+
+    renderPreview() {
+        const desktopPreview = document.getElementById('desktopPreview');
+        const mobilePreview = document.getElementById('mobilePreview');
+        
+        const content = marked.parse(this.easyMDE.value());
+        
+        desktopPreview.innerHTML = `
+            <h4>${this.titleInput.value || 'Untitled Lesson'}</h4>
+            <div>${content}</div>
+        `;
+        
+        mobilePreview.innerHTML = `
+            <h6>${this.titleInput.value || 'Untitled Lesson'}</h6>
+            <div style="font-size: 14px;">${content}</div>
+        `;
+        
+        // Apply Prism highlighting
+        Prism.highlightAllUnder(desktopPreview);
+        Prism.highlightAllUnder(mobilePreview);
+    }
+
+    previewVideo() {
+        const url = document.getElementById('videoUrlInput').value;
+        const preview = document.getElementById('videoPreview');
+        
+        if (url) {
+            let embedUrl = url;
+            
+            // Convert YouTube URL to embed
+            if (url.includes('youtube.com/watch')) {
+                const videoId = url.split('v=')[1];
+                const ampersandPosition = videoId.indexOf('&');
+                if (ampersandPosition !== -1) {
+                    embedUrl = `https://www.youtube.com/embed/${videoId.substring(0, ampersandPosition)}`;
+                } else {
+                    embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                }
+            } else if (url.includes('vimeo.com')) {
+                const videoId = url.split('vimeo.com/')[1];
+                embedUrl = `https://player.vimeo.com/video/${videoId}`;
+            }
+            
+            preview.querySelector('iframe').src = embedUrl;
+            preview.classList.remove('d-none');
+        } else {
+            preview.classList.add('d-none');
+        }
+    }
+
+    toggleDarkMode() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+
+    switchCodeEditor(language) {
+        document.querySelectorAll('.code-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.language === language);
+        });
+        
+        // Update code editor language
+        // In a real implementation, this would switch the editor mode
+        console.log(`Switched to ${language} editor`);
+    }
+
+    updateCodeLanguage(language) {
+        // Update code editor language
+        // In a real implementation, this would change syntax highlighting
+        console.log(`Changed language to ${language}`);
+    }
+
+    showVersionHistory() {
+        const versions = JSON.parse(localStorage.getItem('lessonVersions') || '[]');
+        
+        if (versions.length === 0) {
+            this.showNotification('No version history found', 'info');
+            return;
+        }
+        
+        // Show version history modal
+        const modalHtml = `
+            <div class="modal fade" id="versionModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Version History</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${versions.map((version, index) => `
+                                <div class="card mb-2">
+                                    <div class="card-body">
+                                        <h6>Version ${versions.length - index}</h6>
+                                        <small class="text-muted">${new Date(version.timestamp).toLocaleString()}</small>
+                                        <p class="mt-2 small">${version.title || 'Untitled'}</p>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="editor.restoreVersion(${index})">
+                                            Restore
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        new bootstrap.Modal(document.getElementById('versionModal')).show();
+    }
+
+    restoreVersion(index) {
+        const versions = JSON.parse(localStorage.getItem('lessonVersions') || '[]');
+        const version = versions[index];
+        
+        if (version) {
+            this.titleInput.value = version.title;
+            this.easyMDE.value(version.content);
+            this.updateProgress();
+            this.showNotification('Version restored!', 'success');
+        }
+    }
+
+    handleSubmit(event) {
+        event.preventDefault();
+        
+        // Validate form
+        if (!this.validateForm()) return;
+        
+        // Show loading state
+        const submitBtn = this.form.querySelector('.lesson-submit-btn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+        submitBtn.disabled = true;
+        
+        // Save to version history
+        this.saveToVersionHistory();
+        
+        // Clear drafts
+        localStorage.removeItem('lessonDraft');
+        
+        // Submit form
+        setTimeout(() => {
+            this.form.submit();
+        }, 1000);
+    }
+
+    validateForm() {
+        let isValid = true;
+        
+        if (!this.titleInput.value.trim()) {
+            this.showError(this.titleInput, 'Title is required');
+            isValid = false;
+        }
+        
+        if (!this.easyMDE.value().trim()) {
+            this.showError(this.contentInput, 'Content is required');
+            isValid = false;
+        }
+        
+        if (!this.courseSelect.value) {
+            this.showError(this.courseSelect, 'Course selection is required');
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+
+    showError(element, message) {
+        const feedback = document.createElement('div');
+        feedback.className = 'invalid-feedback d-block';
+        feedback.textContent = message;
+        
+        const parent = element.closest('.form-group') || element.parentElement;
+        parent.appendChild(feedback);
+        element.classList.add('is-invalid');
+        
+        setTimeout(() => {
+            feedback.remove();
+            element.classList.remove('is-invalid');
+        }, 3000);
+    }
+
+    showNotification(message, type = 'info') {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(alert);
+        
+        setTimeout(() => {
+            alert.remove();
+        }, 5000);
+    }
+
+    saveToVersionHistory() {
+        const version = {
+            title: this.titleInput.value,
+            content: this.easyMDE.value(),
+            timestamp: new Date().toISOString()
+        };
+        
+        let versions = JSON.parse(localStorage.getItem('lessonVersions') || '[]');
+        versions.push(version);
+        
+        // Keep only last 10 versions
+        if (versions.length > 10) {
+            versions = versions.slice(-10);
+        }
+        
+        localStorage.setItem('lessonVersions', JSON.stringify(versions));
+    }
+
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + S to save draft
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                this.saveDraft();
+            }
+            
+            // Ctrl/Cmd + P to preview
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                this.showPreview();
+            }
+            
+            // Ctrl/Cmd + D to toggle dark mode
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                this.toggleDarkMode();
+            }
+        });
+    }
+
+    setupResponsiveListeners() {
+        // Handle window resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                this.handleResponsiveLayout();
+            }, 250);
+        });
+        
+        // Initial call
+        this.handleResponsiveLayout();
+    }
+
+    handleResponsiveLayout() {
+        const width = window.innerWidth;
+        
+        if (width < 768) {
+            // Mobile optimizations
+            this.easyMDE.options.toolbar = [
+                "bold", "italic", "|",
+                "link", "|",
+                "preview", "|",
+                "guide"
+            ];
+        } else if (width < 1024) {
+            // Tablet optimizations
+            this.easyMDE.options.toolbar = [
+                "bold", "italic", "heading", "|",
+                "quote", "unordered-list", "ordered-list", "|",
+                "link", "image", "|",
+                "preview", "fullscreen", "|",
+                "guide"
+            ];
+        }
+        
+        // Refresh editor
+        this.easyMDE.codemirror.refresh();
+    }
+
+    toggleMarkdownGuide() {
+        // Show/hide markdown cheat sheet
+        const guide = document.getElementById('markdownGuide');
+        if (!guide) {
+            const guideHtml = `
+                <div class="modal fade" id="markdownGuide" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Markdown Guide</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <table class="table table-sm">
+                                    <tr><td># Heading 1</td><td>Largest heading</td></tr>
+                                    <tr><td>## Heading 2</td><td>Medium heading</td></tr>
+                                    <tr><td>**Bold**</td><td>Bold text</td></tr>
+                                    <tr><td>*Italic*</td><td>Italic text</td></tr>
+                                    <tr><td>```code```</td><td>Code block</td></tr>
+                                    <tr><td>- Item</td><td>Bullet list</td></tr>
+                                    <tr><td>[Link](url)</td><td>Hyperlink</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', guideHtml);
+        }
+        
+        new bootstrap.Modal(document.getElementById('markdownGuide')).show();
+    }
+}
+
+// Initialize editor when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.editor = new AdvancedLessonEditor();
+    
+    // Set theme from localStorage
+    const theme = localStorage.getItem('theme') || 'light';
+    if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+    
+    // Initialize progress
+    setTimeout(() => editor.updateProgress(), 100);
+});
+
+// Export/Import functionality
+document.getElementById('exportBtn').addEventListener('click', () => {
+    const lesson = {
+        title: document.getElementById('titleInput').value,
+        content: editor.easyMDE.value(),
+        course: document.getElementById('courseSelect').value,
+        videoUrl: document.getElementById('videoUrlInput').value,
+        order: document.getElementById('orderInput').value,
+        tags: editor.tagify.value.map(tag => tag.value),
+        timestamp: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(lesson, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `lesson-${new Date().getTime()}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+});
+
+document.getElementById('importBtn').addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = e => {
+            try {
+                const lesson = JSON.parse(e.target.result);
+                
+                if (confirm('Import this lesson? Current data will be replaced.')) {
+                    document.getElementById('titleInput').value = lesson.title || '';
+                    editor.easyMDE.value(lesson.content || '');
+                    document.getElementById('courseSelect').value = lesson.course || '';
+                    $(document.getElementById('courseSelect')).trigger('change');
+                    document.getElementById('videoUrlInput').value = lesson.videoUrl || '';
+                    document.getElementById('orderInput').value = lesson.order || '1';
+                    
+                    if (lesson.tags) {
+                        editor.tagify.removeAllTags();
+                        lesson.tags.forEach(tag => editor.tagify.addTags(tag));
+                    }
+                    
+                    editor.updateProgress();
+                    editor.showNotification('Lesson imported successfully!', 'success');
+                }
+            } catch (error) {
+                alert('Invalid lesson file');
+            }
+        };
+        
+        reader.readAsText(file);
+    };
+    
+    input.click();
+});
+
+// Add service worker for offline support
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(error => {
+            console.log('Service Worker registration failed:', error);
+        });
+    });
+}
+
+// Network status detection
+window.addEventListener('online', () => {
+    editor.showNotification('Back online!', 'success');
+});
+
+window.addEventListener('offline', () => {
+    editor.showNotification('You are offline. Changes will be saved locally.', 'warning');
+});
+</script>
+{% endblock %}

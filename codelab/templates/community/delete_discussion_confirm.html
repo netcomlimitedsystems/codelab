@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Discussion - {{ discussion.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow-sm rounded">
+        <div class="card-body text-center">
+            <h4 class="mb-3">Are you sure you want to delete this discussion?</h4>
+            <p class="mb-4">{{ discussion.title }}</p>
+            <form method="post">
+                {% csrf_token %}
+                <a href="{% url 'community:discussion_detail' discussion.id %}" class="btn btn-outline-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

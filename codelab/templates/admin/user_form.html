@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i>{{ title }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">Username *</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="username" 
+                                   name="username" 
+                                   value="{% if user %}{{ user.username }}{% endif %}" 
+                                   required>
+                            <div class="invalid-feedback">
+                                Username is required.
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email Address *</label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   name="email" 
+                                   value="{% if user %}{{ user.email }}{% endif %}" 
+                                   required>
+                            <div class="invalid-feedback">
+                                Valid email is required.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="first_name" 
+                                   name="first_name" 
+                                   value="{% if user %}{{ user.first_name }}{% endif %}">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="last_name" 
+                                   name="last_name" 
+                                   value="{% if user %}{{ user.last_name }}{% endif %}">
+                        </div>
+                    </div>
+                    
+                    <!-- Password Section -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-key me-2"></i>Password Settings</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="password" class="form-label">
+                                    {% if user %}New Password{% else %}Password *{% endif %}
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="password" 
+                                           name="password"
+                                           {% if not user %}required{% endif %}>
+                                    <button class="btn btn-outline-secondary toggle-password" type="button">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                {% if user %}
+                                    <div class="form-text">Leave blank to keep current password</div>
+                                {% else %}
+                                    <div class="form-text">Minimum 8 characters with uppercase, lowercase, and numbers</div>
+                                {% endif %}
+                                <div class="invalid-feedback">
+                                    Password is required.
+                                </div>
+                            </div>
+                            
+                            <div class="mb-0">
+                                <label for="confirm_password" class="form-label">Confirm Password</label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="confirm_password" 
+                                           name="confirm_password"
+                                           {% if not user %}required{% endif %}>
+                                    <button class="btn btn-outline-secondary toggle-password" type="button">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="password-match mt-2">
+                                    <small class="text-muted" id="password-match-text"></small>
+                                </div>
+                                <div class="invalid-feedback">
+                                    Passwords must match.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Profile Information -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-id-card me-2"></i>Profile Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="full_name" class="form-label">Full Name</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="full_name" 
+                                           name="full_name" 
+                                           value="{% if profile %}{{ profile.full_name }}{% endif %}">
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">+254</span>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="phone" 
+                                               name="phone" 
+                                               value="{% if profile %}{{ profile.phone }}{% endif %}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- User Permissions -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-user-shield me-2"></i>User Permissions</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="is_staff" 
+                                               name="is_staff"
+                                               {% if user and user.is_staff %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_staff">
+                                            Staff Member
+                                        </label>
+                                        <div class="form-text">
+                                            Can access admin interface
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="is_active" 
+                                               name="is_active"
+                                               {% if not user or user.is_active %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_active">
+                                            Active Account
+                                        </label>
+                                        <div class="form-text">
+                                            User can log in
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="is_superuser" 
+                                               name="is_superuser"
+                                               {% if user and user.is_superuser %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_superuser">
+                                            Superuser
+                                        </label>
+                                        <div class="form-text">
+                                            Has all permissions
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="email_verified" 
+                                               name="email_verified"
+                                               {% if user and user.is_active %}checked{% endif %}>
+                                        <label class="form-check-label" for="email_verified">
+                                            Email Verified
+                                        </label>
+                                        <div class="form-text">
+                                            User email is confirmed
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- User Groups -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-users me-2"></i>User Groups</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="group_student" 
+                                               name="groups" 
+                                               value="student"
+                                               checked>
+                                        <label class="form-check-label" for="group_student">
+                                            Student
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="group_instructor" 
+                                               name="groups" 
+                                               value="instructor">
+                                        <label class="form-check-label" for="group_instructor">
+                                            Instructor
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="group_moderator" 
+                                               name="groups" 
+                                               value="moderator">
+                                        <label class="form-check-label" for="group_moderator">
+                                            Community Moderator
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'accounts:admin_user_list' %}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Password toggle visibility
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const input = this.parentElement.querySelector('input');
+            const icon = this.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    });
+    
+    // Password strength indicator
+    const passwordInput = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+    const matchText = document.getElementById('password-match-text');
+    
+    passwordInput?.addEventListener('input', function() {
+        if (confirmPassword.value) {
+            checkPasswordMatch();
+        }
+    });
+    
+    confirmPassword?.addEventListener('input', checkPasswordMatch);
+    
+    function checkPasswordMatch() {
+        if (confirmPassword.value === passwordInput.value && confirmPassword.value !== '') {
+            matchText.textContent = 'Passwords match!';
+            matchText.className = 'text-success';
+        } else if (confirmPassword.value !== '') {
+            matchText.textContent = 'Passwords do not match';
+            matchText.className = 'text-danger';
+        } else {
+            matchText.textContent = '';
+        }
+    }
+    
+    // Username availability check (if you have an endpoint)
+    const usernameInput = document.getElementById('username');
+    let usernameTimeout;
+    
+    usernameInput?.addEventListener('input', function() {
+        clearTimeout(usernameTimeout);
+        usernameTimeout = setTimeout(() => {
+            if (this.value.length >= 3) {
+                checkUsernameAvailability(this.value);
+            }
+        }, 500);
+    });
+    
+    function checkUsernameAvailability(username) {
+        fetch(`/api/check-username/?username=${username}`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.available && username !== '{{ user.username }}') {
+                    usernameInput.classList.add('is-invalid');
+                    usernameInput.nextElementSibling.textContent = 'Username already taken';
+                } else {
+                    usernameInput.classList.remove('is-invalid');
+                }
+            })
+            .catch(console.error);
+    }
+    
+    // Form validation
+    (function() {
+        'use strict';
+        var form = document.querySelector('.needs-validation');
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    })();
+    
+    // Email validation
+    document.getElementById('email')?.addEventListener('blur', function() {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(this.value)) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.textContent = 'Please enter a valid email address';
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

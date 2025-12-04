@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Forums{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'community:index' %}">Forums</a></li>
+                <li class="breadcrumb-item active">Manage Forums</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Forum Management</h1>
+            <a href="{% url 'community:create_forum' %}" class="btn btn-primary">
+                ➕ Create New Forum
+            </a>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h3 class="mb-1">{{ total_forums }}</h3>
+                        <small>Total Forums</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3 class="mb-1">{{ active_forums }}</h3>
+                        <small>Active Forums</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h3 class="mb-1">{{ inactive_forums }}</h3>
+                        <small>Inactive Forums</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h3 class="mb-1">{{ total_discussions }}</h3>
+                        <small>Total Discussions</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forums Table -->
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">All Forums</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Forum Name</th>
+                                <th>Description</th>
+                                <th>Discussions</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Author</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for forum in forums %}
+                            <tr>
+                                <td>
+                                    <strong>{{ forum.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">/{{ forum.slug }}</small>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ forum.description|truncatewords:10 }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ forum.discussions.count }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if forum.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {{ forum.is_active|yesno:"Active,Inactive" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>{{ forum.created_at|date:"M d, Y" }}</small>
+                                </td>
+                                <td>
+                                    <small>{{ forum.author.username }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'community:forum_detail' forum.slug %}" 
+                                           class="btn btn-outline-primary" title="View">
+                                            👁️
+                                        </a>
+                                        <a href="{% url 'community:edit_forum' forum.slug %}" 
+                                           class="btn btn-outline-secondary" title="Edit">
+                                            ✏️
+                                        </a>
+                                        <a href="{% url 'community:delete_forum' forum.slug %}" 
+                                           class="btn btn-outline-danger" title="Delete">
+                                            🗑️
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="text-muted">
+                                        <span class="fs-1">📝</span>
+                                        <h5>No Forums Created</h5>
+                                        <p>Create your first forum to get started!</p>
+                                        <a href="{% url 'community:create_forum' %}" class="btn btn-primary">
+                                            Create First Forum
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

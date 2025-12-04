@@ -1,0 +1,1656 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Certificates - CodeLab{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --cert-primary: #4361ee;
+    --cert-secondary: #3a0ca3;
+    --cert-gold: #ffd700;
+    --cert-silver: #c0c0c0;
+    --cert-bronze: #cd7f32;
+    --cert-success: #10b981;
+    --cert-warning: #f59e0b;
+    --cert-info: #3b82f6;
+    --cert-dark: #1e293b;
+    --cert-light: #f8fafc;
+}
+
+/* Base Container */
+.certificates-container {
+    min-height: calc(100vh - 70px);
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    position: relative;
+    overflow-x: hidden;
+}
+
+.certificates-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.03"><path d="M50,5L85,35L85,75L50,95L15,75L15,35Z" fill="%234361ee"/></svg>') repeat;
+    pointer-events: none;
+}
+
+/* Header Section */
+.certificates-header {
+    background: linear-gradient(135deg, var(--cert-primary) 0%, var(--cert-secondary) 100%);
+    padding: 3rem 2rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.certificates-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><path d="M50,20L60,40L80,45L65,60L70,80L50,70L30,80L35,60L20,45L40,40Z" fill="white"/></svg>') repeat;
+    animation: floatBackground 30s linear infinite;
+}
+
+@keyframes floatBackground {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(-100px) rotate(360deg); }
+}
+
+/* Stats Cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(67, 97, 238, 0.1);
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--cert-primary), var(--cert-secondary));
+}
+
+.stat-card.gold::before { background: linear-gradient(90deg, #ffd700, #ffed4e); }
+.stat-card.silver::before { background: linear-gradient(90deg, #c0c0c0, #e0e0e0); }
+.stat-card.bronze::before { background: linear-gradient(90deg, #cd7f32, #e6994c); }
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Certificate Cards */
+.certificate-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    padding: 2rem;
+}
+
+.certificate-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.certificate-card:hover {
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 30px 50px rgba(67, 97, 238, 0.15);
+}
+
+.certificate-card.premium {
+    border: 2px solid var(--cert-gold);
+    background: linear-gradient(135deg, #fff9db 0%, #fff3bf 100%);
+}
+
+.certificate-header {
+    background: linear-gradient(135deg, var(--cert-primary) 0%, var(--cert-secondary) 100%);
+    padding: 1.5rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.certificate-header.premium {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+}
+
+.certificate-ribbon {
+    position: absolute;
+    top: 20px;
+    right: -40px;
+    background: var(--cert-warning);
+    color: white;
+    padding: 0.5rem 3rem;
+    transform: rotate(45deg);
+    font-size: 0.75rem;
+    font-weight: bold;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.certificate-body {
+    padding: 2rem;
+}
+
+.certificate-badge {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, var(--cert-primary) 0%, var(--cert-secondary) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    color: white;
+    font-size: 2.5rem;
+    box-shadow: 0 10px 30px rgba(67, 97, 238, 0.3);
+    position: relative;
+}
+
+.certificate-badge::after {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border: 3px solid white;
+    border-radius: 50%;
+    opacity: 0.3;
+}
+
+.certificate-details {
+    text-align: center;
+}
+
+.certificate-id {
+    background: #f8fafc;
+    border: 2px dashed #e2e8f0;
+    padding: 0.75rem;
+    border-radius: 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    letter-spacing: 1px;
+    margin: 1rem 0;
+}
+
+.certificate-meta {
+    display: flex;
+    justify-content: space-around;
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 12px;
+}
+
+.meta-item {
+    text-align: center;
+}
+
+.meta-icon {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.5rem;
+    color: var(--cert-primary);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.certificate-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+/* 3D Certificate Preview */
+.certificate-preview-modal .modal-dialog {
+    max-width: 900px;
+}
+
+.preview-container {
+    perspective: 1000px;
+    height: 500px;
+    position: relative;
+}
+
+.certificate-3d {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.8s ease;
+    cursor: grab;
+}
+
+.certificate-3d:active {
+    cursor: grabbing;
+}
+
+.certificate-front, .certificate-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+.certificate-back {
+    transform: rotateY(180deg);
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: white;
+    padding: 2rem;
+}
+
+.preview-controls {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 1rem;
+    z-index: 100;
+}
+
+/* Filter and Search */
+.filter-section {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.filter-tag {
+    padding: 0.5rem 1rem;
+    background: #f1f5f9;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.filter-tag.active {
+    background: var(--cert-primary);
+    color: white;
+    border-color: var(--cert-primary);
+}
+
+.filter-tag:hover:not(.active) {
+    background: #e2e8f0;
+}
+
+.search-box {
+    position: relative;
+    flex: 1;
+}
+
+.search-box input {
+    padding-left: 3rem;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    height: 50px;
+}
+
+.search-box i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+/* Verification Section */
+.verification-section {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-radius: 20px;
+    padding: 3rem;
+    margin: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.verification-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.verification-step {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.step-number {
+    width: 50px;
+    height: 50px;
+    background: var(--cert-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin: 0 auto 1rem;
+}
+
+/* Achievement Badges */
+.achievement-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.achievement-badge {
+    text-align: center;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.achievement-badge:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.achievement-badge.locked {
+    opacity: 0.5;
+    filter: grayscale(1);
+}
+
+.badge-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    position: relative;
+}
+
+.badge-icon i {
+    font-size: 3rem;
+}
+
+.badge-icon.gold { color: var(--cert-gold); }
+.badge-icon.silver { color: var(--cert-silver); }
+.badge-icon.bronze { color: var(--cert-bronze); }
+
+/* Floating Action Buttons */
+.fab-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--cert-primary) 0%, var(--cert-secondary) 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 20px rgba(67, 97, 238, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 25px rgba(67, 97, 238, 0.4);
+}
+
+.fab-menu {
+    display: none;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.fab-menu.active {
+    display: flex;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fab-menu-item {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 50px;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.fab-menu-item:hover {
+    border-color: var(--cert-primary);
+    transform: translateX(-5px);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 20px;
+    margin: 2rem;
+}
+
+.achievement-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin: 3rem 0;
+}
+
+.achievement-step {
+    padding: 2rem;
+    background: white;
+    border-radius: 16px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.achievement-step:hover {
+    border-color: var(--cert-primary);
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(67, 97, 238, 0.1);
+}
+
+.step-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--cert-primary) 0%, var(--cert-secondary) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    color: white;
+    font-size: 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .certificate-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+    
+    .verification-section {
+        margin: 2rem;
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .certificates-header {
+        padding: 2rem 1rem;
+    }
+    
+    .certificate-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        padding: 1rem;
+        gap: 1.5rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    
+    .filter-section {
+        margin: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .certificate-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .certificate-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .verification-section {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+    
+    .achievement-steps {
+        grid-template-columns: 1fr;
+    }
+    
+    .preview-container {
+        height: 400px;
+    }
+    
+    .fab-container {
+        bottom: 1rem;
+        right: 1rem;
+    }
+    
+    .fab {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .certificates-container {
+        padding: 0;
+    }
+    
+    .certificate-grid {
+        padding: 1rem 0.5rem;
+    }
+    
+    .certificate-body {
+        padding: 1.5rem;
+    }
+    
+    .certificate-meta {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .filter-section {
+        padding: 1rem;
+    }
+    
+    .search-box input {
+        height: 45px;
+        font-size: 1rem;
+    }
+    
+    .fab-menu-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .btn, .fab, .fab-menu-item, .filter-tag, .achievement-badge {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+    
+    .certificate-card {
+        margin: 0.5rem;
+    }
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .certificates-container,
+.dark-mode .certificates-container {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .certificate-card,
+[data-theme="dark"] .filter-section,
+[data-theme="dark"] .verification-step,
+[data-theme="dark"] .achievement-badge,
+[data-theme="dark"] .achievement-step,
+[data-theme="dark"] .empty-state,
+.dark-mode .stat-card,
+.dark-mode .certificate-card,
+.dark-mode .filter-section,
+.dark-mode .verification-step,
+.dark-mode .achievement-badge,
+.dark-mode .achievement-step,
+.dark-mode .empty-state {
+    background: #1e293b;
+    color: #e2e8f0;
+    border-color: #334155;
+}
+
+[data-theme="dark"] .certificate-id,
+[data-theme="dark"] .certificate-meta,
+.dark-mode .certificate-id,
+.dark-mode .certificate-meta {
+    background: #0f172a;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .filter-tag,
+.dark-mode .filter-tag {
+    background: #334155;
+    color: #e2e8f0;
+    border-color: #475569;
+}
+
+[data-theme="dark"] .search-box input,
+.dark-mode .search-box input {
+    background: #1e293b;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .verification-section,
+.dark-mode .verification-section {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+[data-theme="dark"] .fab-menu-item,
+.dark-mode .fab-menu-item {
+    background: #1e293b;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+.certificate-card.premium {
+    animation: pulse 2s infinite;
+}
+
+.certificate-badge {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Loading States */
+.loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+}
+
+/* Print Styles */
+@media print {
+    .certificates-header,
+    .filter-section,
+    .fab-container,
+    .fab-menu,
+    .certificate-actions .btn:not(.btn-print),
+    .verification-section {
+        display: none !important;
+    }
+    
+    .certificates-container {
+        background: white !important;
+        padding: 0 !important;
+    }
+    
+    .certificate-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+        padding: 0 !important;
+    }
+    
+    .certificate-card {
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+    
+    .certificate-card:hover {
+        transform: none !important;
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 5px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track,
+.dark-mode ::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb,
+.dark-mode ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover,
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="certificates-container">
+    <!-- Floating Action Buttons -->
+    <div class="fab-container d-print-none">
+        <div class="fab-menu" id="fabMenu">
+            <button class="fab-menu-item" onclick="shareAllCertificates()">
+                <i class="fas fa-share-alt me-2"></i>Share All
+            </button>
+            <button class="fab-menu-item" onclick="downloadAllCertificates()">
+                <i class="fas fa-download me-2"></i>Download All
+            </button>
+            <button class="fab-menu-item" onclick="toggleDarkMode()">
+                <i class="fas fa-moon me-2"></i>Dark Mode
+            </button>
+            <button class="fab-menu-item" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>Print
+            </button>
+        </div>
+        <button class="fab" id="mainFab" onclick="toggleFabMenu()">
+            <i class="fas fa-plus" id="fabIcon"></i>
+        </button>
+    </div>
+
+    <!-- Header -->
+    <div class="certificates-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-5 fw-bold mb-3">My Certificates</h1>
+                    <p class="lead mb-4">Showcase your achievements and verify your skills with industry-recognized certificates</p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <span class="badge bg-white text-primary fs-6 px-3 py-2">
+                            <i class="fas fa-shield-alt me-2"></i>Verifiable Credentials
+                        </span>
+                        <span class="badge bg-white text-primary fs-6 px-3 py-2">
+                            <i class="fas fa-qrcode me-2"></i>QR Code Enabled
+                        </span>
+                        <span class="badge bg-white text-primary fs-6 px-3 py-2">
+                            <i class="fas fa-globe me-2"></i>Global Recognition
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="d-inline-block bg-white text-primary rounded-pill px-4 py-3">
+                        <div class="fs-1 fw-bold">{{ certificates|length|default:"0" }}</div>
+                        <div class="small">Certificates Earned</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter and Search -->
+    <div class="filter-section">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-8">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="form-control" id="certificateSearch" placeholder="Search certificates by course, date, or ID...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" id="certificateSort">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="course">Sort by Course</option>
+                    <option value="premium">Premium First</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <h6 class="mb-3">Filter by Type:</h6>
+            <div class="filter-tags">
+                <span class="filter-tag active" data-filter="all">All</span>
+                <span class="filter-tag" data-filter="premium">
+                    <i class="fas fa-crown me-2"></i>Premium
+                </span>
+                <span class="filter-tag" data-filter="completed">
+                    <i class="fas fa-check-circle me-2"></i>Completed
+                </span>
+                <span class="filter-tag" data-filter="in-progress">
+                    <i class="fas fa-spinner me-2"></i>In Progress
+                </span>
+                <span class="filter-tag" data-filter="verified">
+                    <i class="fas fa-shield-alt me-2"></i>Verified
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="fas fa-certificate"></i>
+                </div>
+                <h3 class="mb-2">{{ certificates|length|default:"0" }}</h3>
+                <p class="text-muted mb-0">Total Certificates</p>
+            </div>
+            
+            <div class="stat-card gold">
+                <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <h3 class="mb-2">{{ premium_count|default:"0" }}</h3>
+                <p class="text-muted mb-0">Premium Certificates</p>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon bg-success bg-opacity-10 text-success">
+                    <i class="fas fa-check-double"></i>
+                </div>
+                <h3 class="mb-2">{{ verified_count|default:"0" }}</h3>
+                <p class="text-muted mb-0">Verified Skills</p>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon bg-info bg-opacity-10 text-info">
+                    <i class="fas fa-star"></i>
+                </div>
+                <h3 class="mb-2">{{ avg_score|default:"0" }}%</h3>
+                <p class="text-muted mb-0">Average Score</p>
+            </div>
+        </div>
+    </div>
+
+    {% if certificates %}
+        <!-- Certificate Grid -->
+        <div class="container-fluid px-0">
+            <div class="certificate-grid" id="certificateGrid">
+                {% for certificate in certificates %}
+                <div class="certificate-card {% if certificate.is_premium %}premium{% endif %}" 
+                     data-course="{{ certificate.course.title|lower }}"
+                     data-date="{{ certificate.issued_at|date:'Y-m-d' }}"
+                     data-type="{% if certificate.is_premium %}premium{% else %}standard{% endif %}"
+                     data-status="completed">
+                    
+                    {% if certificate.is_premium %}
+                    <div class="certificate-ribbon">
+                        <i class="fas fa-crown me-1"></i>Premium
+                    </div>
+                    {% endif %}
+                    
+                    <div class="certificate-header {% if certificate.is_premium %}premium{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1"><i class="fas fa-book me-2"></i>{{ certificate.course.category }}</h6>
+                                <h5 class="mb-0">{{ certificate.course.title|truncatechars:40 }}</h5>
+                            </div>
+                            <div class="text-end">
+                                <small>Issued</small>
+                                <div class="fw-bold">{{ certificate.issued_at|date:"M d, Y" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="certificate-body">
+                        <div class="certificate-badge">
+                            <i class="fas fa-award"></i>
+                        </div>
+                        
+                        <div class="certificate-details">
+                            <h4 class="mb-3">Certificate of Completion</h4>
+                            <p class="text-muted">Awarded to</p>
+                            <h5 class="mb-3">{{ request.user.get_full_name|default:request.user.username }}</h5>
+                            
+                            <div class="certificate-id" title="{{ certificate.cert_id }}">
+                                {{ certificate.cert_id|slice:"0:8"|upper }}...{{ certificate.cert_id|slice:"24:32"|upper }}
+                            </div>
+                            
+                            <div class="certificate-meta">
+                                <div class="meta-item">
+                                    <div class="meta-icon">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div class="small">{{ certificate.course.duration|default:"8" }} Hours</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-icon">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <div class="small">{{ certificate.score|default:"100" }}% Score</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-icon">
+                                        <i class="fas fa-layer-group"></i>
+                                    </div>
+                                    <div class="small">{{ certificate.course.level }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="certificate-actions">
+                            <button class="btn btn-primary" onclick="viewCertificate3D('{{ certificate.id }}')">
+                                <i class="fas fa-eye me-1"></i>3D View
+                            </button>
+                            <a href="{% url 'courses:view_certificate' pk=certificate.id %}" 
+                               class="btn btn-outline-primary">
+                                <i class="fas fa-expand me-1"></i>Preview
+                            </a>
+                            <a href="{% url 'courses:download_certificate' pk=certificate.id %}" 
+                               class="btn btn-success">
+                                <i class="fas fa-download me-1"></i>PDF
+                            </a>
+                            <button class="btn btn-outline-info" onclick="shareCertificate('{{ certificate.id }}')">
+                                <i class="fas fa-share-alt me-1"></i>Share
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Achievement Badges -->
+        <div class="container mt-5">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Achievement Badges</h5>
+                </div>
+                <div class="card-body">
+                    <div class="achievement-grid">
+                        <div class="achievement-badge {% if certificates|length >= 1 %}unlocked{% else %}locked{% endif %}">
+                            <div class="badge-icon gold">
+                                <i class="fas fa-medal"></i>
+                            </div>
+                            <h6>First Certificate</h6>
+                            <small class="text-muted">Complete your first course</small>
+                        </div>
+                        
+                        <div class="achievement-badge {% if certificates|length >= 3 %}unlocked{% else %}locked{% endif %}">
+                            <div class="badge-icon silver">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <h6>Learning Streak</h6>
+                            <small class="text-muted">3+ certificates earned</small>
+                        </div>
+                        
+                        <div class="achievement-badge {% if certificates|length >= 5 %}unlocked{% else %}locked{% endif %}">
+                            <div class="badge-icon gold">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <h6>Master Learner</h6>
+                            <small class="text-muted">5+ certificates earned</small>
+                        </div>
+                        
+                        <div class="achievement-badge {% if premium_count > 0 %}unlocked{% else %}locked{% endif %}">
+                            <div class="badge-icon bronze">
+                                <i class="fas fa-gem"></i>
+                            </div>
+                            <h6>Premium Achiever</h6>
+                            <small class="text-muted">Earn a premium certificate</small>
+                        </div>
+                        
+                        <div class="achievement-badge {% if certificates|length >= 10 %}unlocked{% else %}locked{% endif %}">
+                            <div class="badge-icon gold">
+                                <i class="fas fa-rocket"></i>
+                            </div>
+                            <h6>Learning Expert</h6>
+                            <small class="text-muted">10+ certificates earned</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification Section -->
+        <div class="verification-section">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <h2 class="mb-3">Certificate Verification</h2>
+                        <p class="lead mb-4">All certificates are digitally signed and can be verified independently by employers using blockchain technology.</p>
+                        
+                        <div class="verification-grid">
+                            <div class="verification-step">
+                                <div class="step-number">1</div>
+                                <h5>Scan QR Code</h5>
+                                <p class="text-muted small">Use any smartphone camera to scan the certificate QR code</p>
+                            </div>
+                            
+                            <div class="verification-step">
+                                <div class="step-number">2</div>
+                                <h5>Online Verification</h5>
+                                <p class="text-muted small">Enter certificate ID on our verification portal</p>
+                            </div>
+                            
+                            <div class="verification-step">
+                                <div class="step-number">3</div>
+                                <h5>Instant Results</h5>
+                                <p class="text-muted small">Get instant verification with detailed credential information</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4 text-center">
+                        <div class="p-4 bg-white rounded shadow">
+                            <i class="fas fa-qrcode fa-6x text-primary mb-3"></i>
+                            <h5>Blockchain Verified</h5>
+                            <p class="text-muted small">Immutable record on the blockchain ensures authenticity</p>
+                            <button class="btn btn-outline-primary mt-2" onclick="showVerificationGuide()">
+                                <i class="fas fa-info-circle me-2"></i>Verification Guide
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <div class="icon-wrapper mb-4">
+                        <i class="fas fa-certificate fa-5x text-muted"></i>
+                    </div>
+                    <h2 class="mb-3">No Certificates Yet</h2>
+                    <p class="text-muted lead mb-4">Complete courses to earn verifiable certificates that showcase your skills to employers</p>
+                    
+                    <div class="row justify-content-center mb-5">
+                        <div class="col-lg-8">
+                            <div class="achievement-steps">
+                                <div class="achievement-step">
+                                    <div class="step-icon">
+                                        <i class="fas fa-book"></i>
+                                    </div>
+                                    <h5>Complete Lessons</h5>
+                                    <p class="text-muted small">Finish all course materials and exercises</p>
+                                </div>
+                                
+                                <div class="achievement-step">
+                                    <div class="step-icon">
+                                        <i class="fas fa-tasks"></i>
+                                    </div>
+                                    <h5>Pass Assignments</h5>
+                                    <p class="text-muted small">Submit and pass all course assignments</p>
+                                </div>
+                                
+                                <div class="achievement-step">
+                                    <div class="step-icon">
+                                        <i class="fas fa-graduation-cap"></i>
+                                    </div>
+                                    <h5>Final Exam</h5>
+                                    <p class="text-muted small">Achieve passing score on the final assessment</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-3 justify-content-center flex-wrap">
+                        <a href="{% url 'courses:course_list' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search me-2"></i>Browse Courses
+                        </a>
+                        <a href="{% url 'accounts:dashboard' %}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-chart-line me-2"></i>View Progress
+                        </a>
+                        <button class="btn btn-outline-secondary btn-lg" onclick="showCertificateSamples()">
+                            <i class="fas fa-eye me-2"></i>View Samples
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- 3D Certificate Preview Modal -->
+<div class="modal fade certificate-preview-modal" id="certificate3DModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">3D Certificate Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="preview-container">
+                    <div class="certificate-3d" id="certificate3D">
+                        <div class="certificate-front" id="certificateFront">
+                            <!-- Front content will be loaded here -->
+                        </div>
+                        <div class="certificate-back" id="certificateBack">
+                            <!-- Back content will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="preview-controls">
+                        <button class="btn btn-primary" onclick="rotateCertificate()">
+                            <i class="fas fa-sync-alt me-2"></i>Flip
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="resetCertificate()">
+                            <i class="fas fa-redo me-2"></i>Reset
+                        </button>
+                        <button class="btn btn-success" onclick="captureCertificate()">
+                            <i class="fas fa-camera me-2"></i>Capture
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Verification Guide Modal -->
+<div class="modal fade" id="verificationGuideModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-shield-alt me-2"></i>Certificate Verification Guide</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6><i class="fas fa-qrcode me-2"></i>QR Code Verification</h6>
+                                <ol class="small text-muted">
+                                    <li>Open your phone's camera app</li>
+                                    <li>Point camera at certificate QR code</li>
+                                    <li>Tap the notification/link that appears</li>
+                                    <li>View verification details on our portal</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6><i class="fas fa-globe me-2"></i>Online Verification</h6>
+                                <ol class="small text-muted">
+                                    <li>Visit https://verify.codelab.com</li>
+                                    <li>Enter certificate ID</li>
+                                    <li>Enter recipient name</li>
+                                    <li>View verification status and details</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    All certificates are digitally signed and timestamped on the blockchain for maximum security and authenticity.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/three@0.137.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<script>
+class EnhancedCertificatesManager {
+    constructor() {
+        this.initElements();
+        this.initEventListeners();
+        this.initFilters();
+        this.initSearch();
+        this.init3DViewer();
+        this.setupKeyboardShortcuts();
+    }
+
+    initElements() {
+        this.certificateGrid = document.getElementById('certificateGrid');
+        this.certificateSearch = document.getElementById('certificateSearch');
+        this.certificateSort = document.getElementById('certificateSort');
+        this.filterTags = document.querySelectorAll('.filter-tag');
+        this.fabMenu = document.getElementById('fabMenu');
+        this.mainFab = document.getElementById('mainFab');
+        this.certificate3D = document.getElementById('certificate3D');
+        this.rotationAngle = 0;
+        this.isRotating = false;
+    }
+
+    initEventListeners() {
+        // Sort functionality
+        this.certificateSort?.addEventListener('change', (e) => this.sortCertificates(e.target.value));
+        
+        // FAB menu toggle
+        this.mainFab?.addEventListener('click', () => this.toggleFabMenu());
+        
+        // Initialize theme
+        this.initTheme();
+    }
+
+    initTheme() {
+        const savedTheme = localStorage.getItem('certificates-theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    }
+
+    toggleDarkMode() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('certificates-theme', 'light');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('certificates-theme', 'dark');
+        }
+    }
+
+    initFilters() {
+        this.filterTags.forEach(tag => {
+            tag.addEventListener('click', (e) => {
+                const filter = e.currentTarget.dataset.filter;
+                this.applyFilter(filter);
+                
+                // Update active state
+                this.filterTags.forEach(t => t.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+            });
+        });
+    }
+
+    initSearch() {
+        let searchTimeout;
+        this.certificateSearch?.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this.searchCertificates(e.target.value);
+            }, 300);
+        });
+    }
+
+    applyFilter(filter) {
+        const certificates = document.querySelectorAll('.certificate-card');
+        
+        certificates.forEach(card => {
+            if (filter === 'all') {
+                card.style.display = '';
+            } else {
+                const cardType = card.dataset.type;
+                const cardStatus = card.dataset.status;
+                const matches = cardType === filter || cardStatus === filter;
+                card.style.display = matches ? '' : 'none';
+            }
+        });
+    }
+
+    searchCertificates(query) {
+        const certificates = document.querySelectorAll('.certificate-card');
+        const searchTerm = query.toLowerCase();
+        
+        certificates.forEach(card => {
+            const course = card.dataset.course;
+            const date = card.dataset.date;
+            const matches = course.includes(searchTerm) || date.includes(searchTerm);
+            card.style.display = matches ? '' : 'none';
+        });
+    }
+
+    sortCertificates(sortBy) {
+        const container = this.certificateGrid;
+        const certificates = Array.from(container.children);
+        
+        certificates.sort((a, b) => {
+            switch(sortBy) {
+                case 'newest':
+                    return new Date(b.dataset.date) - new Date(a.dataset.date);
+                case 'oldest':
+                    return new Date(a.dataset.date) - new Date(b.dataset.date);
+                case 'course':
+                    return a.dataset.course.localeCompare(b.dataset.course);
+                case 'premium':
+                    const aPremium = a.dataset.type === 'premium';
+                    const bPremium = b.dataset.type === 'premium';
+                    return bPremium - aPremium;
+                default:
+                    return 0;
+            }
+        });
+        
+        // Reappend in sorted order
+        certificates.forEach(cert => container.appendChild(cert));
+    }
+
+    async viewCertificate3D(certificateId) {
+        // In a real app, this would fetch certificate data from the server
+        const certificateData = {
+            id: certificateId,
+            title: 'Advanced Python Programming',
+            recipient: '{{ request.user.get_full_name|default:request.user.username }}',
+            issueDate: '2024-01-15',
+            certId: 'CLB-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+            score: '98%',
+            instructor: 'Dr. Alex Johnson'
+        };
+        
+        // Load front and back content
+        document.getElementById('certificateFront').innerHTML = this.generateCertificateFront(certificateData);
+        document.getElementById('certificateBack').innerHTML = this.generateCertificateBack(certificateData);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('certificate3DModal'));
+        modal.show();
+        
+        // Reset rotation
+        this.resetCertificate();
+    }
+
+    generateCertificateFront(data) {
+        return `
+            <div class="p-5 text-center h-100 d-flex flex-column justify-content-center" 
+                 style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);">
+                <div class="mb-4">
+                    <i class="fas fa-award fa-4x text-primary mb-3"></i>
+                    <h1 class="display-4 fw-bold mb-3">Certificate of Completion</h1>
+                    <p class="lead">This certifies that</p>
+                    <h2 class="mb-4">${data.recipient}</h2>
+                    <p class="lead">has successfully completed the course</p>
+                    <h3 class="mb-4">${data.title}</h3>
+                    <p class="text-muted">with a final score of <strong>${data.score}</strong></p>
+                </div>
+                <div class="mt-4">
+                    <small class="text-muted">Issued on ${data.issueDate} | Certificate ID: ${data.certId}</small>
+                </div>
+            </div>
+        `;
+    }
+
+    generateCertificateBack(data) {
+        return `
+            <div class="h-100 d-flex flex-column justify-content-center">
+                <h4 class="mb-4"><i class="fas fa-shield-alt me-2"></i>Verification Details</h4>
+                <div class="mb-4">
+                    <p><strong>Certificate ID:</strong><br>${data.certId}</p>
+                    <p><strong>Recipient:</strong><br>${data.recipient}</p>
+                    <p><strong>Course:</strong><br>${data.title}</p>
+                    <p><strong>Issued Date:</strong><br>${data.issueDate}</p>
+                    <p><strong>Instructor:</strong><br>${data.instructor}</p>
+                </div>
+                <div class="mt-4">
+                    <div class="bg-dark p-3 rounded text-center">
+                        <i class="fas fa-qrcode fa-3x mb-2"></i>
+                        <p class="small mb-0">Scan to verify authenticity</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    rotateCertificate() {
+        if (this.isRotating) return;
+        
+        this.isRotating = true;
+        this.rotationAngle += 180;
+        
+        this.certificate3D.style.transform = `rotateY(${this.rotationAngle}deg)`;
+        
+        setTimeout(() => {
+            this.isRotating = false;
+        }, 800);
+    }
+
+    resetCertificate() {
+        this.rotationAngle = 0;
+        this.certificate3D.style.transform = 'rotateY(0deg)';
+    }
+
+    async captureCertificate() {
+        const modal = document.getElementById('certificate3DModal');
+        const canvas = await html2canvas(modal.querySelector('.modal-content'));
+        
+        const link = document.createElement('a');
+        link.download = `certificate-${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        
+        this.showNotification('Certificate captured as image!', 'success');
+    }
+
+    async shareCertificate(certificateId) {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'My CodeLab Certificate',
+                    text: 'Check out my certificate from CodeLab!',
+                    url: `${window.location.origin}/certificates/${certificateId}`
+                });
+            } catch (error) {
+                console.log('Sharing cancelled:', error);
+            }
+        } else {
+            // Fallback: copy to clipboard
+            const url = `${window.location.origin}/certificates/${certificateId}`;
+            await navigator.clipboard.writeText(url);
+            this.showNotification('Certificate link copied to clipboard!', 'success');
+        }
+    }
+
+    async shareAllCertificates() {
+        const url = window.location.href;
+        if (navigator.share) {
+            await navigator.share({
+                title: 'My CodeLab Certificates',
+                text: 'Check out all my certificates from CodeLab!',
+                url: url
+            });
+        } else {
+            await navigator.clipboard.writeText(url);
+            this.showNotification('All certificates link copied!', 'success');
+        }
+    }
+
+    async downloadAllCertificates() {
+        if (confirm('Download all certificates as a ZIP file?')) {
+            // In a real app, this would trigger a backend process
+            this.showNotification('Preparing your certificates download...', 'info');
+            
+            // Simulate download
+            setTimeout(() => {
+                this.showNotification('All certificates downloaded successfully!', 'success');
+            }, 2000);
+        }
+    }
+
+    toggleFabMenu() {
+        const fabMenu = document.getElementById('fabMenu');
+        const fabIcon = document.getElementById('fabIcon');
+        
+        fabMenu.classList.toggle('active');
+        fabIcon.className = fabMenu.classList.contains('active') ? 'fas fa-times' : 'fas fa-plus';
+    }
+
+    init3DViewer() {
+        // Initialize Three.js for advanced 3D viewing
+        // This is a placeholder for actual 3D implementation
+    }
+
+    showVerificationGuide() {
+        const modal = new bootstrap.Modal(document.getElementById('verificationGuideModal'));
+        modal.show();
+    }
+
+    showCertificateSamples() {
+        // In a real app, this would show sample certificates
+        this.showNotification('Sample certificates would be displayed here.', 'info');
+    }
+
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + F to focus search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                this.certificateSearch?.focus();
+            }
+            
+            // Ctrl/Cmd + D to toggle dark mode
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                this.toggleDarkMode();
+            }
+            
+            // Ctrl/Cmd + P to print
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                window.print();
+            }
+            
+            // Escape to close modals
+            if (e.key === 'Escape') {
+                const modals = document.querySelectorAll('.modal.show');
+                modals.forEach(modal => {
+                    bootstrap.Modal.getInstance(modal)?.hide();
+                });
+            }
+        });
+    }
+
+    showNotification(message, type = 'info') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alertDiv.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+}
+
+// Initialize the certificates manager
+document.addEventListener('DOMContentLoaded', () => {
+    window.certManager = new EnhancedCertificatesManager();
+    
+    // Global functions for onclick handlers
+    window.toggleFabMenu = () => certManager.toggleFabMenu();
+    window.toggleDarkMode = () => certManager.toggleDarkMode();
+    window.viewCertificate3D = (id) => certManager.viewCertificate3D(id);
+    window.rotateCertificate = () => certManager.rotateCertificate();
+    window.resetCertificate = () => certManager.resetCertificate();
+    window.captureCertificate = () => certManager.captureCertificate();
+    window.shareCertificate = (id) => certManager.shareCertificate(id);
+    window.shareAllCertificates = () => certManager.shareAllCertificates();
+    window.downloadAllCertificates = () => certManager.downloadAllCertificates();
+    window.showVerificationGuide = () => certManager.showVerificationGuide();
+    window.showCertificateSamples = () => certManager.showCertificateSamples();
+});
+
+// Service worker for offline support
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(error => {
+            console.log('Service Worker registration failed:', error);
+        });
+    });
+}
+
+// Network status detection
+window.addEventListener('online', () => {
+    certManager?.showNotification('Back online! Certificate verification is available.', 'success');
+});
+
+window.addEventListener('offline', () => {
+    certManager?.showNotification('You are offline. Some features may be unavailable.', 'warning');
+});
+
+// Print optimization
+window.addEventListener('beforeprint', () => {
+    document.body.classList.add('printing');
+});
+
+window.addEventListener('afterprint', () => {
+    document.body.classList.remove('printing');
+});
+</script>
+{% endblock %}

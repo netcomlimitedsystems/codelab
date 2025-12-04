@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}All Discussions{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">All Discussions</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        {% for discussion in discussions %}
+        <div class="card mb-3 {% if discussion.is_pinned %}discussion-pinned{% endif %}">
+            <div class="card-body">
+                {% if discussion.is_pinned %}
+                <span class="badge bg-warning float-end">Pinned</span>
+                {% endif %}
+                
+                <h5 class="card-title">
+                    <a href="{% url 'community:discussion_detail' discussion.id %}" class="text-decoration-none">
+                        {{ discussion.title }}
+                    </a>
+                </h5>
+                
+                <p class="card-text">{{ discussion.content|truncatewords:20 }}</p>
+                
+                <div class="d-flex justify-content-between text-muted">
+                    <small>
+                        in <a href="{% url 'community:forum_detail' discussion.forum.slug %}">{{ discussion.forum.name }}</a>
+                        • by {{ discussion.author.username }}
+                    </small>
+                    <small>
+                        {{ discussion.comment_count }} comments • {{ discussion.created_at|timesince }} ago
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">No discussions found.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

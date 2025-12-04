@@ -1,0 +1,585 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Blog - CodeLab | Tech Tutorials, Tips & Career Advice{% endblock %}
+{% block meta_description %}Read the latest tech tutorials, programming tips, and career advice from CodeLab developers. Stay updated with cutting-edge technologies and best practices.{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom Blog Styles */
+    .blog-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 3rem;
+    }
+    
+    .blog-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M1200 120L0 16.48 0 0 1200 0 1200 120z" fill="rgba(255,255,255,0.1)"/></svg>');
+        background-size: 100% 100px;
+        background-repeat: no-repeat;
+        background-position: bottom;
+    }
+    
+    .post-card {
+        transition: all 0.3s ease;
+        border: none;
+        overflow: hidden;
+        height: 100%;
+    }
+    
+    .post-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    
+    .post-card .card-img-top {
+        height: 200px;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    
+    .post-card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+    
+    .category-badge {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        z-index: 1;
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 50px;
+    }
+    
+    .read-time {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .read-time i {
+        color: #667eea;
+    }
+    
+    .author-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .sidebar-widget {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #e9ecef;
+    }
+    
+    .search-box {
+        position: relative;
+    }
+    
+    .search-box input {
+        padding-right: 50px;
+        border-radius: 50px;
+        border: 2px solid #e9ecef;
+    }
+    
+    .search-box button {
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: #667eea;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+    }
+    
+    .category-list li {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .category-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .category-list li:hover {
+        background: rgba(102, 126, 234, 0.1);
+        padding-left: 10px;
+    }
+    
+    .category-list a {
+        color: #495057;
+        text-decoration: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .category-list .badge {
+        background: #667eea;
+        color: white;
+        font-size: 0.75rem;
+    }
+    
+    .tag-cloud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .tag-cloud a {
+        background: white;
+        border: 1px solid #dee2e6;
+        padding: 0.4rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .tag-cloud a:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .blog-hero {
+            border-radius: 10px;
+            margin: 0 -1rem 2rem -1rem;
+        }
+        
+        .post-card .card-img-top {
+            height: 180px;
+        }
+        
+        .sidebar {
+            margin-top: 3rem;
+        }
+        
+        .pagination {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .post-card {
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-box input {
+            font-size: 0.9rem;
+        }
+    }
+    
+    /* Animation for cards */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animate-card {
+        animation: fadeInUp 0.6s ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="blog-hero p-4 p-md-5">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb" style="--bs-breadcrumb-divider: '›';">
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:home' %}" class="text-white-50">Home</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Blog</li>
+                </ol>
+            </nav>
+            <h1 class="display-5 fw-bold mb-3">CodeLab Blog</h1>
+            <p class="lead mb-4">Insights, tutorials, and updates from our team of developers and tech experts.</p>
+            
+            <!-- Search Form -->
+            <form method="get" action="#" class="search-box">
+                <div class="input-group">
+                    <input type="text" 
+                           name="q" 
+                           class="form-control form-control-lg" 
+                           placeholder="Search articles..."
+                           aria-label="Search articles">
+                    <button class="btn" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="col-lg-4 d-none d-lg-flex justify-content-center">
+            <div class="text-center">
+                <i class="fas fa-blog fa-6x text-white-50"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-4">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold mb-0">Latest Articles</h2>
+                <div class="dropdown d-none d-md-block">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown">
+                        <i class="fas fa-sort me-2"></i>Sort by
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">Latest</a></li>
+                        <li><a class="dropdown-item" href="#">Most Popular</a></li>
+                        <li><a class="dropdown-item" href="#">Featured</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Blog Posts Grid -->
+            <div class="row">
+                {% for post in page_obj %}
+                <div class="col-md-6 mb-4">
+                    <div class="card post-card h-100 animate-card" style="animation-delay: {{ forloop.counter|divisibleby:2|yesno:'0.1s,0s' }};">
+                        {% if post.thumbnail %}
+                        <div class="position-relative">
+                            <img src="{{ post.thumbnail.url }}" class="card-img-top" alt="{{ post.title }}">
+                        </div>
+                        {% else %}
+                        <div class="position-relative bg-primary bg-opacity-10" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-file-alt fa-3x text-primary"></i>
+                        </div>
+                        {% endif %}
+                        <div class="card-body d-flex flex-column">
+                            <h4 class="card-title fw-bold">
+                                <a href="{% url 'accounts:blog_detail' post.slug %}" class="text-decoration-none text-dark">
+                                    {{ post.title }}
+                                </a>
+                            </h4>
+                            <p class="card-text text-muted flex-grow-1">
+                                {% if post.excerpt %}
+                                    {{ post.excerpt }}
+                                {% else %}
+                                    {{ post.content|striptags|truncatewords:20 }}
+                                {% endif %}
+                            </p>
+                            <div class="mt-3 pt-3 border-top">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        {% if post.author.avatar %}
+                                        <img src="{{ post.author.avatar.url }}" class="author-avatar me-2" alt="{{ post.author.get_full_name }}">
+                                        {% else %}
+                                        <div class="author-avatar bg-secondary text-white d-flex align-items-center justify-content-center me-2" style="font-size: 0.8rem;">
+                                            {{ post.author.get_full_name|make_list|first }}
+                                        </div>
+                                        {% endif %}
+                                        <div>
+                                            <small class="fw-semibold d-block">{{ post.author.get_full_name }}</small>
+                                            <small class="text-muted">{{ post.created_at|date:"M d, Y" }}</small>
+                                        </div>
+                                    </div>
+                                    <span class="read-time">
+                                        <i class="far fa-clock me-1"></i>5 min
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between">
+                            <div>
+                                <small class="text-muted">
+                                    <i class="far fa-eye me-1"></i>{{ post.views|default:"0" }} views
+                                </small>
+                            </div>
+                            <div>
+                                <a href="{% url 'accounts:blog_detail' post.slug %}" class="text-decoration-none text-primary">
+                                    Read More <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <!-- Empty State -->
+                <div class="col-12">
+                    <div class="text-center py-5 my-5">
+                        <div class="mb-4">
+                            <i class="fas fa-newspaper fa-4x text-muted"></i>
+                        </div>
+                        <h3 class="fw-bold mb-3">No Articles Yet</h3>
+                        <p class="text-muted mb-4">Check back soon for new articles and tutorials.</p>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-bell me-2"></i>Get Notified
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.paginator.num_pages > 1 %}
+            <nav aria-label="Blog pagination" class="mt-5">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link d-flex align-items-center" href="{% url 'accounts:blog_list_paginated' page_obj.previous_page_number %}">
+                            <i class="fas fa-chevron-left me-2"></i> Previous
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if num == page_obj.number %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                        <li class="page-item">
+                            <a class="page-link" href="{% url 'accounts:blog_list_paginated' num %}">{{ num }}</a>
+                        </li>
+                        {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                        <li class="page-item">
+                            <a class="page-link" href="{% url 'accounts:blog_list_paginated' num %}">{{ num }}</a>
+                        </li>
+                        {% elif num == page_obj.number|add:"-3" or num == page_obj.number|add:"3" %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link d-flex align-items-center" href="{% url 'accounts:blog_list_paginated' page_obj.next_page_number %}">
+                            Next <i class="fas fa-chevron-right ms-2"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} articles
+                    </small>
+                </div>
+            </nav>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4 sidebar">
+            <!-- Search Widget -->
+            <div class="sidebar-widget">
+                <h4 class="fw-bold mb-3">Search Blog</h4>
+                <form method="get" action="#" class="search-box">
+                    <div class="input-group">
+                        <input type="text" 
+                               name="q" 
+                               class="form-control" 
+                               placeholder="Type keywords...">
+                        <button class="btn" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Categories Widget -->
+            <div class="sidebar-widget">
+                <h4 class="fw-bold mb-3">Categories</h4>
+                <ul class="category-list list-unstyled">
+                    {% for category in categories %}
+                    <li>
+                        <a href="#">
+                            <span>{{ category.title }}</span>
+                            <span class="badge rounded-pill">{{ category.post_count|default:"0" }}</span>
+                        </a>
+                    </li>
+                    {% empty %}
+                    <li class="text-muted">No categories yet</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Popular Posts Widget -->
+            <div class="sidebar-widget">
+                <h4 class="fw-bold mb-3">Popular Posts</h4>
+                {% for popular_post in page_obj|slice:":3" %}
+                <div class="d-flex mb-3 pb-3 border-bottom">
+                    {% if popular_post.thumbnail %}
+                    <img src="{{ popular_post.thumbnail.url }}" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;" alt="{{ popular_post.title }}">
+                    {% else %}
+                    <div class="rounded bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-file-alt text-primary"></i>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <h6 class="fw-semibold mb-1">
+                            <a href="{% url 'accounts:blog_detail' popular_post.slug %}" class="text-decoration-none text-dark">
+                                {{ popular_post.title|truncatewords:8 }}
+                            </a>
+                        </h6>
+                        <small class="text-muted">{{ popular_post.created_at|date:"M d" }}</small>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">No popular posts yet</p>
+                {% endfor %}
+            </div>
+
+            <!-- Newsletter Widget -->
+            <div class="sidebar-widget">
+                <div class="text-center">
+                    <i class="fas fa-envelope fa-2x text-primary mb-3"></i>
+                    <h5 class="fw-bold mb-2">Subscribe to Newsletter</h5>
+                    <p class="small mb-3">Get the latest articles directly in your inbox</p>
+                    <form method="post" action="#" class="mt-3">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input type="email" 
+                                   name="email" 
+                                   class="form-control" 
+                                   placeholder="Your email address"
+                                   required>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- About Widget -->
+            <div class="sidebar-widget">
+                <h4 class="fw-bold mb-3">About CodeLab Blog</h4>
+                <p class="mb-3">Welcome to our tech blog where we share tutorials, tips, and career advice from experienced developers.</p>
+                <div class="d-flex gap-2">
+                    <a href="#" class="btn btn-outline-primary btn-sm">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="btn btn-outline-primary btn-sm">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="btn btn-outline-primary btn-sm">
+                        <i class="fab fa-github"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Call to Action -->
+<section class="py-5 my-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-5">
+                        <h2 class="fw-bold mb-3">Want to Write for Us?</h2>
+                        <p class="text-muted mb-4">Share your knowledge with our community of developers and tech enthusiasts.</p>
+                        <a href="#" class="btn btn-primary btn-lg">
+                            <i class="fas fa-pen-alt me-2"></i>Submit a Guest Post
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Smooth scroll for pagination
+        document.querySelectorAll('.pagination .page-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.getAttribute('href').includes('page=')) {
+                    e.preventDefault();
+                    window.scrollTo({
+                        top: document.querySelector('.container.py-4').offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                    setTimeout(() => {
+                        window.location.href = this.getAttribute('href');
+                    }, 500);
+                }
+            });
+        });
+
+        // Add animation to cards on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-card');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.post-card').forEach(card => {
+            observer.observe(card);
+        });
+
+        // Search form enhancement
+        const searchForms = document.querySelectorAll('.search-box form');
+        searchForms.forEach(form => {
+            const input = form.querySelector('input[name="q"]');
+            const button = form.querySelector('button[type="submit"]');
+            
+            // Add loading state to search button
+            form.addEventListener('submit', function() {
+                if (input.value.trim()) {
+                    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    button.disabled = true;
+                    setTimeout(() => {
+                        button.innerHTML = '<i class="fas fa-search"></i>';
+                        button.disabled = false;
+                    }, 1000);
+                }
+            });
+        });
+
+        // Category list hover effects
+        document.querySelectorAll('.category-list li').forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateX(5px)';
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateX(0)';
+            });
+        });
+    });
+</script>
+{% endblock %}

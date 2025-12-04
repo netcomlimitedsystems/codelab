@@ -1,0 +1,1020 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contribute to CodeLab - Share Your Knowledge{% endblock %}
+{% block meta_description %}Share your tech expertise with our community. Contribute articles, tutorials, and insights to CodeLab's growing knowledge base.{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contribute-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 3rem;
+    }
+    
+    .contribute-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M1200 120L0 16.48 0 0 1200 0 1200 120z" fill="rgba(255,255,255,0.1)"/></svg>');
+        background-size: 100% 100px;
+        background-repeat: no-repeat;
+        background-position: bottom;
+    }
+    
+    .contribution-type-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        height: 100%;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    
+    .contribution-type-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border-color: #667eea;
+    }
+    
+    .contribution-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+    
+    .contribution-icon i {
+        color: white;
+        font-size: 2rem;
+    }
+    
+    .contribution-form-container {
+        background: white;
+        border-radius: 15px;
+        padding: 3rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .contribution-form-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .form-floating label {
+        color: #6c757d;
+        padding-left: 1.5rem;
+    }
+    
+    .form-floating .form-control,
+    .form-floating .form-select,
+    .form-floating .form-textarea {
+        padding-left: 1.5rem;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        min-height: 50px;
+    }
+    
+    .form-floating .form-textarea {
+        min-height: 150px;
+        padding-top: 1.5rem;
+    }
+    
+    .form-floating .form-control:focus,
+    .form-floating .form-select:focus,
+    .form-floating .form-textarea:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .file-upload {
+        border: 2px dashed #dee2e6;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        background: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .file-upload:hover {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.05);
+    }
+    
+    .file-upload.dragover {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.1);
+    }
+    
+    .file-preview {
+        margin-top: 1rem;
+        display: none;
+    }
+    
+    .guideline-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border-left: 4px solid #667eea;
+        margin-bottom: 1rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .guideline-card ul {
+        margin-bottom: 0;
+        padding-left: 1.2rem;
+    }
+    
+    .guideline-card li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .guideline-card li:last-child {
+        margin-bottom: 0;
+    }
+    
+    .process-step {
+        text-align: center;
+        padding: 2rem 1rem;
+    }
+    
+    .step-number {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin: 0 auto 1rem;
+    }
+    
+    .process-timeline {
+        position: relative;
+    }
+    
+    .process-timeline::before {
+        content: '';
+        position: absolute;
+        top: 25px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #e9ecef;
+        z-index: 1;
+    }
+    
+    .success-animation {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 2rem;
+        position: relative;
+    }
+    
+    .success-animation .checkmark {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: block;
+        stroke-width: 2;
+        stroke: #4bb543;
+        stroke-miterlimit: 10;
+        box-shadow: inset 0px 0px 0px #4bb543;
+        animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+    }
+    
+    .success-animation .checkmark__circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 2;
+        stroke-miterlimit: 10;
+        stroke: #4bb543;
+        fill: none;
+        animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+    
+    .success-animation .checkmark__check {
+        transform-origin: 50% 50%;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+    }
+    
+    @keyframes stroke {
+        100% {
+            stroke-dashoffset: 0;
+        }
+    }
+    
+    @keyframes scale {
+        0%, 100% {
+            transform: none;
+        }
+        50% {
+            transform: scale3d(1.1, 1.1, 1);
+        }
+    }
+    
+    @keyframes fill {
+        100% {
+            box-shadow: inset 0px 0px 0px 30px #4bb543;
+        }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .contribute-hero {
+            border-radius: 10px;
+            margin: 0 -1rem 2rem -1rem;
+        }
+        
+        .contribution-form-container {
+            padding: 2rem;
+        }
+        
+        .process-timeline::before {
+            display: none;
+        }
+        
+        .process-step {
+            padding: 1rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .contribution-type-card {
+            padding: 1.5rem;
+        }
+        
+        .contribution-form-container {
+            padding: 1.5rem;
+        }
+        
+        .file-upload {
+            padding: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="contribute-hero p-4 p-md-5 mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb" style="--bs-breadcrumb-divider: '›';">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-white-50">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:blog_list' %}" class="text-white-50">Blog</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Contribute</li>
+                </ol>
+            </nav>
+            
+            <h1 class="display-4 fw-bold mb-3">Share Your Knowledge</h1>
+            <p class="lead mb-4">Join our community of tech writers and share your expertise with developers worldwide.</p>
+            
+            <div class="d-flex align-items-center flex-wrap gap-3">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-users me-2"></i>
+                    <span>Join 500+ contributors</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-trophy me-2"></i>
+                    <span>Featured author program</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-globe me-2"></i>
+                    <span>Reach 100k+ readers</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 d-none d-lg-flex justify-content-center">
+            <div class="text-center">
+                <i class="fas fa-pen-nib fa-6x text-white-50"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-4">
+    <!-- Contribution Types -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h2 class="fw-bold">How You Can Contribute</h2>
+            <p class="text-muted">Choose your preferred contribution method</p>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="contribution-type-card" data-contribution-type="article">
+                <div class="contribution-icon">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <h4 class="fw-bold mb-3">Write an Article</h4>
+                <p class="text-muted mb-4">Share tutorials, case studies, or insights on programming, tools, or best practices.</p>
+                <div class="badge bg-primary">Most Popular</div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="contribution-type-card" data-contribution-type="tutorial">
+                <div class="contribution-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h4 class="fw-bold mb-3">Create a Tutorial</h4>
+                <p class="text-muted mb-4">Step-by-step guides on specific technologies, frameworks, or development workflows.</p>
+                <div class="badge bg-success">Beginners Welcome</div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="contribution-type-card" data-contribution-type="review">
+                <div class="contribution-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <h4 class="fw-bold mb-3">Tech Review</h4>
+                <p class="text-muted mb-4">Review tools, libraries, or platforms with practical insights and recommendations.</p>
+                <div class="badge bg-warning text-dark">Expert Insights</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contribution Process -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h2 class="fw-bold">How It Works</h2>
+            <p class="text-muted">Simple 4-step process from submission to publication</p>
+        </div>
+        
+        <div class="col-12">
+            <div class="row process-timeline">
+                <div class="col-md-3 process-step">
+                    <div class="step-number">1</div>
+                    <h5 class="fw-bold mb-2">Submit</h5>
+                    <p class="text-muted small">Fill out the form with your contribution details</p>
+                </div>
+                <div class="col-md-3 process-step">
+                    <div class="step-number">2</div>
+                    <h5 class="fw-bold mb-2">Review</h5>
+                    <p class="text-muted small">Our editorial team reviews your submission</p>
+                </div>
+                <div class="col-md-3 process-step">
+                    <div class="step-number">3</div>
+                    <h5 class="fw-bold mb-2">Collaborate</h5>
+                    <p class="text-muted small">We provide feedback and work together on edits</p>
+                </div>
+                <div class="col-md-3 process-step">
+                    <div class="step-number">4</div>
+                    <h5 class="fw-bold mb-2">Publish</h5>
+                    <p class="text-muted small">Your article goes live and reaches our audience</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <!-- Submission Form -->
+            <div class="contribution-form-container">
+                <!-- Success State -->
+                <div class="text-center d-none" id="successState">
+                    <div class="success-animation mb-4">
+                        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                            <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                            <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                        </svg>
+                    </div>
+                    <h2 class="fw-bold mb-3">Submission Received! 🎉</h2>
+                    <p class="text-muted mb-4">Thank you for your contribution to CodeLab. Our editorial team will review your submission and get back to you within 5-7 business days.</p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        You'll receive a confirmation email with a submission ID. Keep it for future reference.
+                    </div>
+                    <div class="mt-4">
+                        <a href="{% url 'accounts:blog_list' %}" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-newspaper me-2"></i>Browse Articles
+                        </a>
+                        <a href="{% url 'home' %}" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i>Back to Home
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Form State -->
+                <div id="formState">
+                    <h2 class="fw-bold text-center mb-1">Submit Your Contribution</h2>
+                    <p class="text-center text-muted mb-4">Fill out the form below to get started</p>
+                    
+                    <form method="POST" id="contributionForm" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="contribution_type" id="contributionType" value="article">
+                        
+                        <div class="row g-3">
+                            <!-- Personal Information -->
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="name" 
+                                           name="name" 
+                                           placeholder="John Doe"
+                                           required>
+                                    <label for="name">Full Name *</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="email" 
+                                           name="email" 
+                                           placeholder="you@example.com"
+                                           required>
+                                    <label for="email">Email Address *</label>
+                                </div>
+                            </div>
+                            
+                            <!-- Professional Information -->
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="title" 
+                                           name="title" 
+                                           placeholder="Senior Developer"
+                                           required>
+                                    <label for="title">Professional Title *</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="company" 
+                                           name="company" 
+                                           placeholder="Tech Company Inc.">
+                                    <label for="company">Company (Optional)</label>
+                                </div>
+                            </div>
+                            
+                            <!-- Contribution Details -->
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="contributionTitle" 
+                                           name="contribution_title" 
+                                           placeholder="Getting Started with Django REST Framework"
+                                           required>
+                                    <label for="contributionTitle">Contribution Title *</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <textarea class="form-control form-textarea" 
+                                              id="message" 
+                                              name="message" 
+                                              placeholder="Write your contribution here..."
+                                              style="height: 200px"
+                                              required></textarea>
+                                    <label for="message">Your Contribution *</label>
+                                    <div class="form-text mt-2">
+                                        <small>Minimum 500 words. Please include headings, code examples, and practical insights.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Category Selection -->
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="category" name="category" required>
+                                        <option value="">Select a category</option>
+                                        <option value="tutorials">Tutorials & How-Tos</option>
+                                        <option value="frameworks">Frameworks & Libraries</option>
+                                        <option value="career">Career Development</option>
+                                        <option value="tools">Tools & Productivity</option>
+                                        <option value="best-practices">Best Practices</option>
+                                        <option value="case-studies">Case Studies</option>
+                                        <option value="opinion">Opinion & Analysis</option>
+                                    </select>
+                                    <label for="category">Category *</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="expertise" name="expertise" required>
+                                        <option value="">Select expertise level</option>
+                                        <option value="beginner">Beginner</option>
+                                        <option value="intermediate">Intermediate</option>
+                                        <option value="advanced">Advanced</option>
+                                        <option value="expert">Expert</option>
+                                    </select>
+                                    <label for="expertise">Target Audience Level *</label>
+                                </div>
+                            </div>
+                            
+                            <!-- File Upload -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold mb-3">Attach Files (Optional)</label>
+                                <div class="file-upload" id="fileUploadArea">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                    <h5 class="fw-bold mb-2">Drop files here or click to upload</h5>
+                                    <p class="text-muted mb-3">Supporting images, code snippets, or documents (Max: 10MB)</p>
+                                    <input type="file" id="fileInput" name="files" multiple style="display: none;" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.md,.txt">
+                                    <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('fileInput').click()">
+                                        <i class="fas fa-upload me-2"></i>Browse Files
+                                    </button>
+                                </div>
+                                <div class="file-preview" id="filePreview"></div>
+                            </div>
+                            
+                            <!-- Social Links -->
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="url" 
+                                           class="form-control" 
+                                           id="linkedin" 
+                                           name="linkedin" 
+                                           placeholder="https://linkedin.com/in/username">
+                                    <label for="linkedin">LinkedIn Profile</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="url" 
+                                           class="form-control" 
+                                           id="github" 
+                                           name="github" 
+                                           placeholder="https://github.com/username">
+                                    <label for="github">GitHub Profile</label>
+                                </div>
+                            </div>
+                            
+                            <!-- Terms -->
+                            <div class="col-12">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="original" name="original" required>
+                                    <label class="form-check-label" for="original">
+                                        I confirm this is my original work and hasn't been published elsewhere.
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-4">
+                                    <input class="form-check-input" type="checkbox" id="license" name="license" required>
+                                    <label class="form-check-label" for="license">
+                                        I agree to license my contribution under 
+                                        <a href="#" target="_blank" class="text-decoration-none">Creative Commons Attribution 4.0</a>.
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <div class="col-12">
+                                <div class="d-grid mt-3">
+                                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                        <span class="submit-text">
+                                            <i class="fas fa-paper-plane me-2"></i>Submit Contribution
+                                        </span>
+                                        <span class="loading-text d-none">
+                                            <i class="fas fa-spinner fa-spin me-2"></i>Submitting...
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="privacy-note text-center mt-4">
+                        <i class="fas fa-lock me-1"></i>
+                        Your information is secure. We'll only use it to contact you about your submission.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guidelines -->
+    <div class="row mb-5">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h3 class="fw-bold mb-4">Submission Guidelines</h3>
+                    
+                    <div class="guideline-card">
+                        <h5 class="fw-bold mb-2">Content Requirements</h5>
+                        <ul>
+                            <li>Minimum 500 words, maximum 3000 words</li>
+                            <li>Original content not published elsewhere</li>
+                            <li>Clear structure with headings and subheadings</li>
+                            <li>Include code examples where applicable</li>
+                            <li>Add relevant images, diagrams, or screenshots</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="guideline-card">
+                        <h5 class="fw-bold mb-2">Technical Standards</h5>
+                        <ul>
+                            <li>Code should be properly formatted and explained</li>
+                            <li>Use Markdown for text formatting</li>
+                            <li>Include comments in code snippets</li>
+                            <li>Test all code examples before submission</li>
+                            <li>Reference official documentation when possible</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="guideline-card">
+                        <h5 class="fw-bold mb-2">What We're Looking For</h5>
+                        <ul>
+                            <li>Practical tutorials and how-to guides</li>
+                            <li>In-depth technical analysis</li>
+                            <li>Case studies and real-world examples</li>
+                            <li>Best practices and optimization tips</li>
+                            <li>Tool reviews and comparisons</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Benefits -->
+            <div class="card border-0 bg-primary text-white mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-3">Why Contribute?</h4>
+                    <ul class="list-unstyled">
+                        <li class="mb-3">
+                            <i class="fas fa-user-check me-2"></i>
+                            <span>Build your professional reputation</span>
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-network-wired me-2"></i>
+                            <span>Expand your professional network</span>
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-chart-line me-2"></i>
+                            <span>Improve your writing and communication skills</span>
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-gift me-2"></i>
+                            <span>Receive contributor swag and recognition</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-users me-2"></i>
+                            <span>Join our exclusive contributor community</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Timeline -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Review Timeline</h5>
+                    <div class="timeline">
+                        <div class="d-flex mb-3">
+                            <div class="timeline-badge bg-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 30px; height: 30px;">
+                                <i class="fas fa-check text-white" style="font-size: 0.8rem;"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">Initial Review</h6>
+                                <small class="text-muted">Within 3-5 business days</small>
+                            </div>
+                        </div>
+                        <div class="d-flex mb-3">
+                            <div class="timeline-badge bg-warning rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 30px; height: 30px;">
+                                <i class="fas fa-clock text-dark" style="font-size: 0.8rem;"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">Editorial Feedback</h6>
+                                <small class="text-muted">Within 7-10 business days</small>
+                            </div>
+                        </div>
+                        <div class="d-flex">
+                            <div class="timeline-badge bg-info rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 30px; height: 30px;">
+                                <i class="fas fa-calendar text-white" style="font-size: 0.8rem;"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">Publication</h6>
+                                <small class="text-muted">Scheduled within 2 weeks of approval</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 bg-light">
+                <div class="card-body p-4 p-md-5">
+                    <h3 class="fw-bold text-center mb-4">Frequently Asked Questions</h3>
+                    
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button rounded collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    Do I get paid for contributions?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    We offer exposure to our audience, contributor recognition, and potential partnership opportunities. For exceptional content, we do offer paid guest posting opportunities.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button rounded collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Can I include promotional content?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    We allow one relevant, contextual link to your website or product within the content. Overt promotion or affiliate links are not allowed.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button rounded collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    What if my submission is rejected?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    We provide detailed feedback on why a submission wasn't accepted and suggestions for improvement. You're welcome to revise and resubmit.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button rounded collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                    Who owns the content after publication?
+                                </button>
+                            </h2>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    You retain copyright of your work. We publish under Creative Commons Attribution 4.0, which allows sharing with attribution. You can republish elsewhere after 30 days.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Contribution type selection
+        const contributionCards = document.querySelectorAll('.contribution-type-card');
+        const contributionTypeInput = document.getElementById('contributionType');
+        
+        contributionCards.forEach(card => {
+            card.addEventListener('click', function() {
+                contributionCards.forEach(c => {
+                    c.style.borderColor = '#e9ecef';
+                    c.style.transform = 'translateY(0)';
+                });
+                this.style.borderColor = '#667eea';
+                this.style.transform = 'translateY(-8px)';
+                contributionTypeInput.value = this.dataset.contributionType;
+            });
+        });
+        
+        // File upload handling
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('filePreview');
+        
+        if (fileUploadArea && fileInput) {
+            // Drag and drop
+            fileUploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+            
+            fileUploadArea.addEventListener('dragleave', function() {
+                this.classList.remove('dragover');
+            });
+            
+            fileUploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                fileInput.files = e.dataTransfer.files;
+                updateFilePreview();
+            });
+            
+            // File selection
+            fileInput.addEventListener('change', updateFilePreview);
+            
+            function updateFilePreview() {
+                if (fileInput.files.length > 0) {
+                    filePreview.style.display = 'block';
+                    filePreview.innerHTML = '<h6 class="fw-bold mb-2">Selected Files:</h6>';
+                    
+                    Array.from(fileInput.files).forEach((file, index) => {
+                        const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'd-flex align-items-center justify-content-between mb-2 p-2 bg-light rounded';
+                        fileItem.innerHTML = `
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-file text-primary me-2"></i>
+                                <span>${file.name}</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="text-muted me-2">${fileSize} MB</span>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile(${index})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        `;
+                        filePreview.appendChild(fileItem);
+                    });
+                } else {
+                    filePreview.style.display = 'none';
+                    filePreview.innerHTML = '';
+                }
+            }
+            
+            window.removeFile = function(index) {
+                const dt = new DataTransfer();
+                const files = Array.from(fileInput.files);
+                files.splice(index, 1);
+                files.forEach(file => dt.items.add(file));
+                fileInput.files = dt.files;
+                updateFilePreview();
+            };
+        }
+        
+        // Form submission
+        const contributionForm = document.getElementById('contributionForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const formState = document.getElementById('formState');
+        const successState = document.getElementById('successState');
+        const submitText = submitBtn.querySelector('.submit-text');
+        const loadingText = submitBtn.querySelector('.loading-text');
+        
+        if (contributionForm) {
+            contributionForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Validate form
+                if (!validateForm()) {
+                    return;
+                }
+                
+                // Show loading state
+                submitText.classList.add('d-none');
+                loadingText.classList.remove('d-none');
+                submitBtn.disabled = true;
+                
+                // Simulate API call
+                setTimeout(() => {
+                    // Show success state
+                    formState.style.display = 'none';
+                    successState.classList.remove('d-none');
+                    successState.style.display = 'block';
+                    
+                    // Scroll to success message
+                    successState.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // In real implementation, submit form via AJAX
+                    // const formData = new FormData(this);
+                    // fetch(this.action, {
+                    //     method: 'POST',
+                    //     body: formData,
+                    //     headers: {
+                    //         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    //     }
+                    // }).then(response => {
+                    //     if (response.ok) {
+                    //         formState.style.display = 'none';
+                    //         successState.style.display = 'block';
+                    //     }
+                    // }).catch(error => {
+                    //     // Handle error
+                    // });
+                    
+                }, 2000);
+            });
+        }
+        
+        // Form validation
+        function validateForm() {
+            let isValid = true;
+            const requiredFields = contributionForm.querySelectorAll('[required]');
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    showError(field, 'This field is required');
+                    isValid = false;
+                } else {
+                    clearError(field);
+                }
+            });
+            
+            // Email validation
+            const emailField = document.getElementById('email');
+            if (emailField.value && !isValidEmail(emailField.value)) {
+                showError(emailField, 'Please enter a valid email address');
+                isValid = false;
+            }
+            
+            // Word count validation for message
+            const messageField = document.getElementById('message');
+            const wordCount = messageField.value.trim().split(/\s+/).length;
+            if (wordCount < 50) {
+                showError(messageField, 'Please provide at least 50 words');
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+        
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        
+        function showError(input, message) {
+            clearError(input);
+            input.classList.add('is-invalid');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback';
+            errorDiv.textContent = message;
+            input.parentNode.appendChild(errorDiv);
+        }
+        
+        function clearError(input) {
+            input.classList.remove('is-invalid');
+            const errorDiv = input.parentNode.querySelector('.invalid-feedback');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        }
+        
+        // Word count display for message field
+        const messageField = document.getElementById('message');
+        if (messageField) {
+            const wordCountDisplay = document.createElement('div');
+            wordCountDisplay.className = 'form-text text-end mt-1';
+            wordCountDisplay.id = 'wordCount';
+            messageField.parentNode.appendChild(wordCountDisplay);
+            
+            function updateWordCount() {
+                const text = messageField.value.trim();
+                const wordCount = text === '' ? 0 : text.split(/\s+/).length;
+                wordCountDisplay.textContent = `${wordCount} words`;
+                wordCountDisplay.style.color = wordCount < 50 ? '#dc3545' : '#6c757d';
+            }
+            
+            messageField.addEventListener('input', updateWordCount);
+            updateWordCount(); // Initial count
+        }
+        
+        // Initialize accordion
+        const accordionButtons = document.querySelectorAll('.accordion-button');
+        accordionButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <div class="text-center mb-4">
+                    {% if user.profile.profile_picture %}
+                        <img src="{{ user.profile.profile_picture.url }}" class="rounded-circle mb-2" width="80" height="80">
+                    {% else %}
+                        <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 80px; height: 80px;">
+                            <i class="fas fa-user fa-2x text-white"></i>
+                        </div>
+                    {% endif %}
+                    <h6 class="mb-0">{{ user.profile.full_name|default:user.username }}</h6>
+                    <small class="text-muted">{{ user.email }}</small>
+                    <div class="badge bg-primary mt-1">
+                        Level {{ user.profile.level }} | {{ user.profile.points }} Points
+                    </div>
+                </div>
+
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'accounts:dashboard' %}">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:update_profile' %}">
+                            <i class="fas fa-user"></i>
+                            Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:change_password' %}">
+                            <i class="fas fa-key"></i>
+                            Change Password
+                        </a>
+                    </li>
+                    {% if user.is_staff %}
+                    <li class="nav-divider my-3"></li>
+                    <li class="nav-item">
+                        <a class="nav-link text-warning" href="{% url 'accounts:admin_dashboard' %}">
+                            <i class="fas fa-cog"></i>
+                            Admin Dashboard
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            {% block dashboard_content %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}

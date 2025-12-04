@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Achievements - CodeLab{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Achievements</h1>
+
+    {% if achievements %}
+        <ul class="list-group">
+            {% for achievement in achievements %}
+                <li class="list-group-item">
+                    <strong>{{ achievement.title }}</strong> - {{ achievement.description }}
+                    <small class="text-muted">({{ achievement.date_earned|date:"M d, Y" }})</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="alert alert-info">No achievements yet.</p>
+    {% endif %}
+
+    <a href="{% url 'community:index' %}" class="btn btn-secondary mt-3">Back to Community</a>
+</div>
+{% endblock %}

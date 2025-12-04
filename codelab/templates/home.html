@@ -1,0 +1,2690 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Home - CodeLab{% endblock %}
+
+{% block extra_css %}
+<!-- Swiper CSS for Carousel -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+<!-- AOS Animation Library -->
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css">
+<!-- Page-Specific Styles -->
+<style>
+    /* Root Variables */
+    :root {
+        --vh: 1vh;
+        --primary-color: #2563eb;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --dark-bg: #0f172a;
+        --card-bg: #1e293b;
+        --border-color: #334155;
+        --text-light: #e2e8f0;
+        --text-muted: #94a3b8;
+    }
+
+    /* Loading Screen */
+    .loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, var(--dark-bg) 0%, var(--card-bg) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease-out;
+    }
+
+    .loading-screen.loaded {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .loading-content {
+        text-align: center;
+    }
+
+    .loading-animation {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 2rem;
+    }
+
+    .loading-spinner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .spinner-ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 3px solid transparent;
+        border-radius: 50%;
+        animation: spin 2s linear infinite;
+    }
+
+    .spinner-ring:nth-child(1) {
+        border-top-color: var(--primary-color);
+        animation-delay: -0.5s;
+    }
+
+    .spinner-ring:nth-child(2) {
+        border-right-color: var(--success-color);
+        animation-delay: -1s;
+    }
+
+    .spinner-ring:nth-child(3) {
+        border-bottom-color: var(--warning-color);
+        animation-delay: -1.5s;
+    }
+
+    .spinner-core {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: pulse 2s infinite;
+    }
+
+    .loading-dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 20px;
+    }
+
+    .dot {
+        width: 12px;
+        height: 12px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        animation: bounce 1.4s infinite;
+    }
+
+    .dot:nth-child(2) { animation-delay: -0.32s; }
+    .dot:nth-child(3) { animation-delay: -0.16s; }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.8); }
+        50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @keyframes bounce {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1); }
+    }
+
+    /* Hero Section */
+    .hero-section {
+        position: relative;
+        min-height: calc(90 * var(--vh));
+        padding: 4rem 0;
+        overflow: hidden;
+    }
+
+    .hero-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
+
+    .background-grid {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-image: 
+            linear-gradient(rgba(37, 99, 235, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(37, 99, 235, 0.1) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: gridMove 20s linear infinite;
+    }
+
+    .animated-shapes .shape {
+        position: absolute;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), #06b6d4);
+        opacity: 0.1;
+        animation: float 20s infinite linear;
+        filter: blur(20px);
+    }
+
+    .shape-1 {
+        width: 400px;
+        height: 400px;
+        top: -200px;
+        right: -200px;
+    }
+
+    .shape-2 {
+        width: 300px;
+        height: 300px;
+        bottom: -150px;
+        left: -150px;
+        animation-delay: -10s;
+    }
+
+    .shape-3 {
+        width: 200px;
+        height: 200px;
+        top: 50%;
+        left: 10%;
+        animation-delay: -15s;
+    }
+
+    @keyframes gridMove {
+        0% { background-position: 0 0; }
+        100% { background-position: 50px 50px; }
+    }
+
+    @keyframes float {
+        0% {
+            transform: translateY(0) rotate(0deg);
+        }
+        50% {
+            transform: translateY(-20px) rotate(180deg);
+        }
+        100% {
+            transform: translateY(0) rotate(360deg);
+        }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-badge {
+        display: inline-block;
+    }
+
+    .text-gradient {
+        background: linear-gradient(135deg, #60a5fa, #06b6d4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .typing-text {
+        display: inline-block;
+        position: relative;
+    }
+
+    .typed-text {
+        display: inline-block;
+        position: relative;
+    }
+
+    .cursor {
+        display: inline-block;
+        width: 3px;
+        height: 1.2em;
+        background-color: var(--success-color);
+        margin-left: 2px;
+        animation: blink 1s infinite;
+        vertical-align: middle;
+    }
+
+    @keyframes typing {
+        0% { width: 0; }
+        100% { width: 100%; }
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+
+    .hero-metrics {
+        display: flex;
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+
+    .metric-item {
+        text-align: center;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        min-width: 100px;
+    }
+
+    .metric-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-label {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    .glow-button {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .glow-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: 0.5s;
+    }
+
+    .glow-button:hover::before {
+        left: 100%;
+    }
+
+    .glow-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+    }
+
+    .hover-lift {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .trust-indicators {
+        margin-top: 3rem;
+    }
+
+    .company-logos {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .company-logo {
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
+        cursor: pointer;
+    }
+
+    .company-logo:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    /* Hero Image Styles */
+    .hero-image-wrapper {
+        position: relative;
+        height: 500px;
+    }
+
+    .card-stack {
+        position: absolute;
+        top: -30px;
+        left: -30px;
+        z-index: 3;
+        width: 200px;
+    }
+
+    .stacked-card {
+        position: absolute;
+        width: 220px;
+        background: rgba(30, 41, 59, 0.95);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        transition: transform 0.3s ease;
+    }
+
+    .stacked-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .card-1 {
+        transform: rotate(-5deg);
+        top: 0;
+        left: 0;
+        z-index: 3;
+    }
+
+    .card-2 {
+        transform: rotate(3deg);
+        top: 20px;
+        left: 30px;
+        z-index: 2;
+        opacity: 0.8;
+    }
+
+    .card-3 {
+        transform: rotate(-2deg);
+        top: 40px;
+        left: 60px;
+        z-index: 1;
+        opacity: 0.6;
+    }
+
+    .card-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .card-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .hero-image-container {
+        position: absolute;
+        top: 50px;
+        right: 0;
+        width: 80%;
+        height: 400px;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-main-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .hero-image-container:hover .hero-main-image {
+        transform: scale(1.05);
+    }
+
+    .image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), transparent);
+    }
+
+    .live-activity-indicator {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 8px 16px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .activity-pulse {
+        width: 10px;
+        height: 10px;
+        background: var(--success-color);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    .activity-text {
+        color: white;
+        font-size: 0.9rem;
+    }
+
+    /* Scroll Indicator */
+    .scroll-indicator {
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .scroll-indicator:hover {
+        transform: translateY(5px);
+    }
+
+    .mouse-scroll {
+        position: relative;
+        width: 24px;
+        height: 40px;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 12px;
+        margin-top: 10px;
+    }
+
+    .wheel {
+        position: absolute;
+        width: 4px;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 2px;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: scroll 2s infinite;
+    }
+
+    @keyframes scroll {
+        0% { top: 8px; opacity: 1; }
+        100% { top: 24px; opacity: 0; }
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border-color);
+        position: relative;
+        z-index: 10;
+    }
+
+    .stat-item {
+        padding: 1.5rem 0;
+        position: relative;
+    }
+
+    .stat-item:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 1px;
+        height: 40px;
+        background: var(--border-color);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    /* Features Section */
+    .feature-tabs .nav-pills .nav-link {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        color: var(--text-light);
+        margin: 0 5px;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .feature-tabs .nav-pills .nav-link.active {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+    }
+
+    .feature-tabs .nav-pills .nav-link:hover:not(.active) {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .code-editor {
+        background: var(--card-bg);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .editor-header {
+        background: var(--dark-bg);
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .window-controls {
+        display: flex;
+        gap: 8px;
+    }
+
+    .window-controls span {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+
+    .close { background: #ef4444; }
+    .minimize { background: var(--warning-color); }
+    .maximize { background: var(--success-color); }
+
+    .editor-body {
+        padding: 1.5rem;
+    }
+
+    .editor-body pre {
+        margin: 0;
+        color: var(--text-light);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .feature-list li {
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: flex-start;
+    }
+
+    /* Learning Paths */
+    .path-card {
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid var(--border-color);
+        padding: 1.5rem;
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .path-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--primary-color);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .path-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .path-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+    }
+
+    .path-stats {
+        display: flex;
+        justify-content: space-between;
+        margin: 1.5rem 0;
+    }
+
+    .stat {
+        text-align: center;
+    }
+
+    /* Quiz Banner */
+    .quiz-banner {
+        background: linear-gradient(135deg, var(--primary-color), #7c3aed);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .quiz-banner::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    /* Live Demo */
+    .demo-window {
+        background: var(--card-bg);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .demo-header {
+        background: var(--dark-bg);
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .demo-editor {
+        padding: 1.5rem;
+        background: var(--card-bg);
+        min-height: 200px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .demo-editor pre {
+        margin: 0;
+        color: var(--text-light);
+        font-family: 'JetBrains Mono', monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .demo-output {
+        background: var(--dark-bg);
+        border-top: 1px solid var(--border-color);
+        min-height: 100px;
+    }
+
+    .output-header {
+        padding: 0.75rem 1.5rem;
+        background: rgba(0, 0, 0, 0.2);
+        font-weight: bold;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .output-body {
+        padding: 1.5rem;
+    }
+
+    /* Newsletter */
+    .newsletter-card {
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid var(--border-color);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .newsletter-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transform: rotate(45deg);
+        animation: shine 3s infinite;
+    }
+
+    @keyframes shine {
+        0% { transform: translateX(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) rotate(45deg); }
+    }
+
+    .newsletter-form .form-control {
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid var(--border-color);
+        color: var(--text-light);
+    }
+
+    /* CTA Section */
+    .cta-card {
+        background: linear-gradient(135deg, var(--primary-color), #7c3aed);
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Chat Widget */
+    .chat-widget {
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 350px;
+        height: 450px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        transform: translateY(20px) scale(0.95);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .chat-widget.active {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .chat-header {
+        background: var(--primary-color);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chat-body {
+        height: calc(100% - 60px);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chat-messages {
+        flex: 1;
+        padding: 1.5rem;
+        overflow-y: auto;
+    }
+
+    .message {
+        margin-bottom: 1rem;
+        animation: slideIn 0.3s ease;
+    }
+
+    .message.bot .message-content {
+        background: var(--border-color);
+        color: var(--text-light);
+        padding: 0.75rem 1rem;
+        border-radius: 12px 12px 12px 0;
+        max-width: 80%;
+    }
+
+    .message.user .message-content {
+        background: var(--primary-color);
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 12px 12px 0 12px;
+        max-width: 80%;
+        margin-left: auto;
+    }
+
+    .message-time {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+
+    .chat-input {
+        padding: 1rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        gap: 10px;
+    }
+
+    .chat-input input {
+        flex: 1;
+        background: var(--dark-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-light);
+        padding: 0.75rem;
+        border-radius: 8px;
+    }
+
+    .chat-input input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+    }
+
+    .chat-send {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .chat-send:hover {
+        background: #1d4ed8;
+    }
+
+    .chat-toggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 5px 20px rgba(37, 99, 235, 0.4);
+        z-index: 999;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .chat-toggle:hover {
+        transform: scale(1.1);
+        box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
+    }
+
+    /* Floating Notification */
+    .floating-notification {
+        position: fixed;
+        top: 90px;
+        right: 20px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        z-index: 1001;
+        transform: translateX(120%);
+        transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        max-width: 400px;
+    }
+
+    .floating-notification.show {
+        transform: translateX(0);
+    }
+
+    .notification-icon {
+        color: var(--primary-color);
+        font-size: 1.5rem;
+    }
+
+    .notification-text {
+        flex: 1;
+    }
+
+    .notification-close {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 4px;
+    }
+
+    .notification-close:hover {
+        color: var(--text-light);
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design - Small Devices (Below 400px) */
+    @media (max-width: 400px) {
+        .hero-title {
+            font-size: 1.8rem !important;
+        }
+        
+        .hero-subtitle {
+            font-size: 0.95rem !important;
+        }
+        
+        .metric-value {
+            font-size: 1.4rem !important;
+        }
+        
+        .hero-buttons .btn {
+            padding: 0.6rem 1rem !important;
+            font-size: 0.9rem !important;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem !important;
+        }
+        
+        .chat-widget {
+            width: calc(100vw - 30px) !important;
+            height: 380px !important;
+            right: 15px !important;
+            left: 15px !important;
+            bottom: 70px !important;
+        }
+        
+        .chat-toggle {
+            bottom: 15px !important;
+            right: 15px !important;
+            width: 50px !important;
+            height: 50px !important;
+        }
+    }
+
+    /* Responsive Design - Mobile */
+    @media (max-width: 768px) {
+        .hero-section {
+            min-height: auto;
+            padding: 2rem 0;
+        }
+
+        .hero-image-wrapper {
+            height: 300px;
+            margin-top: 2rem;
+        }
+
+        .hero-metrics {
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .metric-item {
+            flex: 1;
+            min-width: calc(50% - 1rem);
+        }
+
+        .card-stack {
+            display: none;
+        }
+
+        .hero-image-container {
+            position: relative;
+            top: 0;
+            width: 100%;
+            height: 250px;
+        }
+
+        .stats-bar .stat-item {
+            padding: 1rem 0;
+        }
+
+        .stat-item:not(:last-child)::after {
+            display: none;
+        }
+
+        .feature-tabs .nav-pills {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .feature-tabs .nav-pills .nav-link {
+            margin: 0;
+            text-align: center;
+        }
+
+        .chat-widget {
+            width: calc(100vw - 40px);
+            right: 20px;
+            bottom: 80px;
+        }
+
+        .floating-notification {
+            top: 80px;
+            right: 10px;
+            left: 10px;
+            max-width: none;
+        }
+    }
+
+    /* Responsive Design - Tablets (Portrait and Landscape) */
+    @media (min-width: 768px) and (max-width: 1024px) {
+        .hero-section {
+            min-height: 80vh !important;
+        }
+        
+        .hero-image-wrapper {
+            height: 400px !important;
+        }
+        
+        .card-stack {
+            width: 180px !important;
+        }
+        
+        .stacked-card {
+            width: 190px !important;
+        }
+        
+        .path-card {
+            padding: 1.25rem !important;
+        }
+        
+        .demo-window {
+            margin-top: 2rem !important;
+        }
+    }
+
+    /* Responsive Design - Large Tablets (768px to 992px) */
+    @media (min-width: 768px) and (max-width: 992px) {
+        .hero-content {
+            text-align: center !important;
+            padding-bottom: 2rem !important;
+        }
+        
+        .hero-metrics {
+            justify-content: center !important;
+        }
+        
+        .hero-buttons {
+            justify-content: center !important;
+        }
+        
+        .trust-indicators {
+            text-align: center !important;
+        }
+        
+        .company-logos {
+            justify-content: center !important;
+        }
+    }
+
+    /* Responsive Design - Small Screens */
+    @media (max-width: 576px) {
+        .hero-buttons .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-metrics {
+            flex-direction: column;
+        }
+
+        .metric-item {
+            width: 100%;
+        }
+
+        .company-logos {
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        .newsletter-form .input-group {
+            flex-direction: column;
+        }
+
+        .newsletter-form .btn {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .cta-buttons .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    /* Responsive Design - Extra Large Screens */
+    @media (min-width: 1400px) {
+        .hero-section {
+            min-height: 85vh !important;
+        }
+        
+        .hero-image-wrapper {
+            height: 550px !important;
+        }
+        
+        .hero-image-container {
+            height: 450px !important;
+        }
+    }
+
+    /* Landscape Orientation Fixes */
+    @media (max-height: 600px) and (orientation: landscape) {
+        .hero-section {
+            min-height: 120vh !important;
+            padding: 2rem 0 !important;
+        }
+        
+        .hero-image-wrapper {
+            height: 250px !important;
+            margin-top: 1rem !important;
+        }
+        
+        .hero-image-container {
+            height: 200px !important;
+        }
+        
+        .chat-widget {
+            height: 300px !important;
+            bottom: 60px !important;
+        }
+    }
+
+    /* High DPI (Retina) Screens */
+    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+        .background-grid {
+            background-size: 25px 25px !important;
+        }
+    }
+
+    /* Print Styles */
+    @media print {
+        .loading-screen,
+        .chat-widget,
+        .chat-toggle,
+        .floating-notification,
+        .hero-buttons,
+        .newsletter-form,
+        .scroll-indicator,
+        .live-activity-indicator,
+        .swiper-button-next,
+        .swiper-button-prev,
+        .swiper-pagination,
+        #backToTop {
+            display: none !important;
+        }
+        
+        .hero-section {
+            min-height: auto !important;
+            padding: 1rem 0 !important;
+        }
+        
+        .hero-background,
+        .animated-shapes,
+        .background-grid {
+            display: none !important;
+        }
+        
+        .text-gradient {
+            background: none !important;
+            color: #000 !important;
+            -webkit-text-fill-color: #000 !important;
+        }
+    }
+
+    /* Touch Device Specific Improvements */
+    @media (hover: none) and (pointer: coarse) {
+        .btn, 
+        .nav-link,
+        .company-logo,
+        .chat-send {
+            min-height: 44px !important;
+            min-width: 44px !important;
+        }
+        
+        .glow-button:hover::before,
+        .hover-lift:hover,
+        .stacked-card:hover,
+        .path-card:hover {
+            transform: none !important;
+            animation: none !important;
+        }
+        
+        .swiper {
+            -webkit-overflow-scrolling: touch !important;
+        }
+        
+        input, select, textarea {
+            font-size: 16px !important;
+        }
+    }
+
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+        
+        .loading-spinner,
+        .dot,
+        .animated-shapes .shape,
+        .cursor,
+        .activity-pulse,
+        .wheel,
+        .glow-button::before,
+        .newsletter-card::before {
+            animation: none !important;
+        }
+    }
+
+    /* Dark Mode Support */
+    @media (prefers-color-scheme: dark) {
+        .btn-outline-light {
+            border-color: rgba(255, 255, 255, 0.3) !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+        
+        .text-light {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+    }
+
+    /* Improved Accessibility */
+    @media (prefers-reduced-transparency: reduce) {
+        .hero-background,
+        .background-grid,
+        .animated-shapes,
+        .image-overlay {
+            opacity: 0.7 !important;
+        }
+        
+        .stacked-card,
+        .path-card,
+        .newsletter-card {
+            backdrop-filter: none !important;
+            background: var(--card-bg) !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Loading Screen with Enhanced Animation -->
+<div class="loading-screen" id="loadingScreen">
+    <div class="loading-content">
+        <div class="loading-animation">
+            <div class="loading-spinner">
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-core"></div>
+            </div>
+            <div class="loading-dots">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </div>
+        </div>
+        <h4 class="text-white mt-4">Welcome to CodeLab</h4>
+        <p class="text-light">Preparing your learning environment...</p>
+        <div class="loading-progress mt-3">
+            <div class="progress" style="height: 4px; width: 200px; background: rgba(255,255,255,0.1);">
+                <div class="progress-bar bg-primary" id="loadingBar" style="width: 0%; transition: width 0.3s ease;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hero Section with Enhanced Visuals -->
+<section class="hero-section position-relative overflow-hidden">
+    <!-- Animated Background Elements -->
+    <div class="hero-background">
+        <div class="background-grid"></div>
+        <div class="animated-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </div>
+    
+    <div class="container position-relative z-2">
+        <div class="row align-items-center min-vh-80 py-4 py-md-5">
+            <div class="col-12 col-lg-6 mb-4 mb-lg-0 order-2 order-lg-1">
+                <div class="hero-content text-center text-lg-start" data-aos="fade-up">
+                    <!-- Badge -->
+                    <div class="hero-badge mb-3 mb-md-4">
+                        <span class="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-25 px-3 py-2">
+                            <i class="fa-solid fa-bolt me-2"></i> Trusted by 10,000+ Developers
+                        </span>
+                    </div>
+                    
+                    <h1 class="display-4 fw-bold mb-3 mb-md-4 text-white">
+                        Master Coding Skills with 
+                        <span class="text-gradient typing-text">
+                            <span class="typed-text">Interactive Learning</span>
+                            <span class="cursor">&nbsp;</span>
+                        </span>
+                    </h1>
+                    
+                    <p class="lead mb-3 mb-md-4 text-light">
+                        Build real-world projects, earn industry-recognized certificates, and launch your tech career with our hands-on coding courses.
+                    </p>
+                    
+                    <!-- Hero Metrics -->
+                    <div class="hero-metrics">
+                        <div class="metric-item" data-aos="fade-up" data-aos-delay="100">
+                            <div class="metric-value text-white fw-bold" data-count="10000">0</div>
+                            <div class="metric-label">Developers Trained</div>
+                        </div>
+                        <div class="metric-item" data-aos="fade-up" data-aos-delay="200">
+                            <div class="metric-value text-white fw-bold" data-count="150">0</div>
+                            <div class="metric-label">Courses Available</div>
+                        </div>
+                        <div class="metric-item" data-aos="fade-up" data-aos-delay="300">
+                            <div class="metric-value text-white fw-bold" data-count="98">0</div>
+                            <div class="metric-label">Success Rate</div>
+                        </div>
+                    </div>
+                    
+                    <!-- CTA Buttons -->
+                    <div class="hero-buttons d-flex flex-wrap gap-2 gap-md-3 mb-3 mb-md-4" data-aos="fade-up" data-aos-delay="400">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'courses:course_list' %}" class="btn btn-primary btn-lg px-3 px-md-4 py-2 py-md-3 glow-button">
+                                <i class="fa-solid fa-rocket me-2"></i>Continue Learning
+                            </a>
+                            <a href="{% url 'accounts:dashboard' %}" class="btn btn-outline-light btn-lg px-3 px-md-4 py-2 py-md-3 hover-lift">
+                                <i class="fa-solid fa-gauge me-2"></i>Go to Dashboard
+                            </a>
+                        {% else %}
+                            <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg px-3 px-md-4 py-2 py-md-3 glow-button">
+                                <i class="fa-solid fa-user-plus me-2"></i>Start Learning Free
+                                <span class="badge bg-white text-primary ms-2">No credit card</span>
+                            </a>
+                            <a href="{% url 'accounts:login' %}" class="btn btn-outline-light btn-lg px-3 px-md-4 py-2 py-md-3 hover-lift">
+                                <i class="fa-solid fa-right-to-bracket me-2"></i>Sign In
+                            </a>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Trust Indicators -->
+                    <div class="trust-indicators" data-aos="fade-up" data-aos-delay="500">
+                        <p class="text-light small mb-2">Trusted by developers from leading companies:</p>
+                        <div class="company-logos">
+                            <div class="company-logo" title="Google">
+                                <i class="fa-brands fa-google fa-xl text-light opacity-75"></i>
+                            </div>
+                            <div class="company-logo" title="Microsoft">
+                                <i class="fa-brands fa-microsoft fa-xl text-light opacity-75"></i>
+                            </div>
+                            <div class="company-logo" title="Amazon">
+                                <i class="fa-brands fa-amazon fa-xl text-light opacity-75"></i>
+                            </div>
+                            <div class="company-logo" title="Meta">
+                                <i class="fa-brands fa-meta fa-xl text-light opacity-75"></i>
+                            </div>
+                            <div class="company-logo" title="GitHub">
+                                <i class="fa-brands fa-github fa-xl text-light opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hero Image with Floating Cards -->
+            <div class="col-12 col-lg-6 order-1 order-lg-2 mb-4 mb-lg-0">
+                <div class="hero-image-wrapper" data-aos="fade-left">
+                    <!-- 3D Card Stack -->
+                    <div class="card-stack">
+                        <div class="stacked-card card-1">
+                            <div class="card-content">
+                                <div class="card-icon bg-success bg-opacity-10">
+                                    <i class="fa-solid fa-code text-success"></i>
+                                </div>
+                                <div class="card-text">
+                                    <h6 class="fw-bold mb-1 text-white">Live Coding Sessions</h6>
+                                    <p class="text-muted small mb-0">Weekly workshops</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stacked-card card-2">
+                            <div class="card-content">
+                                <div class="card-icon bg-primary bg-opacity-10">
+                                    <i class="fa-solid fa-users text-primary"></i>
+                                </div>
+                                <div class="card-text">
+                                    <h6 class="fw-bold mb-1 text-white">Community Support</h6>
+                                    <p class="text-muted small mb-0">25k+ members</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stacked-card card-3">
+                            <div class="card-content">
+                                <div class="card-icon bg-warning bg-opacity-10">
+                                    <i class="fa-solid fa-trophy text-warning"></i>
+                                </div>
+                                <div class="card-text">
+                                    <h6 class="fw-bold mb-1 text-white">Career Services</h6>
+                                    <p class="text-muted small mb-0">Job placement help</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Main Hero Image -->
+                    <div class="hero-image-container">
+                        <img 
+                            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                            srcset="
+                                https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80 400w,
+                                https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80 800w,
+                                https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80 1200w
+                            "
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
+                            alt="Students learning to code" 
+                            class="img-fluid rounded-4 shadow-lg hero-main-image" 
+                            loading="lazy"
+                            onload="this.classList.add('loaded')">
+                        <div class="image-overlay"></div>
+                        
+                        <!-- Live Activity Indicator -->
+                        <div class="live-activity-indicator">
+                            <div class="activity-pulse"></div>
+                            <span class="activity-text">500+ active learners</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator position-absolute bottom-0 start-50 translate-middle-x mb-3 d-none d-md-block" onclick="scrollToFeatures()">
+        <div class="d-flex flex-column align-items-center text-light">
+            <span class="small mb-1">Scroll to explore</span>
+            <div class="scroll-arrow mouse-scroll">
+                <span class="mouse">
+                    <span class="wheel"></span>
+                </span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Bar -->
+<div class="stats-bar py-3 border-bottom border-blue-card" id="stats-bar">
+    <div class="container">
+        <div class="row g-3 g-md-0">
+            <div class="col-6 col-md-3">
+                <div class="stat-item text-center">
+                    <div class="stat-value text-white fw-bold" data-count="10000">0</div>
+                    <div class="stat-label">Students Enrolled</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-item text-center">
+                    <div class="stat-value text-white fw-bold" data-count="150">0</div>
+                    <div class="stat-label">Courses Available</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-item text-center">
+                    <div class="stat-value text-white fw-bold" data-count="98">0</div>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-item text-center">
+                    <div class="stat-value text-white fw-bold" data-count="5000">0</div>
+                    <div class="stat-label">Certificates Issued</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section with Tabs -->
+<section class="py-4 py-md-5" id="features">
+    <div class="container py-4 py-md-5">
+        <div class="row mb-4 mb-md-5">
+            <div class="col-12 col-md-10 col-lg-8 mx-auto text-center">
+                <span class="badge bg-primary bg-opacity-20 text-primary px-3 py-2 mb-3" data-aos="fade-up">
+                    <i class="fa-solid fa-star me-2"></i>Why Choose CodeLab
+                </span>
+                <h2 class="display-5 fw-bold mb-3 text-white" data-aos="fade-up">Designed for Real-World Success</h2>
+                <p class="lead text-light" data-aos="fade-up" data-aos-delay="100">Our platform combines cutting-edge technology with proven learning methodologies.</p>
+            </div>
+        </div>
+        
+        <!-- Feature Tabs -->
+        <div class="row">
+            <div class="col-12">
+                <div class="feature-tabs" data-aos="fade-up" data-aos-delay="200">
+                    <nav>
+                        <div class="nav nav-pills justify-content-center mb-4 flex-wrap" id="feature-tab" role="tablist">
+                            <button class="nav-link active" id="tab-interactive" data-bs-toggle="pill" data-bs-target="#interactive" type="button">
+                                <i class="fa-solid fa-laptop-code me-2"></i>Interactive Learning
+                            </button>
+                            <button class="nav-link" id="tab-projects" data-bs-toggle="pill" data-bs-target="#projects" type="button">
+                                <i class="fa-solid fa-code-branch me-2"></i>Project-Based
+                            </button>
+                            <button class="nav-link" id="tab-mentorship" data-bs-toggle="pill" data-bs-target="#mentorship" type="button">
+                                <i class="fa-solid fa-user-graduate me-2"></i>1-on-1 Mentorship
+                            </button>
+                            <button class="nav-link" id="tab-career" data-bs-toggle="pill" data-bs-target="#career" type="button">
+                                <i class="fa-solid fa-briefcase me-2"></i>Career Support
+                            </button>
+                        </div>
+                    </nav>
+                    
+                    <div class="tab-content" id="feature-tab-content">
+                        <div class="tab-pane fade show active" id="interactive">
+                            <div class="row align-items-center">
+                                <div class="col-lg-6 mb-4 mb-lg-0">
+                                    <div class="feature-visual">
+                                        <div class="code-editor">
+                                            <div class="editor-header">
+                                                <div class="window-controls">
+                                                    <span class="close"></span>
+                                                    <span class="minimize"></span>
+                                                    <span class="maximize"></span>
+                                                </div>
+                                                <div class="editor-title text-light">main.py</div>
+                                            </div>
+                                            <div class="editor-body">
+                                                <pre><code># Interactive Python Example
+def calculate_bmi(weight, height):
+    return weight / (height ** 2)
+
+# Try it yourself!
+user_weight = 70
+user_height = 1.75
+bmi = calculate_bmi(user_weight, user_height)
+print(f"Your BMI is: {bmi:.1f}")
+
+# Real-time feedback
+if bmi &lt; 18.5:
+    print("Underweight")
+elif bmi &lt; 25:
+    print("Normal weight")
+else:
+    print("Overweight")</code></pre>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <h3 class="fw-bold mb-3 text-white">Interactive Coding Environment</h3>
+                                    <p class="text-light mb-4">Write and execute code directly in your browser with our built-in IDE. Get instant feedback and debugging assistance.</p>
+                                    <ul class="feature-list list-unstyled">
+                                        <li class="text-light mb-2">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>Real-time code execution</strong>
+                                        </li>
+                                        <li class="text-light mb-2">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>Built-in debugger</strong>
+                                        </li>
+                                        <li class="text-light mb-2">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>Auto-graded exercises</strong>
+                                        </li>
+                                        <li class="text-light">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>Peer code review</strong>
+                                        </li>
+                                    </ul>
+                                    <a href="{% url 'courses:course_list' %}" class="btn btn-primary mt-3">
+                                        <i class="fa-solid fa-play me-2"></i>Try Interactive Demo
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-pane fade" id="projects">
+                            <div class="row align-items-center">
+                                <div class="col-lg-6 mb-4 mb-lg-0">
+                                    <div class="feature-visual">
+                                        <div class="card bg-dark border-secondary">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <div class="feature-icon bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                                                        <i class="fa-solid fa-project-diagram text-primary fa-2x"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h5 class="mb-1 text-white">Real Portfolio Projects</h5>
+                                                        <p class="text-muted mb-0">Build projects that impress employers</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row g-2">
+                                                    <div class="col-6">
+                                                        <div class="bg-dark-blue rounded-3 p-3 text-center">
+                                                            <small class="text-muted">E-commerce</small>
+                                                            <div class="text-white fw-bold mt-1">Full Stack App</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="bg-dark-blue rounded-3 p-3 text-center">
+                                                            <small class="text-muted">API</small>
+                                                            <div class="text-white fw-bold mt-1">RESTful Service</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <h3 class="fw-bold mb-3 text-white">Project-Based Learning</h3>
+                                    <p class="text-light mb-4">Learn by building real-world applications that showcase your skills to potential employers.</p>
+                                    <ul class="feature-list list-unstyled">
+                                        <li class="text-light mb-2">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>50+ portfolio-ready projects</strong>
+                                        </li>
+                                        <li class="text-light mb-2">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>Industry best practices</strong>
+                                        </li>
+                                        <li class="text-light mb-2">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>Code review by experts</strong>
+                                        </li>
+                                        <li class="text-light">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>GitHub integration</strong>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-pane fade" id="mentorship">
+                            <div class="row align-items-center">
+                                <div class="col-lg-6 mb-4 mb-lg-0">
+                                    <div class="feature-visual">
+                                        <div class="card bg-dark border-secondary">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <div class="feature-icon bg-warning bg-opacity-10 rounded-3 p-3 me-3">
+                                                        <i class="fa-solid fa-user-graduate text-warning fa-2x"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h5 class="mb-1 text-white">Expert Mentorship</h5>
+                                                        <p class="text-muted mb-0">1-on-1 guidance from industry professionals</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row g-2">
+                                                    <div class="col-6">
+                                                        <div class="bg-dark-blue rounded-3 p-3 text-center">
+                                                            <small class="text-muted">Weekly</small>
+                                                            <div class="text-white fw-bold mt-1">Code Reviews</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="bg-dark-blue rounded-3 p-3 text-center">
+                                                            <small class="text-muted">24/7</small>
+                                                            <div class="text-white fw-bold mt-1">Q&A Support</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <h3 class="fw-bold mb-3 text-white">Personalized Mentorship</h3>
+                                    <p class="text-light mb-4">Get guidance from experienced developers who will help you overcome challenges and accelerate your learning.</p>
+                                    <ul class="feature-list list-unstyled">
+                                        <li class="text-light mb-2">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>Weekly 1-on-1 sessions</strong>
+                                        </li>
+                                        <li class="text-light mb-2">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>Career guidance</strong>
+                                        </li>
+                                        <li class="text-light mb-2">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>Project feedback</strong>
+                                        </li>
+                                        <li class="text-light">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>Interview preparation</strong>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-pane fade" id="career">
+                            <div class="row align-items-center">
+                                <div class="col-lg-6 mb-4 mb-lg-0">
+                                    <div class="feature-visual">
+                                        <div class="card bg-dark border-secondary">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <div class="feature-icon bg-success bg-opacity-10 rounded-3 p-3 me-3">
+                                                        <i class="fa-solid fa-briefcase text-success fa-2x"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h5 class="mb-1 text-white">Career Services</h5>
+                                                        <p class="text-muted mb-0">Job placement and career growth support</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row g-2">
+                                                    <div class="col-6">
+                                                        <div class="bg-dark-blue rounded-3 p-3 text-center">
+                                                            <small class="text-muted">Resume</small>
+                                                            <div class="text-white fw-bold mt-1">Review</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="bg-dark-blue rounded-3 p-3 text-center">
+                                                            <small class="text-muted">Interview</small>
+                                                            <div class="text-white fw-bold mt-1">Prep</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <h3 class="fw-bold mb-3 text-white">Career Support Services</h3>
+                                    <p class="text-light mb-4">We help you land your dream job with comprehensive career services and industry connections.</p>
+                                    <ul class="feature-list list-unstyled">
+                                        <li class="text-light mb-2">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>Resume and LinkedIn optimization</strong>
+                                        </li>
+                                        <li class="text-light mb-2">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>Mock technical interviews</strong>
+                                        </li>
+                                        <li class="text-light mb-2">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>Job placement assistance</strong>
+                                        </li>
+                                        <li class="text-light">
+                                            <i class="fa-solid fa-check text-success me-2"></i>
+                                            <strong>Industry networking events</strong>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Learning Path Carousel -->
+<section class="py-4 py-md-5 bg-dark-blue" id="learning-paths">
+    <div class="container py-4 py-md-5">
+        <div class="row mb-4 mb-md-5">
+            <div class="col-12 text-center">
+                <h2 class="display-5 fw-bold mb-3 text-white" data-aos="fade-up">Popular Learning Paths</h2>
+                <p class="lead text-light" data-aos="fade-up" data-aos-delay="100">Follow structured paths designed by industry experts</p>
+            </div>
+        </div>
+        
+        <div class="learning-paths-carousel" data-aos="fade-up" data-aos-delay="200">
+            <div class="swiper">
+                <div class="swiper-wrapper">
+                    <!-- Path 1 -->
+                    <div class="swiper-slide">
+                        <div class="path-card rounded-4">
+                            <div class="path-header">
+                                <div class="path-icon bg-primary bg-opacity-20 rounded-3">
+                                    <i class="fa-brands fa-python fa-2x text-primary"></i>
+                                </div>
+                                <div class="path-duration">
+                                    <span class="badge bg-dark">3 months</span>
+                                </div>
+                            </div>
+                            <div class="path-body">
+                                <h4 class="fw-bold text-white mb-3">Python Developer</h4>
+                                <p class="text-light mb-4">Master Python from basics to advanced web development and data science applications.</p>
+                                <div class="path-stats mb-4">
+                                    <div class="stat">
+                                        <div class="stat-value text-white">24</div>
+                                        <div class="stat-label text-light small">Modules</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value text-white">15</div>
+                                        <div class="stat-label text-light small">Projects</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value text-white">92%</div>
+                                        <div class="stat-label text-light small">Completion Rate</div>
+                                    </div>
+                                </div>
+                                <a href="{% url 'courses:course_list' %}" class="btn btn-primary w-100">Start Learning</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Path 2 -->
+                    <div class="swiper-slide">
+                        <div class="path-card rounded-4">
+                            <div class="path-header">
+                                <div class="path-icon bg-success bg-opacity-20 rounded-3">
+                                    <i class="fa-brands fa-js fa-2x text-success"></i>
+                                </div>
+                                <div class="path-duration">
+                                    <span class="badge bg-dark">4 months</span>
+                                </div>
+                            </div>
+                            <div class="path-body">
+                                <h4 class="fw-bold text-white mb-3">Full Stack JavaScript</h4>
+                                <p class="text-light mb-4">Become a full-stack developer with React, Node.js, and modern JavaScript.</p>
+                                <div class="path-stats mb-4">
+                                    <div class="stat">
+                                        <div class="stat-value text-white">32</div>
+                                        <div class="stat-label text-light small">Modules</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value text-white">18</div>
+                                        <div class="stat-label text-light small">Projects</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value text-white">88%</div>
+                                        <div class="stat-label text-light small">Completion Rate</div>
+                                    </div>
+                                </div>
+                                <a href="{% url 'courses:course_list' %}" class="btn btn-primary w-100">Start Learning</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Path 3 -->
+                    <div class="swiper-slide">
+                        <div class="path-card rounded-4">
+                            <div class="path-header">
+                                <div class="path-icon bg-warning bg-opacity-20 rounded-3">
+                                    <i class="fa-solid fa-chart-line fa-2x text-warning"></i>
+                                </div>
+                                <div class="path-duration">
+                                    <span class="badge bg-dark">5 months</span>
+                                </div>
+                            </div>
+                            <div class="path-body">
+                                <h4 class="fw-bold text-white mb-3">Data Science</h4>
+                                <p class="text-light mb-4">Learn data analysis, machine learning, and visualization with Python and R.</p>
+                                <div class="path-stats mb-4">
+                                    <div class="stat">
+                                        <div class="stat-value text-white">28</div>
+                                        <div class="stat-label text-light small">Modules</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value text-white">12</div>
+                                        <div class="stat-label text-light small">Projects</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value text-white">85%</div>
+                                        <div class="stat-label text-light small">Completion Rate</div>
+                                    </div>
+                                </div>
+                                <a href="{% url 'courses:course_list' %}" class="btn btn-primary w-100">Start Learning</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Path 4 -->
+                    <div class="swiper-slide">
+                        <div class="path-card rounded-4">
+                            <div class="path-header">
+                                <div class="path-icon bg-danger bg-opacity-20 rounded-3">
+                                    <i class="fa-solid fa-shield-alt fa-2x text-danger"></i>
+                                </div>
+                                <div class="path-duration">
+                                    <span class="badge bg-dark">6 months</span>
+                                </div>
+                            </div>
+                            <div class="path-body">
+                                <h4 class="fw-bold text-white mb-3">Cybersecurity</h4>
+                                <p class="text-light mb-4">Master security fundamentals, ethical hacking, and network defense techniques.</p>
+                                <div class="path-stats mb-4">
+                                    <div class="stat">
+                                        <div class="stat-value text-white">36</div>
+                                        <div class="stat-label text-light small">Modules</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value text-white">20</div>
+                                        <div class="stat-label text-light small">Projects</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value text-white">90%</div>
+                                        <div class="stat-label text-light small">Completion Rate</div>
+                                    </div>
+                                </div>
+                                <a href="{% url 'courses:course_list' %}" class="btn btn-primary w-100">Start Learning</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Path 5 -->
+                    <div class="swiper-slide">
+                        <div class="path-card rounded-4">
+                            <div class="path-header">
+                                <div class="path-icon bg-info bg-opacity-20 rounded-3">
+                                    <i class="fa-brands fa-android fa-2x text-info"></i>
+                                </div>
+                                <div class="path-duration">
+                                    <span class="badge bg-dark">4 months</span>
+                                </div>
+                            </div>
+                            <div class="path-body">
+                                <h4 class="fw-bold text-white mb-3">Mobile Development</h4>
+                                <p class="text-light mb-4">Build cross-platform mobile apps with React Native and Flutter.</p>
+                                <div class="path-stats mb-4">
+                                    <div class="stat">
+                                        <div class="stat-value text-white">30</div>
+                                        <div class="stat-label text-light small">Modules</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value text-white">16</div>
+                                        <div class="stat-label text-light small">Projects</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value text-white">87%</div>
+                                        <div class="stat-label text-light small">Completion Rate</div>
+                                    </div>
+                                </div>
+                                <a href="{% url 'courses:course_list' %}" class="btn btn-primary w-100">Start Learning</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Navigation buttons -->
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+                <!-- Pagination -->
+                <div class="swiper-pagination"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Interactive Quiz Banner -->
+<section class="quiz-banner py-4 py-md-5">
+    <div class="container position-relative z-2">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mb-4 mb-lg-0">
+                <h3 class="fw-bold text-white mb-3">Find Your Perfect Course</h3>
+                <p class="text-light mb-0">Take our 2-minute quiz to discover which path matches your goals and skill level.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <button class="btn btn-light btn-lg px-4" id="startQuizBtn" data-bs-toggle="modal" data-bs-target="#quizModal">
+                    <i class="fa-solid fa-play-circle me-2"></i>Start Quiz
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Live Demo Section -->
+<section class="py-4 py-md-5" id="live-demo">
+    <div class="container py-4 py-md-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <h2 class="display-5 fw-bold mb-3 text-white" data-aos="fade-right">Experience Learning, Live</h2>
+                <p class="text-light mb-4" data-aos="fade-right" data-aos-delay="100">Try our interactive coding playground without signing up.</p>
+                
+                <div class="demo-features" data-aos="fade-right" data-aos-delay="200">
+                    <div class="demo-feature d-flex align-items-center mb-3">
+                        <div class="feature-icon bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="fa-solid fa-code text-primary fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-white mb-2">Code in Browser</h5>
+                            <p class="text-light small mb-0">No setup required</p>
+                        </div>
+                    </div>
+                    <div class="demo-feature d-flex align-items-center">
+                        <div class="feature-icon bg-warning bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="fa-solid fa-bolt text-warning fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-white mb-2">Instant Feedback</h5>
+                            <p class="text-light small mb-0">Real-time error checking</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary btn-lg mt-4" data-aos="fade-right" data-aos-delay="300" onclick="runCode()">
+                    <i class="fa-solid fa-play me-2"></i>Try Live Demo
+                </button>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="live-demo-container" data-aos="fade-left">
+                    <div class="demo-window">
+                        <div class="demo-header">
+                            <div class="demo-title text-light">Python Playground</div>
+                            <div class="demo-actions">
+                                <button class="btn btn-sm btn-outline-light" onclick="runCode()">
+                                    <i class="fa-solid fa-play me-1"></i> Run
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" onclick="resetCode()">
+                                    <i class="fa-solid fa-redo me-1"></i> Reset
+                                </button>
+                            </div>
+                        </div>
+                        <div class="demo-editor">
+                            <pre id="codeEditor" contenteditable="true" spellcheck="false"># Welcome to CodeLab!
+# Edit this code and click Run
+
+def greet(name):
+    return f"Hello, {name}! Welcome to CodeLab."
+
+# Change this name
+user_name = "Learner"
+message = greet(user_name)
+
+print(message)
+print("Start your coding journey today!")
+print("-" * 40)
+print("Try changing the name variable above!")</pre>
+                        </div>
+                        <div class="demo-output">
+                            <div class="output-header">Output</div>
+                            <div class="output-body">
+                                <pre id="codeOutput" class="text-light">Click "Run" to see the output...</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter Subscription -->
+<section class="newsletter-section py-4 py-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <div class="newsletter-card rounded-4 p-4 p-md-5">
+                    <div class="newsletter-icon mb-4">
+                        <i class="fa-solid fa-envelope-open-text fa-3x text-primary"></i>
+                    </div>
+                    <h3 class="fw-bold text-white mb-3">Get Weekly Coding Tips</h3>
+                    <p class="text-light mb-4">Subscribe to our newsletter for exclusive content, course updates, and career advice.</p>
+                    
+                    <form class="newsletter-form" id="newsletterForm">
+                        {% csrf_token %}
+                        <div class="input-group mb-3">
+                            <input type="email" class="form-control form-control-lg" placeholder="Your email address" required>
+                            <button class="btn btn-primary btn-lg" type="submit">
+                                <i class="fa-solid fa-paper-plane me-2"></i>Subscribe
+                            </button>
+                        </div>
+                        <div class="form-check text-start">
+                            <input class="form-check-input" type="checkbox" id="newsletterConsent" required>
+                            <label class="form-check-label text-light small" for="newsletterConsent">
+                                I agree to receive educational content and updates
+                            </label>
+                        </div>
+                    </form>
+                    
+                    <div class="trust-badge mt-4">
+                        <span class="badge bg-dark bg-opacity-50 text-light">
+                            <i class="fa-solid fa-shield-alt me-2"></i>No spam. Unsubscribe anytime.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Enhanced CTA Section -->
+<section class="cta-section py-4 py-md-5">
+    <div class="container py-4 py-md-5">
+        <div class="cta-card rounded-4 p-4 p-md-5 text-center">
+            <h2 class="display-5 fw-bold text-white mb-3">Start Your Journey Today</h2>
+            <p class="lead text-light mb-4">Join thousands of students who transformed their careers with CodeLab</p>
+            
+            <div class="cta-buttons d-flex flex-column flex-sm-row justify-content-center gap-3 mb-4">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'courses:course_list' %}" class="btn btn-light btn-lg px-4 px-md-5 glow-button">
+                        <i class="fa-solid fa-book-open me-2"></i>Browse Courses
+                    </a>
+                    <a href="{% url 'courses:my_certificates' %}" class="btn btn-outline-light btn-lg px-4 px-md-5">
+                        <i class="fa-solid fa-certificate me-2"></i>View Certificates
+                    </a>
+                {% else %}
+                    <a href="{% url 'accounts:register' %}" class="btn btn-light btn-lg px-4 px-md-5 glow-button">
+                        <i class="fa-solid fa-user-plus me-2"></i>Start Free Trial
+                    </a>
+                    <a href="{% url 'courses:course_list' %}" class="btn btn-outline-light btn-lg px-4 px-md-5">
+                        <i class="fa-solid fa-eye me-2"></i>Preview Courses
+                    </a>
+                {% endif %}
+            </div>
+            
+            <div class="cta-features mt-4">
+                <div class="row justify-content-center">
+                    <div class="col-auto">
+                        <span class="text-light small">
+                            <i class="fa-solid fa-check-circle text-success me-1"></i>7-day free trial
+                        </span>
+                    </div>
+                    <div class="col-auto">
+                        <span class="text-light small">
+                            <i class="fa-solid fa-check-circle text-success me-1"></i>Cancel anytime
+                        </span>
+                    </div>
+                    <div class="col-auto">
+                        <span class="text-light small">
+                            <i class="fa-solid fa-check-circle text-success me-1"></i>Certificate included
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Floating Chat Widget -->
+<div class="chat-widget" id="chatWidget">
+    <div class="chat-header">
+        <div class="chat-title">
+            <i class="fa-solid fa-comments me-2"></i>
+            <span>Need help?</span>
+        </div>
+        <button class="chat-close btn btn-sm btn-transparent text-light" onclick="toggleChat()">
+            <i class="fa-solid fa-times"></i>
+        </button>
+    </div>
+    <div class="chat-body">
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-content">
+                    Hi there! I'm CodeLab Assistant. How can I help you today?
+                </div>
+                <div class="message-time">Just now</div>
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" placeholder="Type your question..." id="chatInput">
+            <button class="chat-send" onclick="sendMessage()">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<button class="chat-toggle" onclick="toggleChat()">
+    <i class="fa-solid fa-comment"></i>
+</button>
+
+<!-- Quiz Modal -->
+<div class="modal fade" id="quizModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Find Your Perfect Course</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="quizContent">
+                    <!-- Quiz steps will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Notification -->
+<div class="floating-notification" id="notification">
+    <div class="notification-content d-flex align-items-center">
+        <i class="fa-solid fa-bell notification-icon"></i>
+        <div class="notification-text">
+            <strong class="d-block">New Course Available!</strong>
+            <span>Python for Data Science just launched</span>
+        </div>
+    </div>
+    <button class="notification-close" onclick="closeNotification()">
+        <i class="fa-solid fa-times"></i>
+    </button>
+</div>
+
+<!-- Floating Back to Top Button -->
+<button class="btn btn-primary rounded-circle shadow-lg position-fixed bottom-3 end-3 d-none" id="backToTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" style="width: 50px; height: 50px; z-index: 998;">
+    <i class="fa-solid fa-arrow-up"></i>
+</button>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Swiper JS -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<!-- AOS Animation Library -->
+<script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<!-- Typed.js for typing animation -->
+<script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+
+<script>
+// Initialize AOS
+AOS.init({
+    duration: 1000,
+    once: true,
+    offset: 100
+});
+
+// Initialize Typed.js
+document.addEventListener('DOMContentLoaded', function() {
+    // Loading screen
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingBar = document.getElementById('loadingBar');
+    
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 100) {
+            progress = 100;
+            clearInterval(progressInterval);
+            
+            setTimeout(() => {
+                loadingScreen.classList.add('loaded');
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    showNotification();
+                }, 500);
+            }, 300);
+        }
+        loadingBar.style.width = `${progress}%`;
+    }, 100);
+    
+    // Typing animation with Typed.js
+    new Typed('.typed-text', {
+        strings: ['Interactive Learning', 'Project-Based Learning', 'Career-Focused Education'],
+        typeSpeed: 50,
+        backSpeed: 30,
+        backDelay: 2000,
+        startDelay: 1000,
+        loop: true,
+        showCursor: false
+    });
+    
+    // Animate counters
+    const counters = document.querySelectorAll('.stat-value');
+    let animated = false;
+    
+    function animateCounters() {
+        if (animated) return;
+        
+        counters.forEach(counter => {
+            const target = parseInt(counter.getAttribute('data-count'));
+            const duration = 2000;
+            const increment = target / (duration / 16);
+            let current = 0;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                
+                if (counter.textContent.includes('%')) {
+                    counter.textContent = Math.floor(current) + '%';
+                } else {
+                    counter.textContent = Math.floor(current).toLocaleString();
+                }
+            }, 16);
+        });
+        
+        animated = true;
+    }
+    
+    // Intersection Observer for counters
+    const statsBar = document.getElementById('stats-bar');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateCounters();
+            }
+        });
+    }, { threshold: 0.5 });
+    
+    if (statsBar) observer.observe(statsBar);
+    
+    // Initialize Swiper with responsive breakpoints
+    const swiper = new Swiper('.swiper', {
+        slidesPerView: 1,
+        spaceBetween: 20,
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+        pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+        },
+        breakpoints: {
+            320: {
+                slidesPerView: 1,
+                spaceBetween: 10
+            },
+            480: {
+                slidesPerView: 1,
+                spaceBetween: 15
+            },
+            640: {
+                slidesPerView: 2,
+                spaceBetween: 15
+            },
+            768: {
+                slidesPerView: 2,
+                spaceBetween: 20
+            },
+            1024: {
+                slidesPerView: 3,
+                spaceBetween: 20
+            },
+            1200: {
+                slidesPerView: 3,
+                spaceBetween: 30
+            }
+        },
+        touchEventsTarget: 'container',
+        touchRatio: 1,
+        touchAngle: 45,
+        grabCursor: true,
+        preventInteractionOnTransition: true
+    });
+    
+    // Chat Widget
+    let chatOpen = false;
+    
+    function toggleChat() {
+        const chatWidget = document.getElementById('chatWidget');
+        chatOpen = !chatOpen;
+        chatWidget.classList.toggle('active');
+        
+        if (chatOpen) {
+            document.getElementById('chatInput').focus();
+        }
+    }
+    
+    function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const messages = document.getElementById('chatMessages');
+        
+        if (input.value.trim() === '') return;
+        
+        // Add user message
+        const userMsg = document.createElement('div');
+        userMsg.className = 'message user';
+        userMsg.innerHTML = `
+            <div class="message-content">${input.value}</div>
+            <div class="message-time">Just now</div>
+        `;
+        messages.appendChild(userMsg);
+        
+        // Clear input
+        const userMessage = input.value;
+        input.value = '';
+        
+        // Scroll to bottom
+        messages.scrollTop = messages.scrollHeight;
+        
+        // Simulate bot response
+        setTimeout(() => {
+            const botMsg = document.createElement('div');
+            botMsg.className = 'message bot';
+            
+            let response = "I'm an AI assistant. For real support, please contact our team at support@codelab.com";
+            if (userMessage.toLowerCase().includes('course')) {
+                response = "We offer courses in Python, Web Development, Data Science, and more! Visit our courses page to explore.";
+            } else if (userMessage.toLowerCase().includes('price') || userMessage.toLowerCase().includes('cost')) {
+                response = "We offer flexible pricing plans starting at $19/month. All plans include a 7-day free trial.";
+            } else if (userMessage.toLowerCase().includes('certificate')) {
+                response = "Yes! All paid courses include a verifiable certificate upon completion.";
+            } else if (userMessage.toLowerCase().includes('help')) {
+                response = "You can check our FAQ section or contact support for immediate assistance.";
+            }
+            
+            botMsg.innerHTML = `
+                <div class="message-content">${response}</div>
+                <div class="message-time">Just now</div>
+            `;
+            messages.appendChild(botMsg);
+            messages.scrollTop = messages.scrollHeight;
+        }, 1000);
+    }
+    
+    // Enter key for chat
+    document.getElementById('chatInput')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendMessage();
+    });
+    
+    // Code Demo Functionality
+    function runCode() {
+        const editor = document.getElementById('codeEditor');
+        const output = document.getElementById('codeOutput');
+        
+        try {
+            const code = editor.textContent;
+            // Simple code evaluation simulation
+            if (code.includes('"Learner"')) {
+                output.textContent = `Hello, Learner! Welcome to CodeLab.
+Start your coding journey today!
+----------------------------------------
+Try changing the name variable above!`;
+            } else {
+                const nameMatch = code.match(/user_name\s*=\s*"([^"]+)"/);
+                const name = nameMatch ? nameMatch[1] : "Developer";
+                output.textContent = `Hello, ${name}! Welcome to CodeLab.
+Start your coding journey today!
+----------------------------------------
+Great! You changed the name variable.`;
+            }
+            output.classList.add('text-success');
+        } catch (error) {
+            output.textContent = `Error: ${error.message}`;
+            output.classList.add('text-danger');
+        }
+    }
+    
+    function resetCode() {
+        const editor = document.getElementById('codeEditor');
+        const output = document.getElementById('codeOutput');
+        
+        editor.textContent = `# Welcome to CodeLab!
+# Edit this code and click Run
+
+def greet(name):
+    return f"Hello, {name}! Welcome to CodeLab."
+
+# Change this name
+user_name = "Learner"
+message = greet(user_name)
+
+print(message)
+print("Start your coding journey today!")
+print("-" * 40)
+print("Try changing the name variable above!")`;
+        
+        output.textContent = 'Click "Run" to see the output...';
+        output.className = 'text-light';
+    }
+    
+    // Quiz Modal
+    const quizBtn = document.getElementById('startQuizBtn');
+    quizBtn?.addEventListener('click', function() {
+        const quizContent = document.getElementById('quizContent');
+        quizContent.innerHTML = `
+            <div class="quiz-step active">
+                <h6 class="text-light mb-4">What is your primary goal?</h6>
+                <div class="quiz-options">
+                    <button class="btn btn-outline-light w-100 mb-3" data-next="1">Get a new job in tech</button>
+                    <button class="btn btn-outline-light w-100 mb-3" data-next="2">Advance in my current role</button>
+                    <button class="btn btn-outline-light w-100 mb-3" data-next="3">Learn for personal growth</button>
+                    <button class="btn btn-outline-light w-100" data-next="4">Start a freelance career</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    // Notification
+    function showNotification() {
+        const notification = document.getElementById('notification');
+        setTimeout(() => {
+            notification.classList.add('show');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }, 2000);
+    }
+    
+    function closeNotification() {
+        document.getElementById('notification').classList.remove('show');
+    }
+    
+    // Back to top button
+    const backToTopBtn = document.getElementById('backToTop');
+    
+    window.addEventListener('scroll', function() {
+        if (window.pageYOffset > 300) {
+            backToTopBtn.classList.remove('d-none');
+        } else {
+            backToTopBtn.classList.add('d-none');
+        }
+    });
+    
+    // Newsletter form
+    const newsletterForm = document.getElementById('newsletterForm');
+    newsletterForm?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const email = this.querySelector('input[type="email"]').value;
+        
+        // Show success message
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fa-solid fa-check me-2"></i>Subscribed!';
+        submitBtn.classList.remove('btn-primary');
+        submitBtn.classList.add('btn-success');
+        
+        // Reset after 3 seconds
+        setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.classList.remove('btn-success');
+            submitBtn.classList.add('btn-primary');
+            this.reset();
+        }, 3000);
+    });
+    
+    // Smooth scroll to features
+    function scrollToFeatures() {
+        document.getElementById('features').scrollIntoView({
+            behavior: 'smooth'
+        });
+    }
+    
+    // Device detection and responsive adjustments
+    function detectDevice() {
+        const isMobile = window.innerWidth <= 768;
+        const isTablet = window.innerWidth > 768 && window.innerWidth <= 1024;
+        const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        
+        // Add device class to body for CSS targeting
+        document.body.classList.toggle('is-mobile', isMobile);
+        document.body.classList.toggle('is-tablet', isTablet);
+        document.body.classList.toggle('is-touch', isTouch);
+    }
+    
+    // Handle orientation changes
+    function handleOrientationChange() {
+        if (window.innerHeight > window.innerWidth) {
+            // Portrait mode
+            document.body.classList.add('portrait');
+            document.body.classList.remove('landscape');
+        } else {
+            // Landscape mode
+            document.body.classList.add('landscape');
+            document.body.classList.remove('portrait');
+        }
+    }
+    
+    // Optimize images for device
+    function optimizeImages() {
+        const images = document.querySelectorAll('img[data-src]');
+        const devicePixelRatio = window.devicePixelRatio || 1;
+        
+        images.forEach(img => {
+            const src = img.getAttribute('data-src');
+            if (src) {
+                // Load appropriate image size based on device
+                if (window.innerWidth < 768) {
+                    img.src = src.replace('.jpg', '-mobile.jpg');
+                } else if (window.innerWidth < 1024) {
+                    img.src = src.replace('.jpg', '-tablet.jpg');
+                } else {
+                    img.src = src;
+                }
+            }
+        });
+    }
+    
+    // Improved scroll handling for mobile
+    function setupSmoothScroll() {
+        const isSmoothScrollSupported = 'scrollBehavior' in document.documentElement.style;
+        
+        if (!isSmoothScrollSupported || window.innerWidth < 768) {
+            // Use polyfill or disable smooth scroll on mobile for better performance
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    if (this.hash !== "") {
+                        e.preventDefault();
+                        const target = document.querySelector(this.hash);
+                        if (target) {
+                            target.scrollIntoView();
+                        }
+                    }
+                });
+            });
+        }
+    }
+    
+    // Viewport height fix for mobile browsers
+    function setVH() {
+        let vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    
+    // Initialize all responsive functions
+    detectDevice();
+    handleOrientationChange();
+    optimizeImages();
+    setupSmoothScroll();
+    setVH();
+    
+    // Event listeners for responsiveness
+    window.addEventListener('resize', function() {
+        detectDevice();
+        handleOrientationChange();
+        setVH();
+    });
+    
+    window.addEventListener('orientationchange', function() {
+        setTimeout(handleOrientationChange, 100);
+        setTimeout(setVH, 100);
+    });
+});
+
+// Add keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + / to open chat
+    if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+        e.preventDefault();
+        toggleChat();
+    }
+    
+    // Escape to close chat
+    if (e.key === 'Escape') {
+        const chatWidget = document.getElementById('chatWidget');
+        if (chatWidget.classList.contains('active')) {
+            toggleChat();
+        }
+    }
+});
+</script>
+{% endblock %}

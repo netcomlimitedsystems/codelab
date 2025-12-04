@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}Privacy Policy - CodeLab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Privacy Policy</h4>
+            </div>
+            <div class="card-body">
+                <div class="privacy-content">
+                    <!-- Last Updated -->
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Last updated: {% now "F j, Y" %}
+                    </div>
+                    
+                    <!-- Table of Contents -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Table of Contents</h6>
+                        </div>
+                        <div class="card-body">
+                            <ol class="mb-0">
+                                <li><a href="#section1" class="text-decoration-none">Information We Collect</a></li>
+                                <li><a href="#section2" class="text-decoration-none">How We Use Your Information</a></li>
+                                <li><a href="#section3" class="text-decoration-none">Data Protection</a></li>
+                                <li><a href="#section4" class="text-decoration-none">Your Rights</a></li>
+                                <li><a href="#section5" class="text-decoration-none">Cookies</a></li>
+                                <li><a href="#section6" class="text-decoration-none">Third-Party Services</a></li>
+                                <li><a href="#section7" class="text-decoration-none">Changes to This Policy</a></li>
+                                <li><a href="#section8" class="text-decoration-none">Contact Us</a></li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <!-- Sections -->
+                    <section id="section1" class="mb-5">
+                        <h5 class="mb-3">1. Information We Collect</h5>
+                        <p>We collect information to provide better services to our users:</p>
+                        <ul>
+                            <li><strong>Account Information:</strong> When you create an account, we collect your name, email address, username, and password.</li>
+                            <li><strong>Profile Information:</strong> You may provide additional information like your profile picture, phone number, and bio.</li>
+                            <li><strong>Learning Data:</strong> We track your course progress, quiz scores, assignments, and certificates.</li>
+                            <li><strong>Payment Information:</strong> For paid courses, we collect payment details through secure payment processors.</li>
+                            <li><strong>Technical Information:</strong> We collect IP addresses, browser type, device information, and usage data.</li>
+                        </ul>
+                    </section>
+                    
+                    <section id="section2" class="mb-5">
+                        <h5 class="mb-3">2. How We Use Your Information</h5>
+                        <p>We use the information we collect for the following purposes:</p>
+                        <ul>
+                            <li>To provide and maintain our learning platform</li>
+                            <li>To personalize your learning experience</li>
+                            <li>To process payments and prevent fraud</li>
+                            <li>To communicate with you about platform updates, new courses, and promotions</li>
+                            <li>To improve our services and develop new features</li>
+                            <li>To comply with legal obligations</li>
+                        </ul>
+                    </section>
+                    
+                    <section id="section3" class="mb-5">
+                        <h5 class="mb-3">3. Data Protection</h5>
+                        <p>We implement appropriate security measures to protect your personal information:</p>
+                        <ul>
+                            <li>Data encryption in transit and at rest</li>
+                            <li>Regular security audits and updates</li>
+                            <li>Access controls and authentication systems</li>
+                            <li>Secure payment processing through certified providers</li>
+                        </ul>
+                        <p>Despite our efforts, no security measures are 100% secure. We cannot guarantee absolute security of your data.</p>
+                    </section>
+                    
+                    <section id="section4" class="mb-5">
+                        <h5 class="mb-3">4. Your Rights</h5>
+                        <p>You have the following rights regarding your personal data:</p>
+                        <ul>
+                            <li><strong>Access:</strong> You can request a copy of your personal data</li>
+                            <li><strong>Correction:</strong> You can update or correct inaccurate information</li>
+                            <li><strong>Deletion:</strong> You can request deletion of your personal data</li>
+                            <li><strong>Objection:</strong> You can object to certain processing of your data</li>
+                            <li><strong>Portability:</strong> You can request transfer of your data to another service</li>
+                        </ul>
+                        <p>To exercise these rights, contact us at <a href="mailto:privacy@codelab.com">privacy@codelab.com</a>.</p>
+                    </section>
+                    
+                    <section id="section5" class="mb-5">
+                        <h5 class="mb-3">5. Cookies</h5>
+                        <p>We use cookies and similar tracking technologies to:</p>
+                        <ul>
+                            <li>Remember your preferences and login sessions</li>
+                            <li>Analyze how our platform is used</li>
+                            <li>Personalize content and advertisements</li>
+                        </ul>
+                        <p>You can control cookies through your browser settings. However, disabling cookies may affect your experience on our platform.</p>
+                    </section>
+                    
+                    <section id="section6" class="mb-5">
+                        <h5 class="mb-3">6. Third-Party Services</h5>
+                        <p>We use third-party services that may collect information:</p>
+                        <ul>
+                            <li><strong>Payment Processors:</strong> M-Pesa, PayPal, Stripe</li>
+                            <li><strong>Analytics:</strong> Google Analytics</li>
+                            <li><strong>Hosting:</strong> AWS, DigitalOcean</li>
+                            <li><strong>Email Service:</strong> SendGrid</li>
+                        </ul>
+                        <p>These services have their own privacy policies. We recommend reviewing them.</p>
+                    </section>
+                    
+                    <section id="section7" class="mb-5">
+                        <h5 class="mb-3">7. Changes to This Policy</h5>
+                        <p>We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last updated" date. We encourage you to review this policy periodically.</p>
+                    </section>
+                    
+                    <section id="section8" class="mb-5">
+                        <h5 class="mb-3">8. Contact Us</h5>
+                        <p>If you have any questions about this privacy policy, please contact us:</p>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-envelope me-2"></i>Email: privacy@codelab.com</li>
+                            <li><i class="fas fa-phone me-2"></i>Phone: +254 700 000 000</li>
+                            <li><i class="fas fa-map-marker-alt me-2"></i>Address: Nairobi, Kenya</li>
+                        </ul>
+                    </section>
+                    
+                    <!-- Agreement -->
+                    <div class="card border-primary mt-5">
+                        <div class="card-body text-center">
+                            <h6 class="card-title mb-3">Acceptance of Privacy Policy</h6>
+                            <p class="card-text text-muted mb-4">
+                                By using our platform, you acknowledge that you have read and understood this privacy policy.
+                            </p>
+                            {% if not user.profile.accepted_terms %}
+                                <form method="POST" action="{% url 'accounts:accept_terms' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-check me-1"></i>I Accept the Privacy Policy
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Accepted on {{ user.profile.accepted_terms|date:"F j, Y" }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .privacy-content section {
+        scroll-margin-top: 20px;
+    }
+    
+    .privacy-content h5 {
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--primary-color);
+        padding-bottom: 10px;
+    }
+    
+    .privacy-content ul {
+        padding-left: 20px;
+    }
+    
+    .privacy-content li {
+        margin-bottom: 10px;
+    }
+</style>
+
+{% block extra_js %}
+<script>
+    // Smooth scrolling for table of contents
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    // Highlight current section in view
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.privacy-content ol a');
+    
+    window.addEventListener('scroll', () => {
+        let current = '';
+        
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (scrollY >= (sectionTop - 100)) {
+                current = section.getAttribute('id');
+            }
+        });
+        
+        navLinks.forEach(link => {
+            link.classList.remove('fw-bold', 'text-primary');
+            if (link.getAttribute('href') === `#${current}`) {
+                link.classList.add('fw-bold', 'text-primary');
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

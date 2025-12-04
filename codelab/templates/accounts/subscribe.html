@@ -1,0 +1,741 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Subscribe to CodeLab Newsletter{% endblock %}
+{% block meta_description %}Stay updated with the latest tech tutorials, programming tips, career advice, and company news from CodeLab. Subscribe to our newsletter.{% endblock %}
+
+{% block extra_css %}
+<style>
+    .subscription-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .subscription-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M1200 120L0 16.48 0 0 1200 0 1200 120z" fill="rgba(255,255,255,0.1)"/></svg>');
+        background-size: 100% 100px;
+        background-repeat: no-repeat;
+        background-position: bottom;
+    }
+    
+    .feature-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        height: 100%;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        border-color: #667eea;
+    }
+    
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+    }
+    
+    .feature-icon i {
+        color: white;
+        font-size: 1.5rem;
+    }
+    
+    .subscription-form {
+        background: white;
+        border-radius: 15px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+    }
+    
+    .form-floating label {
+        color: #6c757d;
+    }
+    
+    .subscription-toggle {
+        background: #f8f9fa;
+        border-radius: 50px;
+        padding: 0.25rem;
+        display: inline-flex;
+        margin-bottom: 1.5rem;
+    }
+    
+    .subscription-toggle .btn {
+        border-radius: 50px;
+        padding: 0.5rem 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .subscription-toggle .btn.active {
+        background: #667eea;
+        color: white;
+    }
+    
+    .preference-item {
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .preference-item:hover {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.05);
+    }
+    
+    .preference-item.active {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+    
+    .privacy-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .privacy-text a {
+        color: #667eea;
+        text-decoration: none;
+    }
+    
+    .privacy-text a:hover {
+        text-decoration: underline;
+    }
+    
+    .confetti {
+        position: fixed;
+        width: 15px;
+        height: 15px;
+        background: #667eea;
+        border-radius: 50%;
+        pointer-events: none;
+        opacity: 0;
+        z-index: 9999;
+    }
+    
+    /* Success State */
+    .success-state {
+        display: none;
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .success-animation {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 2rem;
+        position: relative;
+    }
+    
+    .success-animation .checkmark {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: block;
+        stroke-width: 2;
+        stroke: #4bb543;
+        stroke-miterlimit: 10;
+        box-shadow: inset 0px 0px 0px #4bb543;
+        animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+    }
+    
+    .success-animation .checkmark__circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 2;
+        stroke-miterlimit: 10;
+        stroke: #4bb543;
+        fill: none;
+        animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+    
+    .success-animation .checkmark__check {
+        transform-origin: 50% 50%;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+    }
+    
+    @keyframes stroke {
+        100% {
+            stroke-dashoffset: 0;
+        }
+    }
+    
+    @keyframes scale {
+        0%, 100% {
+            transform: none;
+        }
+        50% {
+            transform: scale3d(1.1, 1.1, 1);
+        }
+    }
+    
+    @keyframes fill {
+        100% {
+            box-shadow: inset 0px 0px 0px 30px #4bb543;
+        }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .subscription-hero {
+            border-radius: 10px;
+            margin: 0 -1rem;
+        }
+        
+        .subscription-form {
+            padding: 1.5rem;
+        }
+        
+        .feature-card {
+            margin-bottom: 1rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .subscription-toggle {
+            width: 100%;
+            flex-direction: column;
+        }
+        
+        .subscription-toggle .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .preference-item {
+            padding: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="subscription-hero p-4 p-md-5 mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb" style="--bs-breadcrumb-divider: '›';">
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:home' %}" class="text-white-50">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:blog_list' %}" class="text-white-50">Blog</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Newsletter</li>
+                </ol>
+            </nav>
+            
+            <h1 class="display-5 fw-bold mb-3">Join Our Newsletter</h1>
+            <p class="lead mb-4">Stay ahead of the curve with curated tech insights, tutorials, and industry updates delivered to your inbox.</p>
+            
+            <div class="d-flex align-items-center flex-wrap gap-3">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-users me-2"></i>
+                    <span>Join 10,000+ subscribers</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-star me-2"></i>
+                    <span>Free, no spam, unsubscribe anytime</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 d-none d-lg-flex justify-content-center">
+            <div class="text-center">
+                <i class="fas fa-envelope-open-text fa-6x text-white-50"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-4">
+    <!-- Features -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h2 class="fw-bold">What You'll Get</h2>
+            <p class="text-muted">Weekly insights delivered straight to your inbox</p>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-code"></i>
+                </div>
+                <h4 class="fw-bold mb-2">Tech Tutorials</h4>
+                <p class="text-muted">Step-by-step guides on programming languages, frameworks, and best practices.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+                <h4 class="fw-bold mb-2">Industry Insights</h4>
+                <p class="text-muted">Latest trends, tools, and technologies shaping the software development world.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <h4 class="fw-bold mb-2">Career Advice</h4>
+                <p class="text-muted">Tips for interviews, resume building, and advancing your tech career.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Subscription Form -->
+            <div class="subscription-form mb-5">
+                <!-- Success State (Initially Hidden) -->
+                <div class="success-state" id="successState">
+                    <div class="success-animation">
+                        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                            <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                            <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                        </svg>
+                    </div>
+                    <h2 class="fw-bold mb-3">You're Subscribed!</h2>
+                    <p class="text-muted mb-4">Thank you for joining our community. Check your email to confirm your subscription.</p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Don't forget to check your spam folder if you don't see our email.
+                    </div>
+                    <div class="mt-4">
+                        <a href="{% url 'accounts:blog_list' %}" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-newspaper me-2"></i>Read Latest Articles
+                        </a>
+                        <a href="{% url 'accounts:home' %}" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i>Back to Home
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Form State (Initially Visible) -->
+                <div id="formState">
+                    <h2 class="fw-bold text-center mb-4">Subscribe Now</h2>
+                    
+                    <!-- Frequency Toggle -->
+                    <div class="text-center mb-4">
+                        <p class="fw-semibold mb-2">Choose your frequency:</p>
+                        <div class="subscription-toggle">
+                            <button type="button" class="btn active" data-frequency="weekly">Weekly Digest</button>
+                            <button type="button" class="btn" data-frequency="monthly">Monthly Roundup</button>
+                            <button type="button" class="btn" data-frequency="announcements">Important Announcements Only</button>
+                        </div>
+                    </div>
+
+                    <form method="POST" id="subscriptionForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="frequency" value="weekly" id="frequencyInput">
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="firstName" 
+                                           name="first_name" 
+                                           placeholder="John"
+                                           required>
+                                    <label for="firstName">First Name *</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="lastName" 
+                                           name="last_name" 
+                                           placeholder="Doe"
+                                           required>
+                                    <label for="lastName">Last Name *</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="email" 
+                                           name="email" 
+                                           placeholder="you@example.com"
+                                           required>
+                                    <label for="email">Email Address *</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Topics you're interested in:</label>
+                                <div class="preference-list">
+                                    <div class="preference-item" data-topic="tutorials">
+                                        <div class="form-check d-flex align-items-center">
+                                            <input class="form-check-input me-3" type="checkbox" id="tutorials" name="topics" value="tutorials" checked>
+                                            <label class="form-check-label flex-grow-1" for="tutorials">
+                                                <span class="fw-semibold">Programming Tutorials</span>
+                                                <p class="text-muted mb-0 small">Step-by-step coding guides and examples</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="preference-item" data-topic="career">
+                                        <div class="form-check d-flex align-items-center">
+                                            <input class="form-check-input me-3" type="checkbox" id="career" name="topics" value="career" checked>
+                                            <label class="form-check-label flex-grow-1" for="career">
+                                                <span class="fw-semibold">Career Development</span>
+                                                <p class="text-muted mb-0 small">Job tips, interview prep, and career growth</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="preference-item" data-topic="industry">
+                                        <div class="form-check d-flex align-items-center">
+                                            <input class="form-check-input me-3" type="checkbox" id="industry" name="topics" value="industry" checked>
+                                            <label class="form-check-label flex-grow-1" for="industry">
+                                                <span class="fw-semibold">Industry News</span>
+                                                <p class="text-muted mb-0 small">Latest tech trends and updates</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="preference-item" data-topic="company">
+                                        <div class="form-check d-flex align-items-center">
+                                            <input class="form-check-input me-3" type="checkbox" id="company" name="topics" value="company">
+                                            <label class="form-check-label flex-grow-1" for="company">
+                                                <span class="fw-semibold">Company Updates</span>
+                                                <p class="text-muted mb-0 small">News about CodeLab and our community</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                                    <label class="form-check-label" for="terms">
+                                        I agree to receive emails from CodeLab. I understand I can unsubscribe at any time.
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-4">
+                                    <input class="form-check-input" type="checkbox" id="privacy" name="privacy" required>
+                                    <label class="form-check-label" for="privacy">
+                                        I have read and agree to the 
+                                        <a href="{% url 'accounts:privacy' %}" target="_blank" class="text-decoration-none">Privacy Policy</a> 
+                                        and 
+                                        <a href="{% url 'accounts:terms' %}" target="_blank" class="text-decoration-none">Terms of Service</a>.
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg" id="subscribeBtn">
+                                        <i class="fas fa-paper-plane me-2"></i>Subscribe Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="privacy-text">
+                            <i class="fas fa-lock me-1"></i>
+                            We respect your privacy. Your email is safe with us. No spam, ever.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Testimonials -->
+            <div class="text-center mb-5">
+                <h3 class="fw-bold mb-4">What Our Readers Say</h3>
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 bg-light h-100">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                        AS
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0">Alex Smith</h6>
+                                        <small class="text-muted">Senior Developer</small>
+                                    </div>
+                                </div>
+                                <p class="mb-0">"The tutorials are always practical and up-to-date. It's my go-to resource for learning new technologies."</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 bg-light h-100">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                        MJ
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0">Maria Johnson</h6>
+                                        <small class="text-muted">Tech Lead</small>
+                                    </div>
+                                </div>
+                                <p class="mb-0">"The career advice helped me negotiate a 30% salary increase. Invaluable content for tech professionals."</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ -->
+            <div class="mb-5">
+                <h3 class="fw-bold text-center mb-4">Frequently Asked Questions</h3>
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                How often will I receive emails?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                You can choose your preferred frequency: weekly digest, monthly roundup, or important announcements only. We respect your inbox.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                Can I unsubscribe at any time?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes, absolutely. Every email includes an unsubscribe link at the bottom. You can unsubscribe with one click, no questions asked.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                Is my information secure?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                We take your privacy seriously. We never share your email with third parties. All data is encrypted and stored securely. Read our full <a href="{% url 'accounts:privacy' %}">Privacy Policy</a>.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                What type of content will I receive?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                You'll receive a mix of tech tutorials, industry insights, career advice, and company updates. You can customize your preferences during signup.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Frequency toggle
+        const frequencyBtns = document.querySelectorAll('[data-frequency]');
+        const frequencyInput = document.getElementById('frequencyInput');
+        
+        frequencyBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                frequencyBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                frequencyInput.value = this.dataset.frequency;
+            });
+        });
+        
+        // Preference item interaction
+        const preferenceItems = document.querySelectorAll('.preference-item');
+        preferenceItems.forEach(item => {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            
+            item.addEventListener('click', function(e) {
+                if (e.target.type !== 'checkbox') {
+                    checkbox.checked = !checkbox.checked;
+                }
+                
+                if (checkbox.checked) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+            
+            // Update active state when checkbox changes
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+            
+            // Set initial active state
+            if (checkbox.checked) {
+                item.classList.add('active');
+            }
+        });
+        
+        // Form submission with animation
+        const subscriptionForm = document.getElementById('subscriptionForm');
+        const subscribeBtn = document.getElementById('subscribeBtn');
+        const formState = document.getElementById('formState');
+        const successState = document.getElementById('successState');
+        
+        if (subscriptionForm) {
+            subscriptionForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const originalText = subscribeBtn.innerHTML;
+                subscribeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Subscribing...';
+                subscribeBtn.disabled = true;
+                
+                // Simulate API call delay
+                setTimeout(() => {
+                    // Create confetti effect
+                    createConfetti();
+                    
+                    // Show success state
+                    formState.style.display = 'none';
+                    successState.style.display = 'block';
+                    
+                    // Scroll to top of form
+                    subscriptionForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    
+                    // In a real implementation, you would submit the form via AJAX here
+                    // For now, we'll simulate a successful submission
+                    
+                    // Example of actual form submission:
+                    // fetch(this.action, {
+                    //     method: 'POST',
+                    //     body: new FormData(this)
+                    // }).then(response => {
+                    //     if (response.ok) {
+                    //         createConfetti();
+                    //         formState.style.display = 'none';
+                    //         successState.style.display = 'block';
+                    //     } else {
+                    //         subscribeBtn.innerHTML = originalText;
+                    //         subscribeBtn.disabled = false;
+                    //         alert('Something went wrong. Please try again.');
+                    //     }
+                    // });
+                    
+                }, 1500);
+            });
+        }
+        
+        // Create confetti effect
+        function createConfetti() {
+            const colors = ['#667eea', '#764ba2', '#f56565', '#ed8936', '#ecc94b', '#48bb78', '#38b2ac'];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                document.body.appendChild(confetti);
+                
+                // Animate confetti
+                const animation = confetti.animate([
+                    {
+                        top: '-10px',
+                        opacity: 1,
+                        transform: `rotate(${Math.random() * 360}deg)`
+                    },
+                    {
+                        top: Math.random() * 100 + 'vh',
+                        opacity: 0,
+                        transform: `rotate(${Math.random() * 720}deg) translateX(${Math.random() * 200 - 100}px)`
+                    }
+                ], {
+                    duration: 1000 + Math.random() * 2000,
+                    easing: 'cubic-bezier(0.215, 0.610, 0.355, 1)'
+                });
+                
+                // Remove confetti after animation
+                animation.onfinish = () => confetti.remove();
+            }
+        }
+        
+        // Form validation
+        const emailInput = document.getElementById('email');
+        if (emailInput) {
+            emailInput.addEventListener('blur', function() {
+                const email = this.value;
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                
+                if (email && !emailRegex.test(email)) {
+                    this.classList.add('is-invalid');
+                    const feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback';
+                    feedback.textContent = 'Please enter a valid email address';
+                    if (!this.nextElementSibling?.classList.contains('invalid-feedback')) {
+                        this.parentNode.insertBefore(feedback, this.nextSibling);
+                    }
+                } else {
+                    this.classList.remove('is-invalid');
+                    const feedback = this.nextElementSibling;
+                    if (feedback?.classList.contains('invalid-feedback')) {
+                        feedback.remove();
+                    }
+                }
+            });
+        }
+        
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

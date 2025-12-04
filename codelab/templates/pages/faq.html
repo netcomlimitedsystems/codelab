@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+
+{% block title %}FAQ - CodeLab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="fas fa-question-circle me-2"></i>Frequently Asked Questions</h4>
+            </div>
+            <div class="card-body">
+                <!-- Search FAQ -->
+                <div class="mb-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" 
+                               class="form-control" 
+                               id="faqSearch" 
+                               placeholder="Search for questions...">
+                    </div>
+                </div>
+                
+                <!-- FAQ Categories -->
+                <div class="mb-4">
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <button class="btn btn-outline-primary active" data-filter="all">All</button>
+                        <button class="btn btn-outline-secondary" data-filter="account">Account</button>
+                        <button class="btn btn-outline-secondary" data-filter="courses">Courses</button>
+                        <button class="btn btn-outline-secondary" data-filter="payment">Payment</button>
+                        <button class="btn btn-outline-secondary" data-filter="technical">Technical</button>
+                    </div>
+                </div>
+                
+                <!-- FAQ Accordion -->
+                <div class="accordion" id="faqAccordion">
+                    <!-- Account Questions -->
+                    <div class="accordion-item" data-category="account">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#account1">
+                                How do I create an account?
+                            </button>
+                        </h2>
+                        <div id="account1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Click the "Register" button in the top right corner. Fill in your details including 
+                                username, email, and password. You'll receive a verification email - click the link 
+                                to activate your account.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item" data-category="account">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#account2">
+                                I forgot my password. What should I do?
+                            </button>
+                        </h2>
+                        <div id="account2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Go to the login page and click "Forgot Password". Enter your email address and we'll 
+                                send you instructions to reset your password. Check your spam folder if you don't see 
+                                the email within 5 minutes.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Course Questions -->
+                    <div class="accordion-item" data-category="courses">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#course1">
+                                Are the courses really free?
+                            </button>
+                        </h2>
+                        <div id="course1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                We offer both free and paid courses. Free courses provide access to all learning 
+                                materials, while paid courses offer additional features like certificates, 
+                                instructor support, and advanced projects. You can filter courses by price in 
+                                the catalog.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item" data-category="courses">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#course2">
+                                How long do I have access to a course?
+                            </button>
+                        </h2>
+                        <div id="course2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Once you enroll in a course, you have lifetime access to the course materials. 
+                                You can learn at your own pace and revisit the content anytime.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Questions -->
+                    <div class="accordion-item" data-category="payment">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#payment1">
+                                What payment methods do you accept?
+                            </button>
+                        </h2>
+                        <div id="payment1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                We accept M-Pesa for local Kenyan payments, PayPal for international payments, 
+                                and Stripe for card payments. All payments are processed securely.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item" data-category="payment">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#payment2">
+                                Can I get a refund?
+                            </button>
+                        </h2>
+                        <div id="payment2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                We offer a 30-day money-back guarantee for all paid courses. If you're not satisfied 
+                                with the course, contact our support team within 30 days of purchase for a full refund.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Technical Questions -->
+                    <div class="accordion-item" data-category="technical">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tech1">
+                                What are the system requirements?
+                            </button>
+                        </h2>
+                        <div id="tech1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                You need a modern web browser (Chrome, Firefox, Safari, or Edge), a stable internet 
+                                connection, and a device with at least 4GB RAM. Some courses may have additional 
+                                software requirements listed in the course description.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item" data-category="technical">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tech2">
+                                I'm having trouble playing videos. What should I do?
+                            </button>
+                        </h2>
+                        <div id="tech2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                1. Check your internet connection<br>
+                                2. Clear your browser cache<br>
+                                3. Try a different browser<br>
+                                4. Update your browser to the latest version<br>
+                                5. Contact support if the issue persists
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Still Have Questions -->
+                <div class="card mt-5 border-info">
+                    <div class="card-body text-center">
+                        <h5 class="card-title mb-3">Still have questions?</h5>
+                        <p class="card-text text-muted mb-4">
+                            Can't find the answer you're looking for? Our support team is here to help.
+                        </p>
+                        <a href="{% url 'accounts:contact' %}" class="btn btn-info">
+                            <i class="fas fa-headset me-1"></i>Contact Support
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // FAQ Search functionality
+    document.getElementById('faqSearch').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const accordionItems = document.querySelectorAll('.accordion-item');
+        
+        accordionItems.forEach(item => {
+            const question = item.querySelector('.accordion-button').textContent.toLowerCase();
+            const answer = item.querySelector('.accordion-body').textContent.toLowerCase();
+            
+            if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+    
+    // FAQ Category filtering
+    document.querySelectorAll('[data-filter]').forEach(button => {
+        button.addEventListener('click', function() {
+            const filter = this.getAttribute('data-filter');
+            
+            // Update active button
+            document.querySelectorAll('[data-filter]').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('btn-outline-secondary');
+                btn.classList.remove('btn-primary');
+            });
+            this.classList.add('active');
+            this.classList.remove('btn-outline-secondary');
+            this.classList.add('btn-primary');
+            
+            // Filter items
+            const accordionItems = document.querySelectorAll('.accordion-item');
+            accordionItems.forEach(item => {
+                if (filter === 'all' || item.getAttribute('data-category') === filter) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

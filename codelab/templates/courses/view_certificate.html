@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Certificate of Completion{% endblock %}
+
+{% block content %}
+<div class="container my-5 d-flex justify-content-center">
+    <div class="certificate p-5" style="width: 800px; border: 10px solid #4CAF50; background: #fff; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.1);">
+        <i class="fas fa-award fa-3x" style="color: #4CAF50;"></i>
+        <h1 class="mt-3">Certificate of Completion</h1>
+        <p class="lead mt-3">This certificate is proudly presented to</p>
+        <div class="recipient-name my-3" style="font-size: 32px; font-weight: bold; color: #222;">
+            {{ user.get_full_name }}
+        </div>
+        <p class="mt-3">for successfully completing the course</p>
+        <div class="course-title my-3" style="font-size: 24px; font-weight: 600; color: #444;">
+            {{ course.title }}
+        </div>
+        <p class="mt-3">on {{ completion_date|date:"F j, Y" }}</p>
+
+        <div class="d-flex justify-content-between mt-5 px-5">
+            <div class="sign text-center">
+                <hr style="border:1px solid #333; width: 200px;">
+                <p class="mt-2 fw-bold">Instructor</p>
+            </div>
+            <div class="sign text-center">
+                <hr style="border:1px solid #333; width: 200px;">
+                <p class="mt-2 fw-bold">Director</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

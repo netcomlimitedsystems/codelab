@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'community:index' %}">Forums</a></li>
+                {% if forum %}
+                <li class="breadcrumb-item">
+                    <a href="{% url 'community:forum_detail' forum.slug %}">{{ forum.name }}</a>
+                </li>
+                <li class="breadcrumb-item active">Edit Forum</li>
+                {% else %}
+                <li class="breadcrumb-item active">Create Forum</li>
+                {% endif %}
+            </ol>
+        </nav>
+
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">{{ title }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">
+                            Forum Name <span class="text-danger">*</span>
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <div class="text-danger">
+                            {% for error in form.name.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            Description <span class="text-danger">*</span>
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="text-danger">
+                            {% for error in form.description.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                {{ form.is_active.label }}
+                            </label>
+                        </div>
+                        {% if form.is_active.errors %}
+                        <div class="text-danger">
+                            {% for error in form.is_active.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if forum %}
+                            <a href="{% url 'community:forum_detail' forum.slug %}" class="btn btn-secondary">Cancel</a>
+                            {% else %}
+                            <a href="{% url 'community:index' %}" class="btn btn-secondary">Cancel</a>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if forum %}
+                            <a href="{% url 'community:delete_forum' forum.slug %}" class="btn btn-danger me-2">
+                                Delete Forum
+                            </a>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">
+                                {% if forum %}Update Forum{% else %}Create Forum{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if not forum %}
+        <!-- Quick Tips -->
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">💡 Forum Creation Tips</h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Choose a clear, descriptive name for your forum</li>
+                    <li>Write a detailed description to help users understand the forum's purpose</li>
+                    <li>Use the active toggle to control forum visibility</li>
+                    <li>Inactive forums won't be visible to regular users</li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

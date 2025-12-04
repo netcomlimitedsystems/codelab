@@ -1,0 +1,1263 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | CodeLab Admin{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --terminal-bg: #0d1117;
+        --editor-bg: #161b22;
+        --code-bg: #0a0d12;
+        --terminal-text: #c9d1d9;
+        --terminal-green: #7ee787;
+        --terminal-blue: #79c0ff;
+        --terminal-purple: #d2a8ff;
+        --terminal-yellow: #ffa657;
+        --terminal-red: #ff7b72;
+        --border-color: #30363d;
+        --terminal-header: #21262d;
+        --terminal-highlight: #1f6feb;
+        --success-color: #2ea043;
+        --warning-color: #d29922;
+        --font-monospace: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+    }
+
+    body {
+        font-family: var(--font-monospace);
+        background-color: var(--terminal-bg);
+        color: var(--terminal-text);
+        margin: 0;
+        padding: 0;
+        line-height: 1.6;
+        font-size: 14px;
+        font-weight: 400;
+    }
+
+    .form-container {
+        background: var(--terminal-bg);
+        min-height: 100vh;
+        padding: 20px 0;
+    }
+
+    .code-editor-card {
+        background: var(--editor-bg);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Terminal Header */
+    .terminal-header {
+        background-color: var(--terminal-header);
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .terminal-controls {
+        display: flex;
+        gap: 8px;
+        margin-right: 20px;
+    }
+
+    .terminal-control {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+
+    .control-close {
+        background-color: #ff5f56;
+    }
+
+    .control-minimize {
+        background-color: #ffbd2e;
+    }
+
+    .control-maximize {
+        background-color: #27ca3f;
+    }
+
+    .terminal-title {
+        font-weight: 600;
+        color: var(--terminal-text);
+        font-size: 13px;
+        letter-spacing: 0.5px;
+    }
+
+    .terminal-path {
+        color: var(--terminal-blue);
+        margin-left: auto;
+        font-size: 12px;
+    }
+
+    /* Code Editor Body */
+    .editor-body {
+        padding: 0;
+    }
+
+    .editor-tabs {
+        display: flex;
+        background: var(--terminal-header);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .editor-tab {
+        padding: 12px 20px;
+        color: var(--terminal-text);
+        background: transparent;
+        border: none;
+        font-family: var(--font-monospace);
+        font-size: 13px;
+        cursor: pointer;
+        position: relative;
+        border-right: 1px solid var(--border-color);
+    }
+
+    .editor-tab.active {
+        background: var(--editor-bg);
+        color: var(--terminal-green);
+    }
+
+    .editor-tab.active::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--terminal-green);
+    }
+
+    .tab-badge {
+        background: rgba(110, 118, 129, 0.4);
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 11px;
+        margin-left: 8px;
+    }
+
+    .editor-content {
+        padding: 30px;
+    }
+
+    /* Live Preview Panel */
+    .live-preview-panel {
+        background: var(--code-bg);
+        border-radius: 6px;
+        padding: 20px;
+        margin-bottom: 30px;
+        border: 1px solid var(--border-color);
+        position: relative;
+    }
+
+    .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .preview-header h5 {
+        color: var(--terminal-yellow);
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .preview-status {
+        font-size: 11px;
+        color: var(--terminal-blue);
+        background: rgba(121, 192, 255, 0.1);
+        padding: 4px 8px;
+        border-radius: 3px;
+    }
+
+    .preview-card {
+        background: var(--editor-bg);
+        border-radius: 6px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .preview-card::before {
+        content: 'ASSIGNMENT';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 10px;
+        color: rgba(121, 192, 255, 0.2);
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    .preview-title {
+        color: var(--terminal-green);
+        font-weight: 600;
+        font-size: 18px;
+        margin-bottom: 10px;
+        font-family: var(--font-monospace);
+    }
+
+    .preview-description {
+        color: var(--terminal-text);
+        line-height: 1.6;
+        margin-bottom: 15px;
+        white-space: pre-wrap;
+        font-size: 13px;
+    }
+
+    .preview-meta {
+        display: flex;
+        gap: 20px;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border-color);
+        flex-wrap: wrap;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--terminal-purple);
+    }
+
+    .meta-icon {
+        color: var(--terminal-yellow);
+    }
+
+    /* Form Controls */
+    .code-input-group {
+        margin-bottom: 25px;
+        position: relative;
+    }
+
+    .code-label {
+        display: block;
+        color: var(--terminal-blue);
+        font-size: 13px;
+        margin-bottom: 8px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .code-label::before {
+        content: '$';
+        color: var(--terminal-yellow);
+    }
+
+    .code-input {
+        width: 100%;
+        padding: 12px 15px;
+        background: var(--code-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        color: var(--terminal-text);
+        font-family: var(--font-monospace);
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+
+    .code-input:focus {
+        outline: none;
+        border-color: var(--terminal-highlight);
+        box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.15);
+    }
+
+    .code-textarea {
+        min-height: 120px;
+        resize: vertical;
+        line-height: 1.5;
+        padding-left: 40px;
+        position: relative;
+    }
+
+    .line-numbers {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 35px;
+        background: rgba(10, 13, 18, 0.7);
+        border-right: 1px solid var(--border-color);
+        color: #6e7681;
+        font-size: 12px;
+        text-align: right;
+        padding: 12px 5px;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+    .code-select {
+        background: var(--code-bg);
+        color: var(--terminal-text);
+        border: 1px solid var(--border-color);
+        padding: 10px 15px;
+        border-radius: 4px;
+        font-family: var(--font-monospace);
+        font-size: 13px;
+        width: 100%;
+        cursor: pointer;
+    }
+
+    .code-select:focus {
+        outline: none;
+        border-color: var(--terminal-highlight);
+    }
+
+    /* Toggle Switch */
+    .code-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+
+    .code-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .code-switch-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--border-color);
+        transition: .4s;
+        border-radius: 24px;
+    }
+
+    .code-switch-slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: var(--terminal-text);
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    .code-switch input:checked + .code-switch-slider {
+        background-color: var(--success-color);
+    }
+
+    .code-switch input:checked + .code-switch-slider:before {
+        transform: translateX(26px);
+    }
+
+    /* Character Counter */
+    .char-counter {
+        font-size: 11px;
+        color: #8b949e;
+        text-align: right;
+        margin-top: 4px;
+        font-family: var(--font-monospace);
+    }
+
+    .char-counter.warning {
+        color: var(--warning-color);
+    }
+
+    .char-counter.danger {
+        color: var(--terminal-red);
+    }
+
+    /* Form Grid */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+        margin-bottom: 25px;
+    }
+
+    /* Submit Button */
+    .code-submit-btn {
+        background: linear-gradient(135deg, var(--terminal-highlight) 0%, #005cc5 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 4px;
+        font-family: var(--font-monospace);
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .code-submit-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(31, 111, 235, 0.3);
+    }
+
+    .code-submit-btn:active {
+        transform: translateY(0);
+    }
+
+    .code-submit-btn.loading {
+        background: linear-gradient(135deg, #6e7681 0%, #484f58 100%);
+    }
+
+    .btn-spinner {
+        display: none;
+    }
+
+    .code-submit-btn.loading .btn-spinner {
+        display: inline-block;
+        animation: spin 1s linear infinite;
+    }
+
+    .code-submit-btn.loading .btn-text {
+        display: none;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Alert Messages */
+    .terminal-alert {
+        background: rgba(31, 111, 235, 0.1);
+        border: 1px solid var(--terminal-highlight);
+        border-radius: 4px;
+        padding: 15px;
+        margin-bottom: 25px;
+        font-size: 13px;
+        color: var(--terminal-blue);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .terminal-alert.success {
+        background: rgba(46, 160, 67, 0.1);
+        border-color: var(--success-color);
+        color: var(--terminal-green);
+    }
+
+    .terminal-alert.error {
+        background: rgba(248, 81, 73, 0.1);
+        border-color: var(--terminal-red);
+        color: var(--terminal-red);
+    }
+
+    .terminal-alert.warning {
+        background: rgba(187, 128, 9, 0.1);
+        border-color: var(--warning-color);
+        color: var(--terminal-yellow);
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    .quick-action-btn {
+        background: rgba(110, 118, 129, 0.2);
+        border: 1px solid var(--border-color);
+        color: var(--terminal-text);
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-family: var(--font-monospace);
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .quick-action-btn:hover {
+        background: rgba(110, 118, 129, 0.4);
+        border-color: var(--terminal-blue);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .editor-content {
+            padding: 20px;
+        }
+        
+        .preview-meta {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .terminal-path {
+            display: none;
+        }
+        
+        .editor-tabs {
+            overflow-x: auto;
+        }
+        
+        .editor-tab {
+            white-space: nowrap;
+            padding: 12px 15px;
+        }
+        
+        .terminal-controls {
+            display: none;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .form-container {
+            padding: 10px 0;
+        }
+        
+        .editor-content {
+            padding: 15px;
+        }
+        
+        .quick-actions {
+            justify-content: center;
+        }
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--terminal-header);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #4a5566;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <div class="code-editor-card">
+                    <!-- Terminal Header -->
+                    <div class="terminal-header">
+                        <div class="terminal-controls">
+                            <div class="terminal-control control-close"></div>
+                            <div class="terminal-control control-minimize"></div>
+                            <div class="terminal-control control-maximize"></div>
+                        </div>
+                        <div class="terminal-title">
+                            <i class="fas fa-code me-2"></i>CREATE_ASSIGNMENT.py
+                        </div>
+                        <div class="terminal-path">
+                            <i class="fas fa-folder me-2"></i> /assignments/new/
+                        </div>
+                    </div>
+                    
+                    <!-- Editor Tabs -->
+                    <div class="editor-tabs">
+                        <button class="editor-tab active" data-tab="form">
+                            <i class="fas fa-edit me-2"></i>Form
+                            <span class="tab-badge">config</span>
+                        </button>
+                        <button class="editor-tab" data-tab="preview">
+                            <i class="fas fa-eye me-2"></i>Preview
+                            <span class="tab-badge">live</span>
+                        </button>
+                        <button class="editor-tab" data-tab="json">
+                            <i class="fas fa-code me-2"></i>JSON
+                            <span class="tab-badge">export</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Editor Body -->
+                    <div class="editor-body">
+                        {% if messages %}
+                        <div class="editor-content">
+                            {% for message in messages %}
+                            <div class="terminal-alert {{ message.tags }}">
+                                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Form Tab -->
+                        <div class="editor-content" id="form-tab">
+                            <!-- Live Preview Panel -->
+                            <div class="live-preview-panel">
+                                <div class="preview-header">
+                                    <h5><i class="fas fa-terminal me-2"></i>ASSIGNMENT_PREVIEW</h5>
+                                    <div class="preview-status">Live Update: <span id="update-status">ON</span></div>
+                                </div>
+                                <div class="preview-card" id="assignmentPreview">
+                                    <div class="preview-title" id="previewTitle">new_assignment.py</div>
+                                    <div class="preview-description" id="previewDescription">
+                                        # Assignment description will appear here...
+                                        # Use markdown or plain text
+                                    </div>
+                                    <div class="preview-meta">
+                                        <div class="meta-item">
+                                            <i class="fas fa-code-branch meta-icon"></i>
+                                            <span>Course: <span id="previewCourse">Not selected</span></span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="far fa-calendar meta-icon"></i>
+                                            <span>Due: <span id="previewDueDate">Not set</span></span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="fas fa-star meta-icon"></i>
+                                            <span>Max Score: <span id="previewMaxScore">100</span></span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="fas fa-file-upload meta-icon"></i>
+                                            <span>Upload: <span id="previewFileUpload">ALLOWED</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Form -->
+                            <form method="post" enctype="multipart/form-data" id="assignmentForm">
+                                {% csrf_token %}
+                                
+                                <!-- Course Selection -->
+                                <div class="code-input-group">
+                                    <label class="code-label" for="courseSelect">
+                                        <i class="fas fa-book"></i> COURSE
+                                    </label>
+                                    <select name="course" class="code-select" id="courseSelect" required>
+                                        <option value="">-- SELECT COURSE --</option>
+                                        {% for course in courses %}
+                                        <option value="{{ course.id }}">{{ course.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="form-grid">
+                                    <!-- Title Field -->
+                                    <div class="code-input-group">
+                                        <label class="code-label" for="titleInput">
+                                            <i class="fas fa-heading"></i> TITLE
+                                        </label>
+                                        <input type="text" 
+                                               class="code-input" 
+                                               name="title" 
+                                               id="titleInput" 
+                                               placeholder="assignment_title.py"
+                                               maxlength="255"
+                                               required>
+                                        <div class="char-counter" id="titleCounter">0/255</div>
+                                    </div>
+                                    
+                                    <!-- Max Score -->
+                                    <div class="code-input-group">
+                                        <label class="code-label" for="maxScoreInput">
+                                            <i class="fas fa-star"></i> MAX_SCORE
+                                        </label>
+                                        <input type="number" 
+                                               class="code-input" 
+                                               name="max_score" 
+                                               id="maxScoreInput"
+                                               value="100"
+                                               min="0"
+                                               max="1000"
+                                               placeholder="100">
+                                    </div>
+                                </div>
+                                
+                                <!-- Description Field -->
+                                <div class="code-input-group">
+                                    <label class="code-label" for="descriptionInput">
+                                        <i class="fas fa-file-alt"></i> DESCRIPTION
+                                    </label>
+                                    <div class="position-relative">
+                                        <div class="line-numbers" id="descriptionLineNumbers">1<br>2<br>3<br>4<br>5</div>
+                                        <textarea class="code-input code-textarea" 
+                                                  name="description" 
+                                                  id="descriptionInput" 
+                                                  placeholder="# Enter assignment description..."
+                                                  maxlength="1000"
+                                                  required></textarea>
+                                    </div>
+                                    <div class="char-counter" id="descriptionCounter">0/1000</div>
+                                </div>
+                                
+                                <div class="form-grid">
+                                    <!-- Due Date -->
+                                    <div class="code-input-group">
+                                        <label class="code-label" for="dueDateInput">
+                                            <i class="far fa-calendar"></i> DUE_DATE
+                                        </label>
+                                        <input type="datetime-local" 
+                                               class="code-input" 
+                                               name="due_date" 
+                                               id="dueDateInput"
+                                               placeholder="YYYY-MM-DD HH:MM">
+                                    </div>
+                                    
+                                    <!-- File Upload Option -->
+                                    <div class="code-input-group">
+                                        <label class="code-label">
+                                            <i class="fas fa-file-upload"></i> FILE_UPLOAD
+                                        </label>
+                                        <div style="display: flex; align-items: center; margin-top: 10px;">
+                                            <label class="code-switch">
+                                                <input type="checkbox" 
+                                                       name="allow_file_upload" 
+                                                       id="fileUploadSwitch"
+                                                       checked>
+                                                <span class="code-switch-slider"></span>
+                                            </label>
+                                            <span style="color: var(--terminal-text); font-size: 13px;">
+                                                Allow students to upload files
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Quick Actions -->
+                                <div class="quick-actions">
+                                    <button type="button" class="quick-action-btn" id="clearForm">
+                                        <i class="fas fa-trash"></i> Clear
+                                    </button>
+                                    <button type="button" class="quick-action-btn" id="saveDraft">
+                                        <i class="fas fa-save"></i> Save Draft
+                                    </button>
+                                    <button type="button" class="quick-action-btn" id="loadTemplate">
+                                        <i class="fas fa-file-code"></i> Load Template
+                                    </button>
+                                    <button type="button" class="quick-action-btn" id="validateForm">
+                                        <i class="fas fa-check-circle"></i> Validate
+                                    </button>
+                                </div>
+                                
+                                <!-- Form Actions -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                                    <a href="{% url 'accounts:admin_assignment_list_all' %}" class="quick-action-btn" style="padding: 10px 20px;">
+                                        <i class="fas fa-arrow-left me-2"></i>Back to List
+                                    </a>
+                                    <button type="submit" class="code-submit-btn" id="submitBtn">
+                                        <i class="fas fa-plus-circle"></i>
+                                        <span class="btn-text">CREATE_ASSIGNMENT</span>
+                                        <i class="fas fa-spinner btn-spinner"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Preview Tab (hidden by default) -->
+                        <div class="editor-content" id="preview-tab" style="display: none;">
+                            <div class="live-preview-panel">
+                                <div class="preview-header">
+                                    <h5><i class="fas fa-code me-2"></i>FULL_PREVIEW</h5>
+                                    <div class="preview-status">Real-time</div>
+                                </div>
+                                <div class="preview-card" id="fullPreview">
+                                    <!-- Full preview content will be generated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- JSON Tab (hidden by default) -->
+                        <div class="editor-content" id="json-tab" style="display: none;">
+                            <div class="live-preview-panel">
+                                <div class="preview-header">
+                                    <h5><i class="fas fa-database me-2"></i>JSON_EXPORT</h5>
+                                    <button class="quick-action-btn" id="copyJson">
+                                        <i class="fas fa-copy me-2"></i>Copy JSON
+                                    </button>
+                                </div>
+                                <pre style="background: var(--code-bg); padding: 20px; border-radius: 4px; color: var(--terminal-text); font-family: var(--font-monospace); font-size: 12px; overflow-x: auto;" id="jsonOutput">
+{
+  "assignment": {
+    "title": "",
+    "description": "",
+    "course": "",
+    "due_date": "",
+    "max_score": 100,
+    "allow_file_upload": true
+  }
+}
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Elements
+    const titleInput = document.getElementById('titleInput');
+    const descriptionInput = document.getElementById('descriptionInput');
+    const dueDateInput = document.getElementById('dueDateInput');
+    const maxScoreInput = document.getElementById('maxScoreInput');
+    const fileUploadSwitch = document.getElementById('fileUploadSwitch');
+    const courseSelect = document.getElementById('courseSelect');
+    
+    // Preview elements
+    const previewTitle = document.getElementById('previewTitle');
+    const previewDescription = document.getElementById('previewDescription');
+    const previewDueDate = document.getElementById('previewDueDate');
+    const previewMaxScore = document.getElementById('previewMaxScore');
+    const previewFileUpload = document.getElementById('previewFileUpload');
+    const previewCourse = document.getElementById('previewCourse');
+    
+    // Character counters
+    const titleCounter = document.getElementById('titleCounter');
+    const descriptionCounter = document.getElementById('descriptionCounter');
+    const descriptionLineNumbers = document.getElementById('descriptionLineNumbers');
+    
+    // Form elements
+    const form = document.getElementById('assignmentForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const updateStatus = document.getElementById('update-status');
+    
+    // Tab elements
+    const tabs = document.querySelectorAll('.editor-tab');
+    const formTab = document.getElementById('form-tab');
+    const previewTab = document.getElementById('preview-tab');
+    const jsonTab = document.getElementById('json-tab');
+    const jsonOutput = document.getElementById('jsonOutput');
+    const fullPreview = document.getElementById('fullPreview');
+    
+    // Update line numbers for textarea
+    function updateLineNumbers(textarea, lineNumbers) {
+        const lines = textarea.value.split('\n').length;
+        let numbersHTML = '';
+        for (let i = 1; i <= Math.max(5, lines); i++) {
+            numbersHTML += i + '<br>';
+        }
+        lineNumbers.innerHTML = numbersHTML;
+    }
+    
+    // Update character counters
+    function updateCharCounter(input, counter) {
+        const length = input.value.length;
+        const maxLength = input.maxLength || 255;
+        counter.textContent = `${length}/${maxLength}`;
+        
+        // Update styling based on usage
+        const usagePercentage = (length / maxLength) * 100;
+        counter.className = 'char-counter';
+        
+        if (usagePercentage > 80) {
+            counter.classList.add('warning');
+        }
+        if (usagePercentage > 95) {
+            counter.classList.add('danger');
+        }
+    }
+    
+    // Format date for preview
+    function formatDateForPreview(dateString) {
+        if (!dateString) return '<span style="color: var(--terminal-red)">NOT SET</span>';
+        
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+    
+    // Update preview in real-time
+    function updatePreview() {
+        // Update title
+        previewTitle.textContent = titleInput.value || 'new_assignment.py';
+        
+        // Update description
+        previewDescription.textContent = descriptionInput.value || 
+            '# Assignment description will appear here...\n# Use markdown or plain text';
+        
+        // Update due date
+        previewDueDate.innerHTML = formatDateForPreview(dueDateInput.value);
+        
+        // Update max score
+        previewMaxScore.textContent = maxScoreInput.value || '100';
+        
+        // Update file upload status
+        const uploadAllowed = fileUploadSwitch.checked;
+        previewFileUpload.textContent = uploadAllowed ? 'ALLOWED' : 'DISABLED';
+        previewFileUpload.style.color = uploadAllowed ? 'var(--success-color)' : 'var(--terminal-red)';
+        
+        // Update course
+        const selectedCourse = courseSelect.options[courseSelect.selectedIndex];
+        previewCourse.textContent = selectedCourse.text || 'Not selected';
+        
+        // Update character counters
+        updateCharCounter(titleInput, titleCounter);
+        updateCharCounter(descriptionInput, descriptionCounter);
+        
+        // Update line numbers
+        updateLineNumbers(descriptionInput, descriptionLineNumbers);
+        
+        // Update JSON output
+        updateJsonOutput();
+        
+        // Update full preview
+        updateFullPreview();
+    }
+    
+    // Update JSON output
+    function updateJsonOutput() {
+        const assignmentData = {
+            assignment: {
+                title: titleInput.value || '',
+                description: descriptionInput.value || '',
+                course: courseSelect.options[courseSelect.selectedIndex]?.text || '',
+                due_date: dueDateInput.value || '',
+                max_score: parseInt(maxScoreInput.value) || 100,
+                allow_file_upload: fileUploadSwitch.checked,
+                created_at: new Date().toISOString()
+            }
+        };
+        
+        jsonOutput.textContent = JSON.stringify(assignmentData, null, 2);
+    }
+    
+    // Update full preview
+    function updateFullPreview() {
+        const uploadStatus = fileUploadSwitch.checked ? 
+            '<span style="color: var(--success-color)">ENABLED</span>' : 
+            '<span style="color: var(--terminal-red)">DISABLED</span>';
+        
+        const courseName = courseSelect.options[courseSelect.selectedIndex]?.text || 'Not selected';
+        
+        fullPreview.innerHTML = `
+            <div style="font-family: var(--font-monospace);">
+                <h3 style="color: var(--terminal-green); margin-bottom: 15px;">${titleInput.value || 'Assignment Preview'}</h3>
+                
+                <div style="background: rgba(110, 118, 129, 0.1); padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; font-size: 13px;">
+                        <div>
+                            <strong style="color: var(--terminal-blue);">Course:</strong><br>
+                            ${courseName}
+                        </div>
+                        <div>
+                            <strong style="color: var(--terminal-blue);">Due Date:</strong><br>
+                            ${formatDateForPreview(dueDateInput.value).replace('<span', '<span style="font-size: 12px;"')}
+                        </div>
+                        <div>
+                            <strong style="color: var(--terminal-blue);">Max Score:</strong><br>
+                            ${maxScoreInput.value || 100}
+                        </div>
+                        <div>
+                            <strong style="color: var(--terminal-blue);">File Upload:</strong><br>
+                            ${uploadStatus}
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <strong style="color: var(--terminal-blue); display: block; margin-bottom: 8px;">Description:</strong>
+                    <div style="background: var(--code-bg); padding: 15px; border-radius: 4px; white-space: pre-wrap; font-size: 13px; line-height: 1.5;">
+                        ${descriptionInput.value || 'No description provided.'}
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); font-size: 12px; color: #8b949e;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Created: ${new Date().toLocaleDateString()}</span>
+                        <span>Status: <span style="color: var(--terminal-green)">DRAFT</span></span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Initialize date input with tomorrow as default
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(23, 59, 0, 0);
+    
+    const timezoneOffset = tomorrow.getTimezoneOffset() * 60000;
+    const localISOTime = new Date(tomorrow - timezoneOffset).toISOString().slice(0, 16);
+    
+    if (!dueDateInput.value) {
+        dueDateInput.value = localISOTime;
+        dueDateInput.min = new Date(now - timezoneOffset).toISOString().slice(0, 16);
+    }
+    
+    // Add event listeners for real-time updates
+    [titleInput, descriptionInput, dueDateInput, maxScoreInput, fileUploadSwitch, courseSelect].forEach(element => {
+        element.addEventListener('input', updatePreview);
+        element.addEventListener('change', updatePreview);
+    });
+    
+    // Tab switching
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.dataset.tab;
+            
+            // Update active tab
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show corresponding content
+            [formTab, previewTab, jsonTab].forEach(content => content.style.display = 'none');
+            
+            if (tabName === 'form') {
+                formTab.style.display = 'block';
+            } else if (tabName === 'preview') {
+                previewTab.style.display = 'block';
+                updateFullPreview();
+            } else if (tabName === 'json') {
+                jsonTab.style.display = 'block';
+                updateJsonOutput();
+            }
+        });
+    });
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        if (!courseSelect.value) {
+            e.preventDefault();
+            showAlert('Please select a course', 'error');
+            courseSelect.focus();
+            courseSelect.style.borderColor = 'var(--terminal-red)';
+            return false;
+        }
+        
+        if (titleInput.value.trim().length < 3) {
+            e.preventDefault();
+            showAlert('Title must be at least 3 characters', 'error');
+            titleInput.focus();
+            return false;
+        }
+        
+        if (descriptionInput.value.trim().length < 10) {
+            e.preventDefault();
+            showAlert('Description must be at least 10 characters', 'error');
+            descriptionInput.focus();
+            return false;
+        }
+        
+        // Show loading state
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+    });
+    
+    // Show alert function
+    function showAlert(message, type) {
+        // Remove existing alerts
+        const existingAlert = document.querySelector('.terminal-alert');
+        if (existingAlert) existingAlert.remove();
+        
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `terminal-alert ${type}`;
+        alertDiv.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            ${message}
+            <button type="button" class="btn-close btn-close-white ms-auto" onclick="this.parentElement.remove()"></button>
+        `;
+        
+        form.insertBefore(alertDiv, form.firstChild);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentElement) alertDiv.remove();
+        }, 5000);
+    }
+    
+    // Quick action buttons
+    document.getElementById('clearForm').addEventListener('click', function() {
+        if (confirm('Clear all fields? This cannot be undone.')) {
+            form.reset();
+            courseSelect.value = '';
+            dueDateInput.value = localISOTime;
+            updatePreview();
+            showAlert('Form cleared', 'warning');
+        }
+    });
+    
+    document.getElementById('saveDraft').addEventListener('click', function() {
+        const draft = {
+            title: titleInput.value,
+            description: descriptionInput.value,
+            dueDate: dueDateInput.value,
+            maxScore: maxScoreInput.value,
+            allowFileUpload: fileUploadSwitch.checked,
+            course: courseSelect.value
+        };
+        
+        localStorage.setItem('assignmentDraft', JSON.stringify(draft));
+        showAlert('Draft saved locally', 'success');
+    });
+    
+    document.getElementById('loadTemplate').addEventListener('click', function() {
+        const templates = [
+            {
+                title: 'Python Programming Assignment',
+                description: 'Write a Python program that implements a binary search algorithm.\n\nRequirements:\n- Must handle edge cases\n- Include unit tests\n- Provide time complexity analysis\n\nSubmission: Upload your .py file',
+                maxScore: 100,
+                allowFileUpload: true
+            },
+            {
+                title: 'Web Development Project',
+                description: 'Create a responsive web application using HTML, CSS, and JavaScript.\n\nFeatures:\n- User authentication\n- CRUD operations\n- Responsive design\n\nSubmit your project files as a zip archive.',
+                maxScore: 150,
+                allowFileUpload: true
+            }
+        ];
+        
+        const template = templates[Math.floor(Math.random() * templates.length)];
+        titleInput.value = template.title;
+        descriptionInput.value = template.description;
+        maxScoreInput.value = template.maxScore;
+        fileUploadSwitch.checked = template.allowFileUpload;
+        updatePreview();
+        showAlert('Template loaded', 'success');
+    });
+    
+    document.getElementById('validateForm').addEventListener('click', function() {
+        let errors = [];
+        
+        if (!courseSelect.value) errors.push('Select a course');
+        if (titleInput.value.trim().length < 3) errors.push('Title too short (min 3 chars)');
+        if (descriptionInput.value.trim().length < 10) errors.push('Description too short (min 10 chars)');
+        
+        if (errors.length === 0) {
+            showAlert('Form validation passed ✓', 'success');
+        } else {
+            showAlert('Validation errors: ' + errors.join(', '), 'error');
+        }
+    });
+    
+    document.getElementById('copyJson').addEventListener('click', function() {
+        navigator.clipboard.writeText(jsonOutput.textContent)
+            .then(() => showAlert('JSON copied to clipboard', 'success'))
+            .catch(() => showAlert('Failed to copy JSON', 'error'));
+    });
+    
+    // Load draft if exists
+    const savedDraft = localStorage.getItem('assignmentDraft');
+    if (savedDraft) {
+        try {
+            const draft = JSON.parse(savedDraft);
+            if (confirm('Load saved draft?')) {
+                titleInput.value = draft.title || '';
+                descriptionInput.value = draft.description || '';
+                dueDateInput.value = draft.dueDate || '';
+                maxScoreInput.value = draft.maxScore || '100';
+                fileUploadSwitch.checked = draft.allowFileUpload || true;
+                courseSelect.value = draft.course || '';
+                updatePreview();
+                showAlert('Draft loaded', 'success');
+            }
+        } catch (e) {
+            console.error('Error loading draft:', e);
+        }
+    }
+    
+    // Initialize preview
+    updatePreview();
+    
+    // Terminal control buttons
+    document.querySelector('.control-close').addEventListener('click', function() {
+        if (confirm('Close assignment creator? Any unsaved changes will be lost.')) {
+            window.location.href = "{% url 'accounts:admin_assignment_list_all' %}";
+        }
+    });
+    
+    document.querySelector('.control-minimize').addEventListener('click', function() {
+        const editorCard = document.querySelector('.code-editor-card');
+        editorCard.style.transform = 'scale(0.95)';
+        editorCard.style.opacity = '0.8';
+        setTimeout(() => {
+            editorCard.style.transform = '';
+            editorCard.style.opacity = '';
+        }, 300);
+    });
+    
+    document.querySelector('.control-maximize').addEventListener('click', function() {
+        const editorCard = document.querySelector('.code-editor-card');
+        if (editorCard.style.width === '100%') {
+            editorCard.style.width = '';
+            editorCard.style.maxWidth = '';
+        } else {
+            editorCard.style.width = '100%';
+            editorCard.style.maxWidth = '100%';
+        }
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + S to save draft
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            document.getElementById('saveDraft').click();
+        }
+        
+        // Ctrl/Cmd + Enter to submit
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            if (form.checkValidity()) {
+                form.requestSubmit();
+            } else {
+                showAlert('Please fill all required fields', 'error');
+            }
+        }
+        
+        // Escape to clear focus
+        if (e.key === 'Escape') {
+            document.activeElement.blur();
+        }
+        
+        // Alt + P for preview
+        if (e.altKey && e.key === 'p') {
+            e.preventDefault();
+            document.querySelector('[data-tab="preview"]').click();
+        }
+    });
+});
+</script>
+{% endblock %}

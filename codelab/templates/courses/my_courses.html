@@ -1,0 +1,1317 @@
+{% extends 'base.html' %}
+
+{% block title %}My Courses - CodeLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Enhanced My Courses Styles */
+    :root {
+        --mycourses-primary: #2563eb;
+        --mycourses-success: #10b981;
+        --mycourses-warning: #f59e0b;
+        --mycourses-danger: #ef4444;
+        --mycourses-info: #06b6d4;
+        --mycourses-bg: #1e293b;
+        --mycourses-card: #0f172a;
+        --mycourses-border: #334155;
+        --mycourses-text: #e2e8f0;
+        --mycourses-muted: #94a3b8;
+    }
+
+    /* Dashboard Header */
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--mycourses-primary), #3b82f6);
+        color: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dashboard-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .stat-card {
+        background: var(--mycourses-card);
+        border: 1px solid var(--mycourses-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+        opacity: 1;
+    }
+
+    /* Progress Rings */
+    .progress-ring {
+        width: 80px;
+        height: 80px;
+        position: relative;
+    }
+
+    .progress-ring-circle {
+        width: 100%;
+        height: 100%;
+        fill: none;
+        stroke-width: 8;
+        stroke-linecap: round;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+    }
+
+    .progress-ring-bg {
+        stroke: var(--mycourses-border);
+    }
+
+    .progress-ring-fill {
+        stroke: var(--mycourses-primary);
+        stroke-dasharray: 251;
+        stroke-dashoffset: calc(251 - (251 * var(--progress, 0)) / 100);
+        transition: stroke-dashoffset 1s ease;
+    }
+
+    /* Course Grid */
+    .courses-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .courses-grid {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        }
+    }
+
+    @media (max-width: 480px) {
+        .courses-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Course Cards */
+    .course-card {
+        background: var(--mycourses-card);
+        border: 1px solid var(--mycourses-border);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .course-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        border-color: var(--mycourses-primary);
+    }
+
+    .course-card.completed {
+        border-color: var(--mycourses-success);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), transparent);
+    }
+
+    .course-card.in-progress {
+        border-color: var(--mycourses-primary);
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), transparent);
+    }
+
+    .course-card.new {
+        border-color: var(--mycourses-warning);
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), transparent);
+    }
+
+    /* Course Actions */
+    .course-actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        gap: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .course-card:hover .course-actions {
+        opacity: 1;
+    }
+
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.7);
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .action-btn:hover {
+        background: var(--mycourses-primary);
+        transform: scale(1.1);
+    }
+
+    /* Learning Path */
+    .learning-path {
+        position: relative;
+        padding-left: 2rem;
+        margin: 2rem 0;
+    }
+
+    .learning-path::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--mycourses-border);
+    }
+
+    .path-item {
+        position: relative;
+        margin-bottom: 2rem;
+        padding-left: 2rem;
+    }
+
+    .path-item::before {
+        content: '';
+        position: absolute;
+        left: -9px;
+        top: 0;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--mycourses-border);
+        border: 3px solid var(--mycourses-bg);
+    }
+
+    .path-item.completed::before {
+        background: var(--mycourses-success);
+    }
+
+    .path-item.current::before {
+        background: var(--mycourses-primary);
+        animation: pulse 2s infinite;
+    }
+
+    .path-item.upcoming::before {
+        background: var(--mycourses-muted);
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    /* Filters */
+    .filter-container {
+        background: var(--mycourses-card);
+        border: 1px solid var(--mycourses-border);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .filter-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .filter-chip {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        background: var(--mycourses-bg);
+        border: 1px solid var(--mycourses-border);
+        color: var(--mycourses-text);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filter-chip:hover {
+        border-color: var(--mycourses-primary);
+    }
+
+    .filter-chip.active {
+        background: var(--mycourses-primary);
+        border-color: var(--mycourses-primary);
+        color: white;
+    }
+
+    /* Achievement Badges */
+    .achievements-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+        margin: 2rem 0;
+    }
+
+    .achievement-card {
+        background: var(--mycourses-card);
+        border: 1px solid var(--mycourses-border);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .achievement-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .achievement-card.locked {
+        opacity: 0.5;
+        filter: grayscale(1);
+    }
+
+    .achievement-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Study Stats */
+    .study-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 2rem 0;
+    }
+
+    .study-stat {
+        background: var(--mycourses-card);
+        border: 1px solid var(--mycourses-border);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .study-chart {
+        height: 200px;
+        position: relative;
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 4rem 2rem;
+        text-align: center;
+        background: var(--mycourses-card);
+        border: 2px dashed var(--mycourses-border);
+        border-radius: 16px;
+        margin: 2rem 0;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        color: var(--mycourses-muted);
+        margin-bottom: 1rem;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .dashboard-header {
+            padding: 1.5rem;
+        }
+        
+        .progress-ring {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .course-actions {
+            opacity: 1;
+        }
+        
+        .action-btn {
+            width: 32px;
+            height: 32px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dashboard-header {
+            padding: 1rem;
+        }
+        
+        .filter-chips {
+            justify-content: center;
+        }
+        
+        .achievements-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    /* Dark/Light Mode Support */
+    @media (prefers-color-scheme: light) {
+        :root {
+            --mycourses-bg: #f8fafc;
+            --mycourses-card: #ffffff;
+            --mycourses-border: #e2e8f0;
+            --mycourses-text: #1e293b;
+            --mycourses-muted: #64748b;
+        }
+    }
+
+    /* Print Styles */
+    @media print {
+        .course-actions,
+        .action-btn,
+        .filter-container {
+            display: none !important;
+        }
+        
+        .course-card {
+            break-inside: avoid;
+            border: 1px solid #000;
+            box-shadow: none;
+        }
+    }
+
+    /* Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+        .course-card,
+        .stat-card,
+        .action-btn,
+        .filter-chip {
+            transition: none;
+        }
+        
+        .course-card:hover {
+            transform: none;
+        }
+        
+        .path-item.current::before {
+            animation: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+    <div class="d-flex flex-wrap justify-content-between align-items-center">
+        <div>
+            <h1 class="display-5 fw-bold mb-2">My Learning Dashboard</h1>
+            <p class="lead mb-0">Track your progress and continue your learning journey</p>
+        </div>
+        <div class="mt-3 mt-md-0">
+            <a href="{% url 'courses:course_list' %}" class="btn btn-light">
+                <i class="fas fa-plus me-2"></i>Browse New Courses
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="text-muted mb-2">Total Courses</h6>
+                <h2 class="mb-0">{{ courses_progress|length }}</h2>
+                <small class="text-success">
+                    <i class="fas fa-arrow-up me-1"></i>+2 this month
+                </small>
+            </div>
+            <div class="progress-ring">
+                <svg class="progress-ring-circle" viewBox="0 0 80 80">
+                    <circle class="progress-ring-bg" cx="40" cy="40" r="35"></circle>
+                    <circle class="progress-ring-fill" cx="40" cy="40" r="35" 
+                            style="--progress: {{ overall_progress }}"></circle>
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="text-muted mb-2">Hours Learned</h6>
+                <h2 class="mb-0">{{ total_learning_hours|default:"0" }}</h2>
+                <small class="text-success">
+                    <i class="fas fa-clock me-1"></i>{{ weekly_hours|default:"0" }}h this week
+                </small>
+            </div>
+            <div class="icon-wrapper">
+                <i class="fas fa-clock fa-3x text-info opacity-75"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="text-muted mb-2">Certificates</h6>
+                <h2 class="mb-0">{{ certificates_count|default:"0" }}</h2>
+                <small class="text-warning">
+                    <i class="fas fa-trophy me-1"></i>{{ pending_certificates|default:"0" }} pending
+                </small>
+            </div>
+            <div class="icon-wrapper">
+                <i class="fas fa-award fa-3x text-warning opacity-75"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="text-muted mb-2">Learning Streak</h6>
+                <h2 class="mb-0">{{ user.profile.consecutive_login_days|default:"0" }}</h2>
+                <small class="text-success">
+                    <i class="fas fa-fire me-1"></i>{{ streak_duration }} days
+                </small>
+            </div>
+            <div class="icon-wrapper">
+                <i class="fas fa-fire fa-3x text-danger opacity-75"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filter-container">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">My Courses</h5>
+        <div class="d-flex gap-2">
+            <div class="dropdown">
+                <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" 
+                        data-bs-toggle="dropdown">
+                    <i class="fas fa-filter me-2"></i>Filter
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="filterCourses('all')">All Courses</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="filterCourses('in-progress')">In Progress</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="filterCourses('completed')">Completed</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="filterCourses('new')">New</a></li>
+                </ul>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" 
+                        data-bs-toggle="dropdown">
+                    <i class="fas fa-sort me-2"></i>Sort
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="sortCourses('progress')">By Progress</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="sortCourses('recent')">Recently Accessed</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="sortCourses('title')">Alphabetical</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="sortCourses('difficulty')">By Difficulty</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="filter-chips">
+        <div class="filter-chip active" onclick="filterCourses('all')">
+            <i class="fas fa-layer-group"></i>
+            All <span class="badge bg-light text-dark ms-1">{{ courses_progress|length }}</span>
+        </div>
+        <div class="filter-chip" onclick="filterCourses('in-progress')">
+            <i class="fas fa-play-circle"></i>
+            In Progress <span class="badge bg-light text-dark ms-1">{{ in_progress_count|default:"0" }}</span>
+        </div>
+        <div class="filter-chip" onclick="filterCourses('completed')">
+            <i class="fas fa-check-circle"></i>
+            Completed <span class="badge bg-light text-dark ms-1">{{ completed_count|default:"0" }}</span>
+        </div>
+        <div class="filter-chip" onclick="filterCourses('new')">
+            <i class="fas fa-star"></i>
+            New <span class="badge bg-light text-dark ms-1">{{ new_count|default:"0" }}</span>
+        </div>
+        <div class="filter-chip" onclick="filterCourses('certificate')">
+            <i class="fas fa-certificate"></i>
+            With Certificate
+        </div>
+    </div>
+</div>
+
+<!-- Courses Grid -->
+<div class="courses-grid" id="coursesGrid">
+    {% if courses_progress %}
+        {% for item in courses_progress %}
+        <div class="course-card {% if item.progress == 100 %}completed{% elif item.progress == 0 %}new{% else %}in-progress{% endif %}"
+             data-progress="{{ item.progress }}"
+             data-category="{{ item.course.category|default:'general' }}"
+             data-level="{{ item.course.level }}"
+             data-recent="{{ item.last_accessed|date:'U' }}">
+            
+            <!-- Course Actions -->
+            <div class="course-actions">
+                <button class="action-btn" title="Bookmark" onclick="toggleBookmark('{{ item.course.id }}')">
+                    <i class="far fa-bookmark"></i>
+                </button>
+                <button class="action-btn" title="Quick View" onclick="showCoursePreview('{{ item.course.id }}')">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            
+            <!-- Course Thumbnail -->
+            {% if item.course.thumbnail %}
+                <img src="{{ item.course.thumbnail.url }}" 
+                     class="card-img-top" 
+                     alt="{{ item.course.title }}"
+                     style="height: 180px; object-fit: cover;">
+            {% else %}
+                <div class="card-img-top bg-gradient-primary d-flex align-items-center justify-content-center" 
+                     style="height: 180px;">
+                    <i class="fas fa-book fa-3x text-white opacity-50"></i>
+                </div>
+            {% endif %}
+            
+            <!-- Course Body -->
+            <div class="p-4">
+                <!-- Course Header -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="badge bg-primary mb-2">{{ item.course.level|title }}</span>
+                        {% if item.course.category %}
+                        <span class="badge bg-info">{{ item.course.category }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-end">
+                        {% if item.progress == 100 %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-check-circle me-1"></i>Completed
+                        </span>
+                        {% elif item.progress == 0 %}
+                        <span class="badge bg-warning">
+                            <i class="fas fa-star me-1"></i>New
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Course Title -->
+                <h5 class="mb-2">{{ item.course.title }}</h5>
+                <p class="text-muted small mb-3">
+                    {{ item.course.short_description|truncatechars:100 }}
+                </p>
+                
+                <!-- Progress Section -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small">Progress</span>
+                        <span class="fw-bold">{{ item.progress }}%</span>
+                    </div>
+                    
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar" 
+                             role="progressbar" 
+                             style="width: {{ item.progress }}%"
+                             aria-valuenow="{{ item.progress }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="text-muted">
+                            {{ item.completed_lessons }}/{{ item.total_lessons }} lessons
+                        </small>
+                        <small class="text-muted">
+                            {% if item.last_accessed %}
+                            Last: {{ item.last_accessed|timesince }} ago
+                            {% else %}
+                            Not started
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="d-grid gap-2">
+                    {% if item.progress == 100 %}
+                        <a href="{% url 'courses:course_detail' slug=item.course.slug %}" 
+                           class="btn btn-outline-success">
+                            <i class="fas fa-redo me-2"></i>Review Course
+                        </a>
+                        <button class="btn btn-outline-primary btn-sm" onclick="viewCertificate('{{ item.course.id }}')">
+                            <i class="fas fa-certificate me-2"></i>View Certificate
+                        </button>
+                    {% else %}
+                        <a href="{% url 'courses:course_detail' slug=item.course.slug %}" 
+                           class="btn btn-primary">
+                            {% if item.progress == 0 %}
+                                <i class="fas fa-play me-2"></i>Start Learning
+                            {% else %}
+                                <i class="fas fa-play-circle me-2"></i>Continue Learning
+                            {% endif %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Course Footer -->
+            <div class="card-footer bg-transparent border-top p-3">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="h6 mb-1">{{ item.course.lessons.count }}</div>
+                        <small class="text-muted">Lessons</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h6 mb-1">{{ item.course.assignments.count }}</div>
+                        <small class="text-muted">Assignments</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h6 mb-1">{{ item.course.exams.count }}</div>
+                        <small class="text-muted">Exams</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <h4 class="mb-3">No Courses Yet</h4>
+                <p class="text-muted mb-4">
+                    You haven't enrolled in any courses yet. Start your learning journey today!
+                </p>
+                <div class="d-flex flex-wrap gap-2 justify-content-center">
+                    <a href="{% url 'courses:course_list' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-search me-2"></i>Browse Courses
+                    </a>
+                    <a href="{% url 'courses:recommended' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-lightbulb me-2"></i>Get Recommendations
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Learning Path -->
+{% if learning_path %}
+<div class="row mt-5">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-road me-2"></i>Your Learning Path
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="learning-path">
+                    {% for milestone in learning_path %}
+                    <div class="path-item {% if milestone.completed %}completed{% elif milestone.current %}current{% else %}upcoming{% endif %}">
+                        <h6 class="mb-1">{{ milestone.title }}</h6>
+                        <p class="text-muted small mb-2">{{ milestone.description }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>{{ milestone.duration }}
+                            </small>
+                            {% if milestone.completed %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>Completed
+                            </span>
+                            {% elif milestone.current %}
+                            <span class="badge bg-primary">
+                                <i class="fas fa-play me-1"></i>Current
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-lock me-1"></i>Upcoming
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Study Stats -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Study Statistics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="study-stats">
+                    <div class="study-stat">
+                        <div class="h4 mb-1">{{ weekly_hours|default:"0" }}</div>
+                        <small class="text-muted">Hours this week</small>
+                    </div>
+                    <div class="study-stat">
+                        <div class="h4 mb-1">{{ daily_streak|default:"0" }}</div>
+                        <small class="text-muted">Day streak</small>
+                    </div>
+                    <div class="study-stat">
+                        <div class="h4 mb-1">{{ total_certificates|default:"0" }}</div>
+                        <small class="text-muted">Certificates</small>
+                    </div>
+                    <div class="study-stat">
+                        <div class="h4 mb-1">{{ average_score|default:"0" }}%</div>
+                        <small class="text-muted">Avg. score</small>
+                    </div>
+                </div>
+                
+                <!-- Weekly Activity Chart -->
+                <div class="mt-4">
+                    <h6 class="mb-3">Weekly Activity</h6>
+                    <div class="study-chart">
+                        <canvas id="weeklyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Activity -->
+{% if recent_activity %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Activity
+                </h5>
+                <a href="{% url 'accounts:activity' %}" class="btn btn-sm btn-outline-primary">
+                    View All <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Activity</th>
+                                <th>Course</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in recent_activity %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-{{ activity.color }} bg-opacity-10 rounded-circle p-2 me-3">
+                                            <i class="fas fa-{{ activity.icon }} text-{{ activity.color }}"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">{{ activity.title }}</h6>
+                                            <small class="text-muted">{{ activity.description }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="{% url 'courses:course_detail' slug=activity.course.slug %}" 
+                                       class="text-decoration-none">
+                                        {{ activity.course.title|truncatechars:30 }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ activity.timestamp|timesince }} ago</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ activity.status_color }}">
+                                        {{ activity.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ activity.url }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Achievements -->
+{% if achievements %}
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-trophy me-2"></i>Your Achievements
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="achievements-grid">
+                    {% for achievement in achievements %}
+                    <div class="achievement-card {% if not achievement.unlocked %}locked{% endif %}">
+                        <div class="achievement-icon">
+                            <i class="fas fa-{{ achievement.icon }} text-{{ achievement.color }}"></i>
+                        </div>
+                        <h6 class="mb-1">{{ achievement.title }}</h6>
+                        <small class="text-muted">{{ achievement.description }}</small>
+                        {% if achievement.unlocked %}
+                        <div class="mt-2">
+                            <small class="text-success">
+                                <i class="fas fa-unlock me-1"></i>Unlocked
+                            </small>
+                        </div>
+                        {% else %}
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-lock me-1"></i>Locked
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Course Preview Modal -->
+<div class="modal fade" id="coursePreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Course Preview</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="coursePreviewContent">
+                <!-- AJAX content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js for statistics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize dashboard
+        initDashboard();
+        initFilters();
+        initCharts();
+        initSorting();
+    });
+    
+    function initDashboard() {
+        // Initialize tooltips
+        const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
+        
+        // Initialize progress rings
+        updateProgressRings();
+        
+        // Initialize lazy loading for images
+        lazyLoadImages();
+        
+        // Initialize keyboard shortcuts
+        initKeyboardShortcuts();
+    }
+    
+    function updateProgressRings() {
+        document.querySelectorAll('.progress-ring-fill').forEach(ring => {
+            const progress = ring.style.getPropertyValue('--progress');
+            if (progress) {
+                ring.style.strokeDashoffset = `calc(251 - (251 * ${progress}) / 100)`;
+            }
+        });
+    }
+    
+    function initFilters() {
+        window.filterCourses = function(filter) {
+            const courses = document.querySelectorAll('.course-card');
+            const filterChips = document.querySelectorAll('.filter-chip');
+            
+            // Update active filter chip
+            filterChips.forEach(chip => {
+                chip.classList.remove('active');
+                if (chip.textContent.includes(filter.replace('-', ' '))) {
+                    chip.classList.add('active');
+                }
+            });
+            
+            // Show/hide courses based on filter
+            courses.forEach(course => {
+                switch(filter) {
+                    case 'all':
+                        course.style.display = 'block';
+                        break;
+                    case 'in-progress':
+                        const progress = parseInt(course.dataset.progress);
+                        if (progress > 0 && progress < 100) {
+                            course.style.display = 'block';
+                        } else {
+                            course.style.display = 'none';
+                        }
+                        break;
+                    case 'completed':
+                        if (parseInt(course.dataset.progress) === 100) {
+                            course.style.display = 'block';
+                        } else {
+                            course.style.display = 'none';
+                        }
+                        break;
+                    case 'new':
+                        if (parseInt(course.dataset.progress) === 0) {
+                            course.style.display = 'block';
+                        } else {
+                            course.style.display = 'none';
+                        }
+                        break;
+                    case 'certificate':
+                        // Filter logic for courses with certificates
+                        course.style.display = 'block'; // Placeholder
+                        break;
+                }
+            });
+            
+            // Show empty state if no courses visible
+            const visibleCourses = Array.from(courses).filter(c => c.style.display !== 'none');
+            const emptyState = document.querySelector('.empty-state');
+            if (visibleCourses.length === 0 && emptyState) {
+                emptyState.style.display = 'block';
+            } else if (emptyState) {
+                emptyState.style.display = 'none';
+            }
+        };
+    }
+    
+    function initSorting() {
+        window.sortCourses = function(sortBy) {
+            const container = document.getElementById('coursesGrid');
+            const courses = Array.from(container.querySelectorAll('.course-card'));
+            
+            courses.sort((a, b) => {
+                switch(sortBy) {
+                    case 'progress':
+                        return parseInt(b.dataset.progress) - parseInt(a.dataset.progress);
+                    case 'recent':
+                        return parseInt(b.dataset.recent || 0) - parseInt(a.dataset.recent || 0);
+                    case 'title':
+                        return a.querySelector('h5').textContent.localeCompare(b.querySelector('h5').textContent);
+                    case 'difficulty':
+                        const levels = { 'beginner': 1, 'intermediate': 2, 'advanced': 3, 'expert': 4 };
+                        return (levels[b.dataset.level] || 0) - (levels[a.dataset.level] || 0);
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Reorder courses
+            courses.forEach(course => container.appendChild(course));
+            
+            showToast(`Sorted by ${sortBy}`, 'info');
+        };
+    }
+    
+    function initCharts() {
+        // Weekly activity chart
+        const ctx = document.getElementById('weeklyChart');
+        if (ctx) {
+            new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Study Hours',
+                        data: [2, 3, 1.5, 4, 2.5, 1, 3],
+                        backgroundColor: 'rgba(37, 99, 235, 0.5)',
+                        borderColor: 'rgb(37, 99, 235)',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 'h';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+    }
+    
+    function lazyLoadImages() {
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        if (img.dataset.src) {
+                            img.src = img.dataset.src;
+                            img.removeAttribute('data-src');
+                            imageObserver.unobserve(img);
+                        }
+                    }
+                });
+            });
+            
+            document.querySelectorAll('img[data-src]').forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
+    }
+    
+    window.toggleBookmark = function(courseId) {
+        const btn = event.target.closest('.action-btn');
+        const icon = btn.querySelector('i');
+        
+        icon.classList.toggle('far');
+        icon.classList.toggle('fas');
+        
+        // Update button color
+        if (icon.classList.contains('fas')) {
+            btn.style.background = 'var(--mycourses-warning)';
+            showToast('Course bookmarked', 'success');
+        } else {
+            btn.style.background = 'rgba(0, 0, 0, 0.7)';
+            showToast('Bookmark removed', 'info');
+        }
+        
+        // Send AJAX request
+        fetch(`/api/courses/${courseId}/bookmark/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        event.stopPropagation();
+    };
+    
+    window.showCoursePreview = function(courseId) {
+        const modal = new bootstrap.Modal(document.getElementById('coursePreviewModal'));
+        const contentDiv = document.getElementById('coursePreviewContent');
+        
+        // Show loading state
+        contentDiv.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted">Loading course details...</p>
+            </div>
+        `;
+        
+        // Fetch course preview
+        fetch(`/api/courses/${courseId}/preview/`)
+            .then(response => response.json())
+            .then(data => {
+                contentDiv.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-5">
+                            <img src="${data.thumbnail || '/static/images/default-course.jpg'}" 
+                                 class="img-fluid rounded mb-3" 
+                                 alt="${data.title}">
+                        </div>
+                        <div class="col-md-7">
+                            <h4>${data.title}</h4>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="badge bg-primary me-2">${data.level}</span>
+                                <small class="text-muted">
+                                    <i class="fas fa-users me-1"></i>${data.enrollment_count} students
+                                </small>
+                            </div>
+                            <p class="mb-3">${data.description}</p>
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <div class="text-muted small">Progress</div>
+                                    <div class="h4">${data.progress}%</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted small">Last Accessed</div>
+                                    <div class="h4">${data.last_accessed}</div>
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <a href="/courses/${data.slug}/" class="btn btn-primary">
+                                    <i class="fas fa-play me-2"></i>Continue Learning
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                modal.show();
+            })
+            .catch(error => {
+                contentDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Failed to load course details.
+                    </div>
+                `;
+                modal.show();
+            });
+        
+        event.stopPropagation();
+    };
+    
+    window.viewCertificate = function(courseId) {
+        // Open certificate modal or page
+        fetch(`/api/courses/${courseId}/certificate/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.certificate_url) {
+                    window.open(data.certificate_url, '_blank');
+                } else {
+                    alert('Certificate not available yet. Complete the course first.');
+                }
+            });
+    };
+    
+    function initKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
+            switch(e.key) {
+                case '1':
+                    filterCourses('all');
+                    break;
+                case '2':
+                    filterCourses('in-progress');
+                    break;
+                case '3':
+                    filterCourses('completed');
+                    break;
+                case 'r':
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        sortCourses('recent');
+                    }
+                    break;
+                case 'p':
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        sortCourses('progress');
+                    }
+                    break;
+            }
+        });
+    }
+    
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-bg-${type} border-0`;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        `;
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+        bsToast.show();
+        
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+    }
+    
+    // Auto-refresh stats every 30 seconds
+    setInterval(() => {
+        fetch('/api/dashboard/stats/')
+            .then(response => response.json())
+            .then(data => {
+                // Update stats dynamically
+                console.log('Stats updated:', data);
+            });
+    }, 30000);
+</script>
+{% endblock %}

@@ -1,0 +1,1413 @@
+{% extends 'base.html' %}
+
+{% block title %}Enroll in {{ course.title }} - CodeLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Enhanced Enrollment Page Styles */
+    :root {
+        --enroll-primary: #2563eb;
+        --enroll-success: #10b981;
+        --enroll-warning: #f59e0b;
+        --enroll-danger: #ef4444;
+        --enroll-info: #06b6d4;
+        --enroll-bg: #1e293b;
+        --enroll-card: #0f172a;
+        --enroll-border: #334155;
+        --enroll-text: #e2e8f0;
+        --enroll-muted: #94a3b8;
+    }
+
+    /* Enrollment Hero */
+    .enrollment-hero {
+        background: linear-gradient(135deg, var(--enroll-primary), #3b82f6);
+        color: white;
+        padding: 3rem 1rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .enrollment-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+    }
+
+    @media (max-width: 768px) {
+        .enrollment-hero {
+            padding: 2rem 1rem;
+            border-radius: 12px;
+        }
+    }
+
+    /* Course Summary Card */
+    .course-summary-card {
+        background: var(--enroll-card);
+        border: 1px solid var(--enroll-border);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    @media (max-width: 992px) {
+        .course-summary-card {
+            position: static !important;
+        }
+    }
+
+    /* Payment Methods Grid */
+    .payment-methods-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .payment-methods-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .payment-method-card {
+        border: 2px solid var(--enroll-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: var(--enroll-card);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .payment-method-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--enroll-primary);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1);
+    }
+
+    .payment-method-card.selected {
+        border-color: var(--enroll-primary);
+        background: rgba(37, 99, 235, 0.05);
+    }
+
+    .payment-method-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+
+    /* Payment Details Panels */
+    .payment-details-panel {
+        display: none;
+        animation: slideDown 0.3s ease;
+    }
+
+    .payment-details-panel.active {
+        display: block;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Form Elements */
+    .form-control-lg {
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        border: 2px solid var(--enroll-border);
+        background: var(--enroll-card);
+        color: var(--enroll-text);
+        transition: all 0.3s ease;
+    }
+
+    .form-control-lg:focus {
+        border-color: var(--enroll-primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    /* Progress Steps */
+    .enrollment-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 3rem;
+        position: relative;
+    }
+
+    .enrollment-steps::before {
+        content: '';
+        position: absolute;
+        top: 24px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--enroll-border);
+        z-index: 1;
+    }
+
+    .step {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        flex: 1;
+    }
+
+    .step-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--enroll-card);
+        border: 2px solid var(--enroll-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.5rem;
+        transition: all 0.3s ease;
+        font-weight: bold;
+    }
+
+    .step.active .step-circle {
+        background: var(--enroll-primary);
+        border-color: var(--enroll-primary);
+        color: white;
+    }
+
+    .step.completed .step-circle {
+        background: var(--enroll-success);
+        border-color: var(--enroll-success);
+        color: white;
+    }
+
+    .step-label {
+        font-size: 0.875rem;
+        color: var(--enroll-muted);
+    }
+
+    .step.active .step-label {
+        color: var(--enroll-primary);
+        font-weight: 500;
+    }
+
+    /* Price Breakdown */
+    .price-breakdown {
+        background: var(--enroll-card);
+        border: 1px solid var(--enroll-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .price-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--enroll-border);
+    }
+
+    .price-item.total {
+        border-bottom: none;
+        font-weight: bold;
+        font-size: 1.25rem;
+    }
+
+    /* Coupon Code */
+    .coupon-section {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), transparent);
+        border: 1px solid var(--enroll-success);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Security Badges */
+    .security-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .security-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--enroll-card);
+        border: 1px solid var(--enroll-border);
+        border-radius: 8px;
+        font-size: 0.875rem;
+    }
+
+    /* Loading States */
+    .payment-processing {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .payment-processing.active {
+        display: flex;
+    }
+
+    .payment-spinner {
+        width: 80px;
+        height: 80px;
+        border: 4px solid var(--enroll-border);
+        border-top-color: var(--enroll-primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Responsive Table */
+    .responsive-table {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    /* Mobile Payment Actions */
+    .mobile-payment-actions {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--enroll-card);
+        border-top: 1px solid var(--enroll-border);
+        padding: 1rem;
+        display: none;
+        z-index: 1000;
+        gap: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .mobile-payment-actions {
+            display: flex;
+        }
+    }
+
+    /* Accordion for Payment Methods */
+    .payment-method-accordion {
+        display: none;
+    }
+
+    @media (max-width: 576px) {
+        .payment-methods-grid {
+            display: none;
+        }
+        
+        .payment-method-accordion {
+            display: block;
+        }
+    }
+
+    /* Dark/Light Mode */
+    @media (prefers-color-scheme: light) {
+        :root {
+            --enroll-bg: #f8fafc;
+            --enroll-card: #ffffff;
+            --enroll-border: #e2e8f0;
+            --enroll-text: #1e293b;
+            --enroll-muted: #64748b;
+        }
+    }
+
+    /* Print Styles */
+    @media print {
+        .mobile-payment-actions,
+        .payment-processing,
+        .enrollment-steps {
+            display: none !important;
+        }
+        
+        .course-summary-card {
+            break-inside: avoid;
+        }
+    }
+
+    /* Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+        .payment-method-card,
+        .payment-details-panel {
+            transition: none;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 1;
+                transform: none;
+            }
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+    }
+
+    /* High Contrast Mode */
+    @media (prefers-contrast: high) {
+        .payment-method-card {
+            border-width: 3px;
+        }
+        
+        .step-circle {
+            border-width: 3px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Enrollment Hero -->
+<div class="enrollment-hero text-center">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-3">Enroll in {{ course.title }}</h1>
+        <p class="lead mb-4">
+            Complete your enrollment and start learning today
+        </p>
+        <div class="d-flex flex-wrap gap-2 justify-content-center">
+            <span class="badge bg-light text-dark">
+                <i class="fas fa-clock me-1"></i>Self-paced
+            </span>
+            <span class="badge bg-light text-dark">
+                <i class="fas fa-certificate me-1"></i>Certificate included
+            </span>
+            <span class="badge bg-light text-dark">
+                <i class="fas fa-shield-alt me-1"></i>30-day guarantee
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Steps -->
+<div class="enrollment-steps">
+    <div class="step completed">
+        <div class="step-circle">
+            <i class="fas fa-check"></i>
+        </div>
+        <div class="step-label">Course Details</div>
+    </div>
+    <div class="step active">
+        <div class="step-circle">2</div>
+        <div class="step-label">Payment</div>
+    </div>
+    <div class="step">
+        <div class="step-circle">3</div>
+        <div class="step-label">Confirmation</div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row g-4">
+        <!-- Course Summary -->
+        <div class="col-lg-4">
+            <div class="course-summary-card sticky-top" style="top: 100px;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Order Summary</h5>
+                </div>
+                
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        {% if course.thumbnail %}
+                        <img src="{{ course.thumbnail.url }}" 
+                             class="img-fluid rounded mb-3" 
+                             alt="{{ course.title }}"
+                             style="max-height: 150px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-dark rounded mb-3 d-flex align-items-center justify-content-center" 
+                             style="height: 150px;">
+                            <i class="fas fa-book fa-3x text-muted"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <h5 class="mb-2">{{ course.title }}</h5>
+                        <p class="text-muted small mb-3">{{ course.short_description }}</p>
+                        
+                        <div class="d-flex flex-wrap gap-2 justify-content-center mb-3">
+                            <span class="badge bg-primary">{{ course.level|title }}</span>
+                            <span class="badge bg-info">{{ course.category|default:"General" }}</span>
+                            {% if course.featured %}
+                            <span class="badge bg-warning">
+                                <i class="fas fa-star me-1"></i>Featured
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Price Breakdown -->
+                    <div class="price-breakdown mb-4">
+                        <h6 class="mb-3">Price Breakdown</h6>
+                        
+                        <div class="price-item">
+                            <span>Course Price</span>
+                            <span>KES {{ course.price|floatformat:2 }}</span>
+                        </div>
+                        
+                        {% if course.discount_price %}
+                        <div class="price-item text-success">
+                            <span>Discount</span>
+                            <span>-KES {{ course.discount_amount|floatformat:2 }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="price-item">
+                            <span>Platform Fee</span>
+                            <span>KES 0.00</span>
+                        </div>
+                        
+                        <div class="price-item">
+                            <span>VAT (16%)</span>
+                            <span>KES {{ course.vat_amount|floatformat:2 }}</span>
+                        </div>
+                        
+                        <div class="price-item total">
+                            <span>Total Amount</span>
+                            <span class="text-primary">KES {{ course.final_price|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Course Features -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">What's Included</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                {{ course.lessons.count }} video lessons
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                {{ course.projects.count }} hands-on projects
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Certificate of completion
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Lifetime access
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Mobile & desktop access
+                            </li>
+                            <li>
+                                <i class="fas fa-check text-success me-2"></i>
+                                Q&A support
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Student Stats -->
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="h5 mb-1">{{ course.enrollments.count }}</div>
+                            <small class="text-muted">Students</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h5 mb-1">{{ course.average_rating|default:"4.8" }}</div>
+                            <small class="text-muted">Rating</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h5 mb-1">{{ course.lessons.count }}</div>
+                            <small class="text-muted">Lessons</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent border-top">
+                    <small class="text-muted">
+                        <i class="fas fa-lock me-1"></i>
+                        Secure checkout • 256-bit SSL encryption
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Payment Section -->
+        <div class="col-lg-8">
+            <form method="POST" id="enrollmentForm" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <!-- Coupon Code Section -->
+                <div class="coupon-section mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">
+                            <i class="fas fa-tag me-2"></i>
+                            Have a coupon code?
+                        </h6>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="toggleCoupon()">
+                            <i class="fas fa-plus me-1"></i>Apply
+                        </button>
+                    </div>
+                    
+                    <div id="couponInput" style="display: none;">
+                        <div class="input-group">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="couponCode" 
+                                   placeholder="Enter coupon code"
+                                   aria-label="Coupon code">
+                            <button class="btn btn-success" type="button" onclick="applyCoupon()">
+                                Apply
+                            </button>
+                        </div>
+                        <div id="couponMessage" class="mt-2"></div>
+                    </div>
+                </div>
+                
+                <!-- Payment Methods Grid -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-wallet me-2"></i>
+                        Select Payment Method
+                    </h5>
+                    
+                    <div class="payment-methods-grid">
+                        {% for method in payment_methods %}
+                        <div class="payment-method-card" 
+                             onclick="selectPaymentMethod('{{ method.id }}')"
+                             id="method-{{ method.id }}">
+                            <div class="payment-method-icon" style="background: {{ method.color }}; color: white;">
+                                <i class="{{ method.icon }}"></i>
+                            </div>
+                            <h6 class="mb-2">{{ method.name }}</h6>
+                            <p class="small text-muted mb-2">{{ method.description }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-success">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    Secure
+                                </small>
+                                {% if method.fee %}
+                                <small class="text-muted">{{ method.fee }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Mobile Accordion -->
+                    <div class="payment-method-accordion">
+                        <div class="accordion" id="paymentAccordion">
+                            {% for method in payment_methods %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse" 
+                                            data-bs-target="#method{{ method.id }}">
+                                        <i class="{{ method.icon }} me-2"></i>
+                                        {{ method.name }}
+                                    </button>
+                                </h2>
+                                <div id="method{{ method.id }}" 
+                                     class="accordion-collapse collapse"
+                                     data-bs-parent="#paymentAccordion">
+                                    <div class="accordion-body">
+                                        <p class="small mb-3">{{ method.description }}</p>
+                                        <button type="button" 
+                                                class="btn btn-primary w-100"
+                                                onclick="selectPaymentMethod('{{ method.id }}')">
+                                            Select {{ method.name }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Details Panels -->
+                <div class="payment-details-container">
+                    <!-- M-Pesa Panel -->
+                    <div class="payment-details-panel" id="mpesa-panel">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-mobile-alt me-2"></i>
+                                    M-Pesa Payment
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-4">
+                                    <div class="alert alert-info">
+                                        <div class="d-flex">
+                                            <i class="fas fa-info-circle fa-2x me-3"></i>
+                                            <div>
+                                                <h6 class="alert-heading">How to Pay with M-Pesa</h6>
+                                                <ol class="mb-0">
+                                                    <li>Enter your M-Pesa registered phone number</li>
+                                                    <li>Click "Pay with M-Pesa"</li>
+                                                    <li>Check your phone for STK push notification</li>
+                                                    <li>Enter your M-Pesa PIN to complete</li>
+                                                    <li>You'll be redirected automatically</li>
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="mpesaPhone" class="form-label">M-Pesa Phone Number</label>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text">+254</span>
+                                        <input type="tel" 
+                                               class="form-control" 
+                                               id="mpesaPhone" 
+                                               name="mpesa_phone"
+                                               placeholder="7XX XXX XXX"
+                                               pattern="[0-9\s]{9,12}"
+                                               required>
+                                    </div>
+                                    <div class="form-text">
+                                        Enter phone number registered with M-Pesa
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Ensure you have sufficient balance and SMS notifications are enabled.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Card Panel -->
+                    <div class="payment-details-panel" id="card-panel">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-credit-card me-2"></i>
+                                    Card Payment
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-4">
+                                    <div id="card-element" class="form-control-lg p-3"></div>
+                                    <div id="card-errors" class="text-danger mt-2"></div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="cardName" class="form-label">Name on Card</label>
+                                        <input type="text" 
+                                               class="form-control form-control-lg" 
+                                               id="cardName"
+                                               placeholder="John Doe">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="cardEmail" class="form-label">Email for Receipt</label>
+                                        <input type="email" 
+                                               class="form-control form-control-lg" 
+                                               id="cardEmail"
+                                               value="{{ user.email }}">
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex gap-3 align-items-center">
+                                    <img src="https://cdn.worldvectorlogo.com/logos/visa-1.svg" 
+                                         alt="Visa" style="height: 30px;">
+                                    <img src="https://cdn.worldvectorlogo.com/logos/mastercard-2.svg" 
+                                         alt="Mastercard" style="height: 30px;">
+                                    <img src="https://cdn.worldvectorlogo.com/logos/american-express-2.svg" 
+                                         alt="Amex" style="height: 30px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- PayPal Panel -->
+                    <div class="payment-details-panel" id="paypal-panel">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fab fa-paypal me-2"></i>
+                                    PayPal Payment
+                                </h6>
+                            </div>
+                            <div class="card-body text-center">
+                                <div class="mb-4">
+                                    <i class="fab fa-paypal fa-5x text-primary mb-3"></i>
+                                    <p class="text-muted">
+                                        You will be redirected to PayPal to complete your payment securely.
+                                    </p>
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-globe-americas fa-2x me-3"></i>
+                                        <div>
+                                            <h6 class="alert-heading mb-2">International Payments</h6>
+                                            <p class="mb-0">
+                                                PayPal supports payments in multiple currencies. 
+                                                Your card/bank will handle the currency conversion.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bank Transfer Panel -->
+                    <div class="payment-details-panel" id="bank-panel">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-university me-2"></i>
+                                    Bank Transfer
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning">
+                                    <h6><i class="fas fa-clock me-2"></i>Manual Processing</h6>
+                                    <p class="mb-0">
+                                        Bank transfers are processed manually within 24-48 hours.
+                                        Your enrollment will be activated once payment is confirmed.
+                                    </p>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h6 class="mb-3">Bank Details</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <tbody>
+                                                <tr>
+                                                    <th>Bank Name</th>
+                                                    <td>Equity Bank Kenya Limited</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Account Name</th>
+                                                    <td>CodeLab Education Ltd</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Account Number</th>
+                                                    <td>1234567890</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Branch</th>
+                                                    <td>Nairobi West</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Swift Code</th>
+                                                    <td>EQBLKENA</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Reference Number</label>
+                                    <div class="input-group input-group-lg">
+                                        <input type="text" 
+                                               class="form-control" 
+                                               value="CODELAB-{{ course.id }}-{{ user.id }}"
+                                               readonly>
+                                        <button class="btn btn-outline-primary" type="button" onclick="copyReference()">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text">
+                                        Use this reference when making payment
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="proofUpload" class="form-label">Upload Payment Proof</label>
+                                    <input type="file" 
+                                           class="form-control" 
+                                           id="proofUpload"
+                                           accept=".jpg,.jpeg,.png,.pdf">
+                                    <div class="form-text">
+                                        Upload screenshot or scanned receipt (max 5MB)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Terms and Conditions -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the 
+                                <a href="{% url 'accounts:terms' %}" target="_blank">Terms of Service</a>, 
+                                <a href="{% url 'accounts:privacy' %}" target="_blank">Privacy Policy</a>,
+                                and understand that I will receive email updates about this course.
+                            </label>
+                            <div class="invalid-feedback">
+                                You must agree to the terms before proceeding.
+                            </div>
+                        </div>
+                        
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox" id="refund" required>
+                            <label class="form-check-label" for="refund">
+                                I understand and agree to the 
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#refundModal">30-day refund policy</a>.
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{% url 'courses:course_detail' course.slug %}" 
+                       class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Course
+                    </a>
+                    <button type="submit" 
+                            class="btn btn-primary btn-lg"
+                            id="submitBtn">
+                        <i class="fas fa-lock me-2"></i>
+                        <span id="submitText">Complete Enrollment - KES {{ course.final_price|floatformat:2 }}</span>
+                    </button>
+                </div>
+                
+                <input type="hidden" name="payment_method" id="selectedMethod" value="">
+                <input type="hidden" name="payment_data" id="paymentData" value="">
+            </form>
+            
+            <!-- Security Badges -->
+            <div class="security-badges mt-4">
+                <div class="security-badge">
+                    <i class="fas fa-lock text-success"></i>
+                    <span>256-bit SSL</span>
+                </div>
+                <div class="security-badge">
+                    <i class="fas fa-shield-alt text-primary"></i>
+                    <span>PCI DSS Compliant</span>
+                </div>
+                <div class="security-badge">
+                    <i class="fas fa-user-shield text-warning"></i>
+                    <span>GDPR Compliant</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Payment Actions -->
+<div class="mobile-payment-actions">
+    <button class="btn btn-outline-primary flex-fill" onclick="scrollToTop()">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+    <button class="btn btn-primary flex-fill" onclick="document.getElementById('enrollmentForm').requestSubmit()">
+        <i class="fas fa-lock me-2"></i>Pay KES {{ course.final_price|floatformat:2 }}
+    </button>
+</div>
+
+<!-- Payment Processing Modal -->
+<div class="payment-processing" id="paymentProcessing">
+    <div class="text-center text-white">
+        <div class="payment-spinner mb-3"></div>
+        <h4 class="mb-2">Processing Payment</h4>
+        <p class="text-muted">Please wait while we process your payment...</p>
+        <small class="text-muted">Do not close this window or refresh the page.</small>
+    </div>
+</div>
+
+<!-- Refund Policy Modal -->
+<div class="modal fade" id="refundModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">30-Day Money-Back Guarantee</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>We offer a full refund within 30 days of enrollment if:</p>
+                <ul>
+                    <li>You haven't completed more than 30% of the course</li>
+                    <li>You haven't downloaded any premium resources</li>
+                    <li>You submit your refund request within 30 days</li>
+                </ul>
+                <p class="text-muted small">
+                    Refunds are processed within 5-7 business days to your original payment method.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize enrollment page
+        initEnrollmentPage();
+        initPaymentMethods();
+        initFormValidation();
+        initStripe();
+    });
+    
+    function initEnrollmentPage() {
+        // Set default payment method
+        const defaultMethod = 'mpesa';
+        selectPaymentMethod(defaultMethod);
+        
+        // Initialize phone number formatting
+        initPhoneFormatting();
+        
+        // Initialize file upload
+        initFileUpload();
+        
+        // Initialize scroll to top
+        initScrollBehavior();
+    }
+    
+    function initPaymentMethods() {
+        // Define payment methods
+        window.paymentMethods = {
+            'mpesa': {
+                name: 'M-Pesa',
+                panel: 'mpesa-panel',
+                icon: 'fas fa-mobile-alt',
+                color: '#10b981'
+            },
+            'card': {
+                name: 'Credit/Debit Card',
+                panel: 'card-panel',
+                icon: 'fas fa-credit-card',
+                color: '#2563eb'
+            },
+            'paypal': {
+                name: 'PayPal',
+                panel: 'paypal-panel',
+                icon: 'fab fa-paypal',
+                color: '#003087'
+            },
+            'bank': {
+                name: 'Bank Transfer',
+                panel: 'bank-panel',
+                icon: 'fas fa-university',
+                color: '#f59e0b'
+            }
+        };
+    }
+    
+    function selectPaymentMethod(methodId) {
+        // Update selected method
+        document.getElementById('selectedMethod').value = methodId;
+        
+        // Update UI for selected method
+        Object.keys(window.paymentMethods).forEach(id => {
+            const card = document.getElementById(`method-${id}`);
+            const panel = document.getElementById(`${id}-panel`);
+            
+            if (card) {
+                card.classList.remove('selected');
+            }
+            if (panel) {
+                panel.classList.remove('active');
+            }
+        });
+        
+        // Activate selected method
+        const selectedCard = document.getElementById(`method-${methodId}`);
+        const selectedPanel = document.getElementById(`${methodId}-panel`);
+        
+        if (selectedCard) {
+            selectedCard.classList.add('selected');
+        }
+        if (selectedPanel) {
+            selectedPanel.classList.add('active');
+        }
+        
+        // Update submit button text
+        const submitText = document.getElementById('submitText');
+        const method = window.paymentMethods[methodId];
+        if (submitText && method) {
+            submitText.innerHTML = `Pay with ${method.name} - KES {{ course.final_price|floatformat:2 }}`;
+        }
+        
+        // Show mobile accordion collapse
+        if (window.innerWidth <= 576) {
+            const collapse = document.getElementById(`method${methodId}`);
+            if (collapse) {
+                new bootstrap.Collapse(collapse, { show: true });
+            }
+        }
+    }
+    
+    function initPhoneFormatting() {
+        const phoneInput = document.getElementById('mpesaPhone');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                
+                // Limit to 9 digits for Kenyan numbers
+                if (value.length > 9) {
+                    value = value.substring(0, 9);
+                }
+                
+                // Format: 7XX XXX XXX
+                if (value.length > 3) {
+                    value = value.replace(/(\d{3})(\d{3})?(\d{3})?/, '$1 $2 $3').trim();
+                }
+                
+                e.target.value = value;
+            });
+        }
+    }
+    
+    function initFileUpload() {
+        const fileInput = document.getElementById('proofUpload');
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Validate file size (5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('File size must be less than 5MB');
+                        e.target.value = '';
+                        return;
+                    }
+                    
+                    // Validate file type
+                    const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+                    if (!validTypes.includes(file.type)) {
+                        alert('Please upload JPG, PNG, or PDF files only');
+                        e.target.value = '';
+                        return;
+                    }
+                    
+                    // Preview file
+                    if (file.type.startsWith('image/')) {
+                        previewImage(file);
+                    }
+                }
+            });
+        }
+    }
+    
+    function previewImage(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // Show preview
+            const preview = document.createElement('div');
+            preview.className = 'alert alert-info mt-2';
+            preview.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <img src="${e.target.result}" style="max-width: 100px; max-height: 100px;" class="me-3">
+                    <div>
+                        <strong>${file.name}</strong><br>
+                        <small>${(file.size / 1024).toFixed(2)} KB</small>
+                    </div>
+                </div>
+            `;
+            document.getElementById('proofUpload').parentNode.appendChild(preview);
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    function initFormValidation() {
+        const form = document.getElementById('enrollmentForm');
+        
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+            
+            // Show processing modal
+            document.getElementById('paymentProcessing').classList.add('active');
+            
+            // Disable submit button
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+            
+            try {
+                // Process payment based on selected method
+                const method = document.getElementById('selectedMethod').value;
+                await processPayment(method);
+                
+                // Submit form after successful payment
+                setTimeout(() => {
+                    form.submit();
+                }, 2000);
+                
+            } catch (error) {
+                // Hide processing modal
+                document.getElementById('paymentProcessing').classList.remove('active');
+                
+                // Enable submit button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Complete Enrollment';
+                
+                // Show error
+                alert('Payment failed: ' + error.message);
+            }
+        });
+    }
+    
+    async function processPayment(method) {
+        switch(method) {
+            case 'mpesa':
+                return await processMpesaPayment();
+            case 'card':
+                return await processCardPayment();
+            case 'paypal':
+                return await processPayPalPayment();
+            case 'bank':
+                return await processBankPayment();
+            default:
+                throw new Error('Invalid payment method');
+        }
+    }
+    
+    async function processMpesaPayment() {
+        const phone = document.getElementById('mpesaPhone').value.replace(/\s/g, '');
+        
+        if (!phone || phone.length !== 9) {
+            throw new Error('Please enter a valid M-Pesa phone number');
+        }
+        
+        // Simulate M-Pesa STK push
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                // In real app, this would make API call to M-Pesa
+                const success = Math.random() > 0.1; // 90% success rate for demo
+                
+                if (success) {
+                    resolve({ transaction_id: 'MP' + Date.now() });
+                } else {
+                    reject(new Error('M-Pesa payment failed. Please try again.'));
+                }
+            }, 3000);
+        });
+    }
+    
+    async function processCardPayment() {
+        // Get Stripe token
+        const { token, error } = await stripe.createToken(cardElement);
+        
+        if (error) {
+            throw new Error(error.message);
+        }
+        
+        // In real app, send token to your backend
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({ token: token.id });
+            }, 2000);
+        });
+    }
+    
+    async function processPayPalPayment() {
+        // In real app, this would redirect to PayPal
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({ redirect_url: '/paypal/process/' });
+            }, 1000);
+        });
+    }
+    
+    async function processBankPayment() {
+        // For bank transfer, just validate form
+        const fileInput = document.getElementById('proofUpload');
+        if (fileInput.files.length === 0) {
+            throw new Error('Please upload payment proof');
+        }
+        
+        return new Promise((resolve) => {
+            resolve({ status: 'pending' });
+        });
+    }
+    
+    function toggleCoupon() {
+        const couponInput = document.getElementById('couponInput');
+        if (couponInput.style.display === 'none') {
+            couponInput.style.display = 'block';
+        } else {
+            couponInput.style.display = 'none';
+        }
+    }
+    
+    function applyCoupon() {
+        const code = document.getElementById('couponCode').value;
+        const messageDiv = document.getElementById('couponMessage');
+        
+        // Simulate coupon validation
+        const validCoupons = {
+            'WELCOME10': 10,
+            'STUDENT20': 20,
+            'SAVE30': 30
+        };
+        
+        if (validCoupons[code]) {
+            const discount = validCoupons[code];
+            messageDiv.innerHTML = `<div class="alert alert-success">Coupon applied! ${discount}% discount added.</div>`;
+            
+            // Update price display
+            updatePriceWithDiscount(discount);
+        } else {
+            messageDiv.innerHTML = `<div class="alert alert-danger">Invalid coupon code. Please try again.</div>`;
+        }
+    }
+    
+    function updatePriceWithDiscount(discountPercent) {
+        const originalPrice = {{ course.final_price }};
+        const discountAmount = (originalPrice * discountPercent) / 100;
+        const finalPrice = originalPrice - discountAmount;
+        
+        // Update all price displays
+        document.querySelectorAll('.price-display').forEach(el => {
+            el.textContent = `KES ${finalPrice.toFixed(2)}`;
+        });
+    }
+    
+    function copyReference() {
+        const referenceInput = document.querySelector('input[readonly]');
+        referenceInput.select();
+        document.execCommand('copy');
+        
+        // Show toast
+        showToast('Reference copied to clipboard!', 'success');
+    }
+    
+    function initScrollBehavior() {
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    }
+    
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-bg-${type} border-0`;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        `;
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+        bsToast.show();
+        
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+    }
+    
+    // Stripe Integration
+    let stripe, cardElement;
+    
+    function initStripe() {
+        // Load Stripe.js dynamically
+        if (!document.querySelector('script[src*="stripe"]')) {
+            const script = document.createElement('script');
+            script.src = 'https://js.stripe.com/v3/';
+            script.onload = setupStripe;
+            document.head.appendChild(script);
+        } else {
+            setupStripe();
+        }
+    }
+    
+    function setupStripe() {
+        stripe = Stripe('{{ STRIPE_PUBLIC_KEY }}');
+        const elements = stripe.elements();
+        
+        // Create card element
+        cardElement = elements.create('card', {
+            style: {
+                base: {
+                    fontSize: '16px',
+                    color: '#32325d',
+                    '::placeholder': {
+                        color: '#aab7c4'
+                    }
+                },
+                invalid: {
+                    color: '#fa755a'
+                }
+            }
+        });
+        
+        // Mount card element
+        const cardContainer = document.getElementById('card-element');
+        if (cardContainer) {
+            cardElement.mount('#card-element');
+            
+            // Handle real-time validation errors
+            cardElement.on('change', function(event) {
+                const displayError = document.getElementById('card-errors');
+                if (event.error) {
+                    displayError.textContent = event.error.message;
+                } else {
+                    displayError.textContent = '';
+                }
+            });
+        }
+    }
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        // Adjust layout for mobile/desktop
+        if (window.innerWidth <= 576) {
+            document.querySelector('.payment-methods-grid').style.display = 'none';
+            document.querySelector('.payment-method-accordion').style.display = 'block';
+        } else {
+            document.querySelector('.payment-methods-grid').style.display = 'grid';
+            document.querySelector('.payment-method-accordion').style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

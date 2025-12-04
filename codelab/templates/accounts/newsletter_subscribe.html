@@ -1,0 +1,771 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Subscribe to Our Newsletter - CodeLab{% endblock %}
+{% block meta_description %}Join our community of developers and tech enthusiasts. Get weekly tech tutorials, career advice, and industry insights delivered to your inbox.{% endblock %}
+
+{% block extra_css %}
+<style>
+    .newsletter-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 3rem;
+    }
+    
+    .newsletter-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M1200 120L0 16.48 0 0 1200 0 1200 120z" fill="rgba(255,255,255,0.1)"/></svg>');
+        background-size: 100% 100px;
+        background-repeat: no-repeat;
+        background-position: bottom;
+    }
+    
+    .benefit-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        height: 100%;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    
+    .benefit-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        border-color: #667eea;
+    }
+    
+    .benefit-icon {
+        width: 70px;
+        height: 70px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+    
+    .benefit-icon i {
+        color: white;
+        font-size: 1.8rem;
+    }
+    
+    .subscription-form-container {
+        background: white;
+        border-radius: 15px;
+        padding: 3rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .subscription-form-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .form-floating label {
+        color: #6c757d;
+        padding-left: 1.5rem;
+    }
+    
+    .form-floating .form-control {
+        padding-left: 1.5rem;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+    }
+    
+    .form-floating .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .subscription-type {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .subscription-type .btn {
+        flex: 1;
+        min-width: 120px;
+        border-radius: 10px;
+        padding: 1rem 1.5rem;
+        border: 2px solid #e9ecef;
+        background: white;
+        color: #495057;
+        transition: all 0.3s ease;
+    }
+    
+    .subscription-type .btn:hover {
+        border-color: #667eea;
+        transform: translateY(-2px);
+    }
+    
+    .subscription-type .btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .privacy-note {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 1.5rem;
+    }
+    
+    .privacy-note a {
+        color: #667eea;
+        text-decoration: none;
+    }
+    
+    .privacy-note a:hover {
+        text-decoration: underline;
+    }
+    
+    .confetti {
+        position: fixed;
+        width: 15px;
+        height: 15px;
+        background: #667eea;
+        border-radius: 50%;
+        pointer-events: none;
+        opacity: 0;
+        z-index: 9999;
+    }
+    
+    .success-animation {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 2rem;
+        position: relative;
+    }
+    
+    .success-animation .checkmark {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: block;
+        stroke-width: 2;
+        stroke: #4bb543;
+        stroke-miterlimit: 10;
+        box-shadow: inset 0px 0px 0px #4bb543;
+        animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+    }
+    
+    .success-animation .checkmark__circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 2;
+        stroke-miterlimit: 10;
+        stroke: #4bb543;
+        fill: none;
+        animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+    
+    .success-animation .checkmark__check {
+        transform-origin: 50% 50%;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+    }
+    
+    @keyframes stroke {
+        100% {
+            stroke-dashoffset: 0;
+        }
+    }
+    
+    @keyframes scale {
+        0%, 100% {
+            transform: none;
+        }
+        50% {
+            transform: scale3d(1.1, 1.1, 1);
+        }
+    }
+    
+    @keyframes fill {
+        100% {
+            box-shadow: inset 0px 0px 0px 30px #4bb543;
+        }
+    }
+    
+    .community-stats {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #667eea;
+        display: block;
+        line-height: 1;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .newsletter-hero {
+            border-radius: 10px;
+            margin: 0 -1rem 2rem -1rem;
+        }
+        
+        .subscription-form-container {
+            padding: 2rem;
+        }
+        
+        .subscription-type {
+            flex-direction: column;
+        }
+        
+        .subscription-type .btn {
+            width: 100%;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .benefit-card {
+            padding: 1.5rem;
+        }
+        
+        .subscription-form-container {
+            padding: 1.5rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="newsletter-hero p-4 p-md-5 mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb" style="--bs-breadcrumb-divider: '›';">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-white-50">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:blog_list' %}" class="text-white-50">Blog</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Newsletter</li>
+                </ol>
+            </nav>
+            
+            <h1 class="display-4 fw-bold mb-3">Stay Ahead in Tech</h1>
+            <p class="lead mb-4">Join our community of 10,000+ developers and get curated insights, tutorials, and career advice delivered to your inbox.</p>
+            
+            <div class="d-flex align-items-center flex-wrap gap-3">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span>No spam, ever</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span>Unsubscribe anytime</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span>Free exclusive content</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 d-none d-lg-flex justify-content-center">
+            <div class="text-center">
+                <i class="fas fa-paper-plane fa-6x text-white-50"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-4">
+    <!-- Benefits Section -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h2 class="fw-bold">What You'll Receive</h2>
+            <p class="text-muted">Weekly insights to level up your tech career</p>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i class="fas fa-code"></i>
+                </div>
+                <h4 class="fw-bold mb-3">Hands-on Tutorials</h4>
+                <p class="text-muted">Practical coding examples and step-by-step guides on the latest frameworks and technologies.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h4 class="fw-bold mb-3">Industry Insights</h4>
+                <p class="text-muted">Analysis of tech trends, salary reports, and market updates to help you make informed career decisions.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <h4 class="fw-bold mb-3">Career Growth</h4>
+                <p class="text-muted">Interview tips, resume advice, and strategies for advancing your career in technology.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-8">
+            <!-- Community Stats -->
+            <div class="community-stats mb-5">
+                <div class="row">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <span class="stat-number">10,000+</span>
+                        <span class="stat-label">Developers</span>
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <span class="stat-number">98%</span>
+                        <span class="stat-label">Open Rate</span>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="stat-number">50+</span>
+                        <span class="stat-label">Countries</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscription Form -->
+            <div class="subscription-form-container">
+                <!-- Success State -->
+                <div class="text-center d-none" id="successState">
+                    <div class="success-animation mb-4">
+                        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                            <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                            <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                        </svg>
+                    </div>
+                    <h2 class="fw-bold mb-3">Welcome Aboard! 🎉</h2>
+                    <p class="text-muted mb-4">Thank you for subscribing to the CodeLab newsletter. Check your email to confirm your subscription and get your welcome gift.</p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Can't find our email? Please check your spam folder.
+                    </div>
+                    <div class="mt-4">
+                        <a href="{% url 'accounts:blog_list' %}" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-newspaper me-2"></i>Read Latest Articles
+                        </a>
+                        <a href="{% url 'home' %}" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i>Back to Home
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Form State -->
+                <div id="formState">
+                    <h2 class="fw-bold text-center mb-1">Join Our Newsletter</h2>
+                    <p class="text-center text-muted mb-4">Enter your details below to subscribe</p>
+                    
+                    <!-- Subscription Type -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold mb-3">Choose your frequency:</label>
+                        <div class="subscription-type">
+                            <button type="button" class="btn active" data-frequency="weekly">
+                                <i class="fas fa-calendar-week me-2"></i>Weekly
+                            </button>
+                            <button type="button" class="btn" data-frequency="biweekly">
+                                <i class="fas fa-calendar-alt me-2"></i>Bi-Weekly
+                            </button>
+                            <button type="button" class="btn" data-frequency="monthly">
+                                <i class="far fa-calendar me-2"></i>Monthly
+                            </button>
+                        </div>
+                    </div>
+
+                    <form method="POST" id="subscriptionForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="frequency" value="weekly" id="frequencyInput">
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="firstName" 
+                                           name="first_name" 
+                                           placeholder="John"
+                                           required>
+                                    <label for="firstName">First Name</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="lastName" 
+                                           name="last_name" 
+                                           placeholder="Doe"
+                                           required>
+                                    <label for="lastName">Last Name</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="email" 
+                                           name="email" 
+                                           placeholder="you@example.com"
+                                           required>
+                                    <label for="email">Email Address</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <select class="form-select" id="jobRole" name="job_role">
+                                        <option value="">Select your role</option>
+                                        <option value="developer">Developer</option>
+                                        <option value="designer">Designer</option>
+                                        <option value="manager">Engineering Manager</option>
+                                        <option value="student">Student</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    <label for="jobRole">Primary Role (Optional)</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                                    <label class="form-check-label" for="terms">
+                                        I agree to receive emails from CodeLab. I can unsubscribe anytime.
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="privacy" name="privacy" required>
+                                    <label class="form-check-label" for="privacy">
+                                        I have read and agree to the 
+                                        <a href="{% url 'privacy_policy' %}" target="_blank">Privacy Policy</a>.
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="d-grid mt-3">
+                                    <button type="submit" class="btn btn-primary btn-lg" id="subscribeBtn">
+                                        <span class="subscribe-text">
+                                            <i class="fas fa-paper-plane me-2"></i>Subscribe Now
+                                        </span>
+                                        <span class="loading-text d-none">
+                                            <i class="fas fa-spinner fa-spin me-2"></i>Subscribing...
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="privacy-note text-center mt-4">
+                        <i class="fas fa-lock me-1"></i>
+                        Your information is secure. We never share your data with third parties.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Testimonials -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h3 class="fw-bold">What Our Readers Say</h3>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            JS
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">Jamie Smith</h6>
+                            <small class="text-muted">Senior Full-Stack Developer</small>
+                        </div>
+                    </div>
+                    <p class="mb-0">"The CodeLab newsletter helped me learn React Hooks before my team adopted them. The practical examples saved me weeks of trial and error."</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            MP
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">Maria Patel</h6>
+                            <small class="text-muted">Tech Lead at Startup</small>
+                        </div>
+                    </div>
+                    <p class="mb-0">"The career advice section helped me negotiate a better compensation package. The newsletter pays for itself many times over!"</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 bg-light">
+                <div class="card-body p-4 p-md-5">
+                    <h3 class="fw-bold text-center mb-4">Frequently Asked Questions</h3>
+                    
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button rounded collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    How often will I receive emails?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    You can choose your preferred frequency: weekly, bi-weekly, or monthly. We recommend weekly to stay current with tech trends.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button rounded collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Can I unsubscribe anytime?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Yes! Every email includes a one-click unsubscribe link at the bottom. We make it easy to leave if our content isn't right for you.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button rounded collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    What if I don't like the content?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    We're constantly improving based on reader feedback. Reply to any email with your suggestions, and we'll do our best to incorporate them.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button rounded collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                    Is my email address safe?
+                                </button>
+                            </h2>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Absolutely. We never sell, rent, or share your email address with third parties. Your privacy is important to us. Read our full <a href="{% url 'privacy_policy' %}">Privacy Policy</a>.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Subscription type toggle
+        const frequencyBtns = document.querySelectorAll('[data-frequency]');
+        const frequencyInput = document.getElementById('frequencyInput');
+        
+        frequencyBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                frequencyBtns.forEach(b => {
+                    b.classList.remove('active');
+                    b.style.borderColor = '#e9ecef';
+                });
+                this.classList.add('active');
+                this.style.borderColor = '#667eea';
+                frequencyInput.value = this.dataset.frequency;
+            });
+        });
+        
+        // Form submission
+        const subscriptionForm = document.getElementById('subscriptionForm');
+        const subscribeBtn = document.getElementById('subscribeBtn');
+        const formState = document.getElementById('formState');
+        const successState = document.getElementById('successState');
+        const subscribeText = subscribeBtn.querySelector('.subscribe-text');
+        const loadingText = subscribeBtn.querySelector('.loading-text');
+        
+        if (subscriptionForm) {
+            subscriptionForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Show loading state
+                subscribeText.classList.add('d-none');
+                loadingText.classList.remove('d-none');
+                subscribeBtn.disabled = true;
+                
+                // Simulate API call
+                setTimeout(() => {
+                    // Create confetti effect
+                    createConfetti();
+                    
+                    // Show success state
+                    formState.style.display = 'none';
+                    successState.classList.remove('d-none');
+                    successState.style.display = 'block';
+                    
+                    // Scroll to success message
+                    successState.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // In real implementation, submit form via AJAX
+                    // const formData = new FormData(this);
+                    // fetch(this.action, {
+                    //     method: 'POST',
+                    //     body: formData,
+                    //     headers: {
+                    //         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    //     }
+                    // }).then(response => {
+                    //     if (response.ok) {
+                    //         createConfetti();
+                    //         formState.style.display = 'none';
+                    //         successState.style.display = 'block';
+                    //     }
+                    // }).catch(error => {
+                    //     // Handle error
+                    // });
+                    
+                }, 1500);
+            });
+        }
+        
+        // Email validation
+        const emailInput = document.getElementById('email');
+        if (emailInput) {
+            emailInput.addEventListener('blur', validateEmail);
+            emailInput.addEventListener('input', clearEmailError);
+        }
+        
+        function validateEmail() {
+            const email = this.value;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (email && !emailRegex.test(email)) {
+                showError(this, 'Please enter a valid email address');
+                return false;
+            }
+            return true;
+        }
+        
+        function clearEmailError() {
+            clearError(this);
+        }
+        
+        function showError(input, message) {
+            clearError(input);
+            input.classList.add('is-invalid');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback';
+            errorDiv.textContent = message;
+            input.parentNode.appendChild(errorDiv);
+        }
+        
+        function clearError(input) {
+            input.classList.remove('is-invalid');
+            const errorDiv = input.parentNode.querySelector('.invalid-feedback');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        }
+        
+        // Confetti effect
+        function createConfetti() {
+            const colors = ['#667eea', '#764ba2', '#f56565', '#ed8936', '#ecc94b', '#48bb78', '#38b2ac'];
+            
+            for (let i = 0; i < 80; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                document.body.appendChild(confetti);
+                
+                const animation = confetti.animate([
+                    {
+                        top: '-10px',
+                        opacity: 1,
+                        transform: `rotate(${Math.random() * 360}deg)`
+                    },
+                    {
+                        top: Math.random() * 100 + 'vh',
+                        opacity: 0,
+                        transform: `rotate(${Math.random() * 720}deg) translateX(${Math.random() * 200 - 100}px)`
+                    }
+                ], {
+                    duration: 1000 + Math.random() * 2000,
+                    easing: 'cubic-bezier(0.215, 0.610, 0.355, 1)'
+                });
+                
+                animation.onfinish = () => confetti.remove();
+            }
+        }
+        
+        // Initialize accordion
+        const accordionButtons = document.querySelectorAll('.accordion-button');
+        accordionButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+    });
+</script>
+{% endblock %}

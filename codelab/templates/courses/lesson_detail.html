@@ -1,0 +1,1742 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ lesson.title }} - {{ course.title }} | CodeLab{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --lesson-primary: #4361ee;
+    --lesson-secondary: #3a0ca3;
+    --lesson-success: #4cc9f0;
+    --lesson-warning: #f72585;
+    --lesson-info: #7209b7;
+    --lesson-dark: #1a1a2e;
+    --lesson-light: #f8f9fa;
+}
+
+/* Enhanced Layout */
+.lesson-container {
+    min-height: calc(100vh - 70px);
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    position: relative;
+    overflow-x: hidden;
+}
+
+.lesson-wrapper {
+    display: flex;
+    min-height: calc(100vh - 120px);
+}
+
+/* Sidebar - Enhanced */
+.lesson-sidebar {
+    width: 320px;
+    background: white;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 100;
+}
+
+.lesson-main {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Mobile Sidebar Toggle */
+.sidebar-toggle {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    background: var(--lesson-primary);
+    color: white;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(67, 97, 238, 0.3);
+}
+
+/* Course Navigation */
+.course-nav {
+    background: white;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.nav-search {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.nav-search input {
+    padding-left: 2.5rem;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+}
+
+.nav-search i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+.lesson-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.lesson-item {
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.lesson-item:hover {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+    transform: translateX(4px);
+}
+
+.lesson-item.active {
+    background: linear-gradient(135deg, var(--lesson-primary) 0%, var(--lesson-secondary) 100%);
+    color: white;
+    border-color: var(--lesson-primary);
+    box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
+}
+
+.lesson-item.completed {
+    border-left: 4px solid #10b981;
+}
+
+.lesson-meta {
+    font-size: 0.875rem;
+    opacity: 0.8;
+}
+
+.lesson-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+}
+
+/* Progress Circle */
+.progress-circle {
+    width: 120px;
+    height: 120px;
+    position: relative;
+}
+
+.progress-circle svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.progress-circle-bg {
+    fill: none;
+    stroke: #e2e8f0;
+    stroke-width: 8;
+}
+
+.progress-circle-fill {
+    fill: none;
+    stroke: var(--lesson-primary);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 314;
+    stroke-dashoffset: calc(314 - (314 * var(--progress)) / 100);
+    transition: stroke-dashoffset 1s ease;
+}
+
+.progress-percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--lesson-dark);
+}
+
+/* Main Content */
+.lesson-header {
+    background: white;
+    padding: 2rem;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+}
+
+.lesson-title {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--lesson-primary) 0%, var(--lesson-secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+}
+
+.lesson-meta-info {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.lesson-content {
+    padding: 2rem;
+    background: white;
+    min-height: 500px;
+}
+
+/* Interactive Elements */
+.interactive-widgets {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.code-editor-widget {
+    background: #1e1e1e;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.code-header {
+    background: #252525;
+    padding: 1rem;
+    border-bottom: 1px solid #333;
+}
+
+.code-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.code-tab {
+    background: #333;
+    color: #ddd;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.code-tab.active {
+    background: var(--lesson-primary);
+    color: white;
+}
+
+.code-run-btn {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.code-output {
+    background: #252525;
+    padding: 1rem;
+    border-top: 1px solid #333;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Notes Widget */
+.notes-widget {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.notes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.notes-content {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.note-item {
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid var(--lesson-primary);
+}
+
+/* Quiz Widget */
+.quiz-widget {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.quiz-question {
+    background: #f1f5f9;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.quiz-options {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.quiz-option {
+    padding: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quiz-option:hover {
+    border-color: var(--lesson-primary);
+    background: rgba(67, 97, 238, 0.05);
+}
+
+.quiz-option.selected {
+    background: #dcfce7;
+    border-color: #22c55e;
+}
+
+/* Resource Cards */
+.resource-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.resource-card {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.resource-card:hover {
+    border-color: var(--lesson-primary);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(67, 97, 238, 0.1);
+}
+
+.resource-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--lesson-primary) 0%, var(--lesson-secondary) 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Discussion Section */
+.discussion-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-top: 2rem;
+}
+
+.comment-thread {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.comment-item {
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.comment-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--lesson-primary) 0%, var(--lesson-secondary) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+
+/* Navigation Buttons */
+.navigation-buttons {
+    display: flex;
+    justify-content: space-between;
+    padding: 2rem;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+}
+
+.nav-btn {
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Floating Action Buttons */
+.fab-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--lesson-primary) 0%, var(--lesson-secondary) 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 20px rgba(67, 97, 238, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 25px rgba(67, 97, 238, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .lesson-sidebar {
+        width: 280px;
+    }
+    
+    .interactive-widgets {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 992px) {
+    .lesson-wrapper {
+        flex-direction: column;
+    }
+    
+    .lesson-sidebar {
+        width: 100%;
+        height: 60vh;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        transform: translateY(100%);
+        z-index: 1000;
+        border-right: none;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .lesson-sidebar.active {
+        transform: translateY(0);
+    }
+    
+    .lesson-main {
+        width: 100%;
+    }
+    
+    .sidebar-toggle {
+        display: flex;
+    }
+    
+    .lesson-header {
+        padding: 1rem;
+    }
+    
+    .lesson-title {
+        font-size: 1.5rem;
+    }
+    
+    .lesson-meta-info {
+        gap: 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .navigation-buttons {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .nav-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .lesson-content {
+        padding: 1rem;
+    }
+    
+    .resource-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .code-editor-widget {
+        font-size: 0.875rem;
+    }
+    
+    .interactive-widgets {
+        margin: 1rem 0;
+    }
+    
+    .discussion-section {
+        padding: 1rem;
+    }
+    
+    .fab-container {
+        bottom: 1rem;
+        right: 1rem;
+    }
+    
+    .fab {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .lesson-container {
+        padding: 0;
+    }
+    
+    .lesson-title {
+        font-size: 1.25rem;
+    }
+    
+    .progress-circle {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .progress-percentage {
+        font-size: 1rem;
+    }
+    
+    .lesson-meta-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .code-tabs {
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+    
+    .code-tab {
+        white-space: nowrap;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .btn, .fab, .nav-btn, .quiz-option, .lesson-item {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+    
+    .code-run-btn, .quiz-option {
+        padding: 1rem;
+    }
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .lesson-container,
+.dark-mode .lesson-container {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+[data-theme="dark"] .lesson-sidebar,
+[data-theme="dark"] .lesson-header,
+[data-theme="dark"] .lesson-content,
+.dark-mode .lesson-sidebar,
+.dark-mode .lesson-header,
+.dark-mode .lesson-content {
+    background: #1e293b;
+    color: #e2e8f0;
+    border-color: #334155;
+}
+
+[data-theme="dark"] .lesson-item,
+.dark-mode .lesson-item {
+    background: #0f172a;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .lesson-item.active,
+.dark-mode .lesson-item.active {
+    background: linear-gradient(135deg, var(--lesson-primary) 0%, var(--lesson-secondary) 100%);
+    color: white;
+}
+
+[data-theme="dark"] .resource-card,
+[data-theme="dark"] .notes-widget,
+[data-theme="dark"] .quiz-widget,
+.dark-mode .resource-card,
+.dark-mode .notes-widget,
+.dark-mode .quiz-widget {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .quiz-option,
+.dark-mode .quiz-option {
+    background: #0f172a;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .quiz-option.selected,
+.dark-mode .quiz-option.selected {
+    background: #14532d;
+    border-color: #22c55e;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease;
+}
+
+.slide-in-right {
+    animation: slideInRight 0.3s ease;
+}
+
+.slide-in-left {
+    animation: slideInLeft 0.3s ease;
+}
+
+/* Progress animations */
+.progress-animate {
+    animation: progressFill 1s ease-out;
+}
+
+@keyframes progressFill {
+    from {
+        stroke-dashoffset: 314;
+    }
+}
+
+/* Code execution animation */
+.code-running {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Success animation */
+.success-animation {
+    animation: successPulse 2s ease;
+}
+
+@keyframes successPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Accessibility */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.focus-visible:focus {
+    outline: 3px solid var(--lesson-primary);
+    outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+    .lesson-sidebar,
+    .fab-container,
+    .sidebar-toggle,
+    .code-run-btn,
+    .quiz-option,
+    .notes-widget,
+    .discussion-section {
+        display: none !important;
+    }
+    
+    .lesson-container {
+        background: white !important;
+    }
+    
+    .lesson-content {
+        padding: 0;
+    }
+    
+    .lesson-header {
+        position: static;
+    }
+    
+    a {
+        text-decoration: none !important;
+        color: black !important;
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 5px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track,
+.dark-mode ::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb,
+.dark-mode ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover,
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lesson-container">
+    <!-- Floating Action Buttons -->
+    <div class="fab-container d-print-none">
+        <div class="fab-menu" id="fabMenu" style="display: none;">
+            <button class="fab-menu-item" onclick="toggleDarkMode()">
+                <i class="fas fa-moon me-2"></i>Toggle Dark Mode
+            </button>
+            <button class="fab-menu-item" onclick="printLesson()">
+                <i class="fas fa-print me-2"></i>Print Lesson
+            </button>
+            <button class="fab-menu-item" onclick="bookmarkLesson()">
+                <i class="fas fa-bookmark me-2"></i>Bookmark
+            </button>
+            <button class="fab-menu-item" onclick="shareLesson()">
+                <i class="fas fa-share me-2"></i>Share
+            </button>
+        </div>
+        <button class="fab" id="mainFab" onclick="toggleFabMenu()">
+            <i class="fas fa-plus" id="fabIcon"></i>
+        </button>
+    </div>
+
+    <!-- Mobile Sidebar Toggle -->
+    <button class="sidebar-toggle d-print-none" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="lesson-wrapper">
+        <!-- Sidebar -->
+        <div class="lesson-sidebar" id="lessonSidebar">
+            <div class="course-nav">
+                <div class="nav-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="form-control" placeholder="Search lessons..." id="lessonSearch">
+                </div>
+                <div class="d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0">{{ course.title }}</h6>
+                    <span class="badge bg-primary">{{ course.level }}</span>
+                </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="p-3 border-bottom">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="progress-circle">
+                        <svg>
+                            <circle class="progress-circle-bg" cx="60" cy="60" r="50"></circle>
+                            <circle class="progress-circle-fill" cx="60" cy="60" r="50" 
+                                    style="--progress: {{ progress }}"></circle>
+                        </svg>
+                        <div class="progress-percentage">{{ progress }}%</div>
+                    </div>
+                    <div>
+                        <h6 class="mb-1">Progress</h6>
+                        <small class="text-muted">{{ completed_lessons }} of {{ total_lessons }} lessons</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lesson List -->
+            <div class="lesson-list" id="lessonList">
+                {% for l in lessons %}
+                <div class="lesson-item {% if l.id == lesson.id %}active{% endif %} {% if l.completed %}completed{% endif %}" 
+                     onclick="window.location.href='{% url 'courses:lesson_detail' course_slug=course.slug lesson_slug=l.slug %}'">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div class="d-flex align-items-center">
+                            {% if l.completed %}
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                            {% else %}
+                                <i class="far fa-circle me-2"></i>
+                            {% endif %}
+                            <strong>Lesson {{ l.order }}</strong>
+                        </div>
+                        <div>
+                            {% if l.video_url %}
+                                <span class="badge lesson-badge bg-danger me-1">
+                                    <i class="fas fa-video"></i>
+                                </span>
+                            {% endif %}
+                            {% if l.attachment %}
+                                <span class="badge lesson-badge bg-info">
+                                    <i class="fas fa-paperclip"></i>
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="lesson-meta">{{ l.title }}</div>
+                    {% if l.duration %}
+                    <div class="lesson-meta">
+                        <i class="far fa-clock me-1"></i>
+                        {{ l.duration }} min
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="p-3 border-top">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'courses:course_detail' slug=course.slug %}" class="btn btn-outline-primary">
+                        <i class="fas fa-home me-2"></i>Course Home
+                    </a>
+                    <button class="btn btn-outline-success" onclick="markAllComplete()">
+                        <i class="fas fa-check-double me-2"></i>Mark All Complete
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="lesson-main">
+            <!-- Header -->
+            <div class="lesson-header">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                    <div>
+                        <h1 class="lesson-title">{{ lesson.title }}</h1>
+                        <div class="lesson-meta-info">
+                            <span>
+                                <i class="fas fa-book me-1"></i>
+                                Lesson {{ lesson.order }} of {{ lessons|length }}
+                            </span>
+                            {% if lesson.duration %}
+                            <span>
+                                <i class="far fa-clock me-1"></i>
+                                {{ lesson.duration }} min
+                            </span>
+                            {% endif %}
+                            <span>
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ lesson.created_at|date:"M d, Y" }}
+                            </span>
+                            <span>
+                                <i class="fas fa-chart-line me-1"></i>
+                                {{ lesson.difficulty|default:"Beginner" }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        {% if not completed %}
+                            <button class="btn btn-success" id="markCompleteBtn">
+                                <i class="fas fa-check me-2"></i>Mark Complete
+                            </button>
+                        {% else %}
+                            <span class="badge bg-success fs-6 px-3 py-2">
+                                <i class="fas fa-check-circle me-2"></i>Completed
+                            </span>
+                        {% endif %}
+                        <button class="btn btn-outline-secondary" id="toggleSidebarBtn">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lesson Content -->
+            <div class="lesson-content">
+                <!-- Learning Objectives -->
+                {% if lesson.objectives %}
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="fas fa-bullseye me-2"></i>Learning Objectives</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            {% for objective in lesson.objectives_as_list %}
+                            <li>{{ objective }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Video Player -->
+                {% if lesson.video_url %}
+                <div class="mb-4">
+                    <div class="ratio ratio-16x9">
+                        <iframe src="{{ lesson.video_url }}" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen 
+                                class="rounded shadow">
+                        </iframe>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-expand me-1"></i>Double-click to enter fullscreen
+                        </small>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="playbackSpeed()">
+                            <i class="fas fa-tachometer-alt me-1"></i>1x
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Content -->
+                <div class="content-wrapper mb-5">
+                    {{ lesson.content|safe }}
+                </div>
+
+                <!-- Interactive Widgets -->
+                <div class="interactive-widgets">
+                    <!-- Code Editor -->
+                    {% if lesson.has_code_example %}
+                    <div class="code-editor-widget">
+                        <div class="code-header">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="code-tabs">
+                                    <button class="code-tab active" data-language="python">Python</button>
+                                    <button class="code-tab" data-language="javascript">JavaScript</button>
+                                    <button class="code-tab" data-language="html">HTML</button>
+                                    <button class="code-tab" data-language="css">CSS</button>
+                                </div>
+                                <button class="code-run-btn" onclick="runCode()">
+                                    <i class="fas fa-play me-1"></i>Run Code
+                                </button>
+                            </div>
+                            <div id="codeEditor" style="height: 300px;"></div>
+                        </div>
+                        <div class="code-output">
+                            <pre id="codeOutput">Output will appear here...</pre>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Notes Widget -->
+                    <div class="notes-widget">
+                        <div class="notes-header">
+                            <h6 class="mb-0"><i class="fas fa-sticky-note me-2"></i>My Notes</h6>
+                            <button class="btn btn-sm btn-primary" onclick="addNote()">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="notes-content" id="notesContainer">
+                            <!-- Notes will be loaded here -->
+                        </div>
+                        <div class="mt-2">
+                            <textarea class="form-control" id="newNote" rows="2" placeholder="Add a new note..."></textarea>
+                            <button class="btn btn-sm btn-success mt-2" onclick="saveNote()">Save Note</button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Quiz -->
+                    <div class="quiz-widget">
+                        <h6 class="mb-3"><i class="fas fa-question-circle me-2"></i>Quick Quiz</h6>
+                        <div class="quiz-question" id="quizQuestion">
+                            <!-- Quiz question will be loaded here -->
+                        </div>
+                        <div class="quiz-options" id="quizOptions">
+                            <!-- Quiz options will be loaded here -->
+                        </div>
+                        <button class="btn btn-primary w-100 mt-3" onclick="submitQuiz()">Submit Answer</button>
+                    </div>
+                </div>
+
+                <!-- Resource Cards -->
+                {% if lesson.attachment or lesson.code_files or lesson.references %}
+                <div class="mt-4">
+                    <h5 class="mb-3"><i class="fas fa-download me-2"></i>Resources</h5>
+                    <div class="resource-grid">
+                        {% if lesson.attachment %}
+                        <div class="resource-card">
+                            <div class="resource-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <h6>PDF Notes</h6>
+                            <p class="text-muted mb-2">{{ lesson.attachment.size|filesizeformat }}</p>
+                            <a href="{{ lesson.attachment.url }}" class="btn btn-sm btn-primary" download>
+                                <i class="fas fa-download me-1"></i>Download
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        {% if lesson.code_files %}
+                        <div class="resource-card">
+                            <div class="resource-icon">
+                                <i class="fas fa-code"></i>
+                            </div>
+                            <h6>Source Code</h6>
+                            <p class="text-muted mb-2">Complete examples</p>
+                            <button class="btn btn-sm btn-success" onclick="downloadCode()">
+                                <i class="fas fa-code-branch me-1"></i>Get Code
+                            </button>
+                        </div>
+                        {% endif %}
+
+                        {% if lesson.references %}
+                        <div class="resource-card">
+                            <div class="resource-icon">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <h6>References</h6>
+                            <p class="text-muted mb-2">Further reading</p>
+                            <button class="btn btn-sm btn-info" onclick="showReferences()">
+                                <i class="fas fa-external-link-alt me-1"></i>View
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Discussion Section -->
+                <div class="discussion-section">
+                    <h5 class="mb-3"><i class="fas fa-comments me-2"></i>Discussion</h5>
+                    <div class="comment-thread" id="commentThread">
+                        <!-- Comments will be loaded here -->
+                    </div>
+                    <div class="mt-3">
+                        <textarea class="form-control" id="newComment" rows="2" placeholder="Add a comment..."></textarea>
+                        <button class="btn btn-primary mt-2" onclick="postComment()">Post Comment</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="navigation-buttons">
+                {% if previous_lesson %}
+                <a href="{% url 'courses:lesson_detail' course_slug=course.slug lesson_slug=previous_lesson.slug %}" 
+                   class="nav-btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i>
+                    <div>
+                        <small>Previous</small>
+                        <div>{{ previous_lesson.title }}</div>
+                    </div>
+                </a>
+                {% else %}
+                <div></div>
+                {% endif %}
+
+                {% if next_lesson %}
+                <a href="{% url 'courses:lesson_detail' course_slug=course.slug lesson_slug=next_lesson.slug %}" 
+                   class="nav-btn btn-primary">
+                    <div class="text-end">
+                        <small>Next</small>
+                        <div>{{ next_lesson.title }}</div>
+                    </div>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                {% else %}
+                <a href="{% url 'courses:course_detail' slug=course.slug %}" 
+                   class="nav-btn btn-success">
+                    <div class="text-end">
+                        <small>Complete Course</small>
+                        <div>View Certificate</div>
+                    </div>
+                    <i class="fas fa-trophy"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<div class="modal fade" id="referencesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">References & Further Reading</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% if lesson.references %}
+                <div class="references-list">
+                    {{ lesson.references|safe }}
+                </div>
+                {% else %}
+                <p class="text-muted">No references available for this lesson.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Load Monaco Editor for code editing -->
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.34.1/min/vs/loader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script>
+class EnhancedLessonViewer {
+    constructor() {
+        this.initElements();
+        this.initEventListeners();
+        this.initMonacoEditor();
+        this.initNotes();
+        this.initQuiz();
+        this.initComments();
+        this.setupKeyboardShortcuts();
+        this.trackTime();
+    }
+
+    initElements() {
+        this.markCompleteBtn = document.getElementById('markCompleteBtn');
+        this.sidebarToggle = document.getElementById('sidebarToggle');
+        this.lessonSidebar = document.getElementById('lessonSidebar');
+        this.toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+        this.lessonSearch = document.getElementById('lessonSearch');
+        this.lessonItems = document.querySelectorAll('.lesson-item');
+        this.fabMenu = document.getElementById('fabMenu');
+        this.mainFab = document.getElementById('mainFab');
+        
+        // Initialize theme
+        this.initTheme();
+    }
+
+    initEventListeners() {
+        // Mark complete button
+        if (this.markCompleteBtn) {
+            this.markCompleteBtn.addEventListener('click', () => this.markComplete());
+        }
+
+        // Sidebar toggle
+        this.sidebarToggle.addEventListener('click', () => this.toggleSidebar());
+        this.toggleSidebarBtn?.addEventListener('click', () => this.toggleSidebar());
+
+        // Lesson search
+        this.lessonSearch.addEventListener('input', (e) => this.searchLessons(e.target.value));
+
+        // Resize observer for responsive layout
+        this.setupResizeObserver();
+
+        // Video playback speed
+        this.setupVideoControls();
+
+        // Load lesson data
+        this.loadNotes();
+        this.loadComments();
+    }
+
+    initTheme() {
+        const savedTheme = localStorage.getItem('lesson-theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    }
+
+    toggleDarkMode() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('lesson-theme', 'light');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('lesson-theme', 'dark');
+        }
+    }
+
+    async initMonacoEditor() {
+        if (typeof monaco === 'undefined') return;
+
+        await new Promise((resolve) => {
+            require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.34.1/min/vs' } });
+            require(['vs/editor/editor.main'], () => resolve());
+        });
+
+        const editorContainer = document.getElementById('codeEditor');
+        if (editorContainer) {
+            this.editor = monaco.editor.create(editorContainer, {
+                value: `# Welcome to CodeLab\n# Start coding here...\n\ndef hello_world():\n    print("Hello, World!")\n\nhello_world()`,
+                language: 'python',
+                theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'vs-dark' : 'vs',
+                fontSize: 14,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                automaticLayout: true
+            });
+
+            // Language tabs
+            document.querySelectorAll('.code-tab').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    const language = e.target.dataset.language;
+                    this.switchLanguage(language);
+                    document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                });
+            });
+        }
+    }
+
+    switchLanguage(language) {
+        if (!this.editor) return;
+
+        const codeSamples = {
+            python: `# Python Example\ndef fibonacci(n):\n    if n <= 1:\n        return n\n    return fibonacci(n-1) + fibonacci(n-2)\n\nprint(fibonacci(10))`,
+            javascript: `// JavaScript Example\nfunction fibonacci(n) {\n    if (n <= 1) return n;\n    return fibonacci(n-1) + fibonacci(n-2);\n}\n\nconsole.log(fibonacci(10));`,
+            html: `<!-- HTML Example -->\n<!DOCTYPE html>\n<html>\n<head>\n    <title>Fibonacci</title>\n</head>\n<body>\n    <h1>Fibonacci Calculator</h1>\n    <div id="result"></div>\n    <script>\n        function fibonacci(n) {\n            if (n <= 1) return n;\n            return fibonacci(n-1) + fibonacci(n-2);\n        }\n        document.getElementById('result').textContent = fibonacci(10);\n    </script>\n</body>\n</html>`,
+            css: `/* CSS Example */\n.fibonacci-container {\n    max-width: 800px;\n    margin: 0 auto;\n    padding: 20px;\n    font-family: 'Arial', sans-serif;\n}\n\n.fibonacci-item {\n    padding: 10px;\n    margin: 5px 0;\n    background: linear-gradient(135deg, #4361ee, #3a0ca3);\n    color: white;\n    border-radius: 8px;\n    transition: transform 0.3s ease;\n}\n\n.fibonacci-item:hover {\n    transform: translateX(10px);\n}`
+        };
+
+        this.editor.setValue(codeSamples[language] || codeSamples.python);
+        monaco.editor.setModelLanguage(this.editor.getModel(), language);
+    }
+
+    async runCode() {
+        const code = this.editor?.getValue();
+        const language = this.editor?.getModel()?.getLanguageId();
+        const outputElement = document.getElementById('codeOutput');
+        
+        if (!outputElement) return;
+
+        outputElement.textContent = 'Running code...';
+        const runBtn = document.querySelector('.code-run-btn');
+        runBtn.classList.add('code-running');
+        runBtn.disabled = true;
+
+        // Simulate code execution (in a real app, this would be an API call)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const outputs = {
+            python: 'Hello, World!\n55',
+            javascript: '55',
+            html: '<!-- Page would render here -->',
+            css: '/* Styles would apply here */'
+        };
+
+        outputElement.textContent = outputs[language] || 'Execution complete!';
+        runBtn.classList.remove('code-running');
+        runBtn.disabled = false;
+    }
+
+    initNotes() {
+        this.notes = JSON.parse(localStorage.getItem(`lesson-notes-{{ lesson.id }}`)) || [];
+        this.renderNotes();
+    }
+
+    renderNotes() {
+        const container = document.getElementById('notesContainer');
+        if (!container) return;
+
+        container.innerHTML = '';
+        this.notes.forEach((note, index) => {
+            const noteElement = document.createElement('div');
+            noteElement.className = 'note-item';
+            noteElement.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>${note.text}</div>
+                    <button class="btn btn-sm btn-outline-danger" onclick="lessonViewer.deleteNote(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <small class="text-muted">${new Date(note.timestamp).toLocaleString()}</small>
+            `;
+            container.appendChild(noteElement);
+        });
+    }
+
+    saveNote() {
+        const noteInput = document.getElementById('newNote');
+        if (!noteInput || !noteInput.value.trim()) return;
+
+        this.notes.push({
+            text: noteInput.value.trim(),
+            timestamp: new Date().toISOString()
+        });
+
+        localStorage.setItem(`lesson-notes-{{ lesson.id }}`, JSON.stringify(this.notes));
+        noteInput.value = '';
+        this.renderNotes();
+    }
+
+    deleteNote(index) {
+        this.notes.splice(index, 1);
+        localStorage.setItem(`lesson-notes-{{ lesson.id }}`, JSON.stringify(this.notes));
+        this.renderNotes();
+    }
+
+    initQuiz() {
+        const questionElement = document.getElementById('quizQuestion');
+        const optionsElement = document.getElementById('quizOptions');
+        
+        if (!questionElement || !optionsElement) return;
+
+        // Sample quiz (in a real app, this would come from the backend)
+        const quiz = {
+            question: "What is the time complexity of binary search?",
+            options: [
+                { text: "O(1)", correct: false },
+                { text: "O(log n)", correct: true },
+                { text: "O(n)", correct: false },
+                { text: "O(n²)", correct: false }
+            ]
+        };
+
+        questionElement.textContent = quiz.question;
+        optionsElement.innerHTML = '';
+
+        quiz.options.forEach((option, index) => {
+            const optionElement = document.createElement('div');
+            optionElement.className = 'quiz-option';
+            optionElement.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="me-2">${String.fromCharCode(65 + index)}.</div>
+                    <div>${option.text}</div>
+                </div>
+            `;
+            optionElement.dataset.correct = option.correct;
+            optionElement.addEventListener('click', () => this.selectQuizOption(optionElement));
+            optionsElement.appendChild(optionElement);
+        });
+    }
+
+    selectQuizOption(selectedOption) {
+        document.querySelectorAll('.quiz-option').forEach(option => {
+            option.classList.remove('selected');
+        });
+        selectedOption.classList.add('selected');
+    }
+
+    submitQuiz() {
+        const selectedOption = document.querySelector('.quiz-option.selected');
+        if (!selectedOption) {
+            alert('Please select an answer');
+            return;
+        }
+
+        const isCorrect = selectedOption.dataset.correct === 'true';
+        if (isCorrect) {
+            selectedOption.classList.add('success-animation');
+            alert('Correct! 🎉');
+        } else {
+            selectedOption.style.borderColor = '#ef4444';
+            alert('Incorrect. Try again!');
+        }
+    }
+
+    initComments() {
+        this.comments = JSON.parse(localStorage.getItem(`lesson-comments-{{ lesson.id }}`)) || [];
+        this.renderComments();
+    }
+
+    renderComments() {
+        const container = document.getElementById('commentThread');
+        if (!container) return;
+
+        container.innerHTML = '';
+        this.comments.forEach(comment => {
+            const commentElement = document.createElement('div');
+            commentElement.className = 'comment-item';
+            commentElement.innerHTML = `
+                <div class="d-flex">
+                    <div class="comment-avatar me-3">
+                        ${comment.user.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>${comment.user}</strong>
+                            <small class="text-muted">${new Date(comment.timestamp).toLocaleString()}</small>
+                        </div>
+                        <p class="mb-0">${comment.text}</p>
+                    </div>
+                </div>
+            `;
+            container.appendChild(commentElement);
+        });
+    }
+
+    postComment() {
+        const commentInput = document.getElementById('newComment');
+        if (!commentInput || !commentInput.value.trim()) return;
+
+        this.comments.push({
+            user: 'You',
+            text: commentInput.value.trim(),
+            timestamp: new Date().toISOString()
+        });
+
+        localStorage.setItem(`lesson-comments-{{ lesson.id }}`, JSON.stringify(this.comments));
+        commentInput.value = '';
+        this.renderComments();
+    }
+
+    searchLessons(query) {
+        const searchTerm = query.toLowerCase();
+        this.lessonItems.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    }
+
+    toggleSidebar() {
+        this.lessonSidebar.classList.toggle('active');
+    }
+
+    setupResizeObserver() {
+        const resizeObserver = new ResizeObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.contentRect.width < 992) {
+                    this.lessonSidebar.classList.remove('active');
+                }
+            });
+        });
+
+        resizeObserver.observe(document.body);
+    }
+
+    setupVideoControls() {
+        const videoIframe = document.querySelector('iframe');
+        if (!videoIframe) return;
+
+        // Add keyboard shortcuts for video
+        document.addEventListener('keydown', (e) => {
+            if (e.target !== document.body) return;
+
+            switch(e.key) {
+                case ' ':
+                case 'k':
+                    // Space or K to play/pause
+                    e.preventDefault();
+                    break;
+                case 'm':
+                    // M to mute
+                    e.preventDefault();
+                    break;
+                case 'f':
+                    // F for fullscreen
+                    if (e.target === videoIframe) {
+                        videoIframe.requestFullscreen?.();
+                    }
+                    break;
+            }
+        });
+    }
+
+    async markComplete() {
+        if (!this.markCompleteBtn) return;
+
+        const originalText = this.markCompleteBtn.innerHTML;
+        this.markCompleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Marking...';
+        this.markCompleteBtn.disabled = true;
+
+        try {
+            const response = await fetch('{% url "courses:mark_lesson_complete" course_slug=course.slug lesson_slug=lesson.slug %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({})
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                this.markCompleteBtn.classList.remove('btn-success');
+                this.markCompleteBtn.classList.add('btn-secondary');
+                this.markCompleteBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Completed';
+                
+                // Update progress circle
+                const progressFill = document.querySelector('.progress-circle-fill');
+                const progressPercent = document.querySelector('.progress-percentage');
+                if (progressFill && progressPercent) {
+                    progressFill.style.setProperty('--progress', data.progress);
+                    progressPercent.textContent = `${data.progress}%`;
+                }
+
+                // Show success message
+                this.showNotification('Lesson marked as complete!', 'success');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            this.markCompleteBtn.innerHTML = originalText;
+            this.markCompleteBtn.disabled = false;
+            this.showNotification('An error occurred. Please try again.', 'danger');
+        }
+    }
+
+    trackTime() {
+        this.startTime = new Date();
+        
+        // Send periodic updates (every 30 seconds)
+        this.timeTracker = setInterval(() => {
+            const timeSpent = Math.round((new Date() - this.startTime) / 1000);
+            if (timeSpent > 30) {
+                // In a real app, send this to your analytics backend
+                console.log(`Time spent: ${timeSpent} seconds`);
+            }
+        }, 30000);
+    }
+
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + S to save note
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                this.saveNote();
+            }
+            
+            // Ctrl/Cmd + / to toggle sidebar
+            if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+                e.preventDefault();
+                this.toggleSidebar();
+            }
+            
+            // Ctrl/Cmd + D to toggle dark mode
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                this.toggleDarkMode();
+            }
+            
+            // Arrow keys for navigation
+            if (e.key === 'ArrowLeft' && !e.ctrlKey) {
+                const prevBtn = document.querySelector('.nav-btn.btn-outline-primary');
+                if (prevBtn) prevBtn.click();
+            }
+            
+            if (e.key === 'ArrowRight' && !e.ctrlKey) {
+                const nextBtn = document.querySelector('.nav-btn.btn-primary, .nav-btn.btn-success');
+                if (nextBtn) nextBtn.click();
+            }
+        });
+    }
+
+    showNotification(message, type = 'info') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alertDiv.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+}
+
+// Initialize the lesson viewer
+document.addEventListener('DOMContentLoaded', () => {
+    window.lessonViewer = new EnhancedLessonViewer();
+    
+    // Global functions
+    window.toggleFabMenu = () => {
+        const fabMenu = document.getElementById('fabMenu');
+        const fabIcon = document.getElementById('fabIcon');
+        fabMenu.style.display = fabMenu.style.display === 'none' ? 'block' : 'none';
+        fabIcon.className = fabMenu.style.display === 'none' ? 'fas fa-plus' : 'fas fa-times';
+    };
+    
+    window.toggleDarkMode = () => lessonViewer.toggleDarkMode();
+    window.printLesson = () => window.print();
+    window.bookmarkLesson = () => lessonViewer.showNotification('Lesson bookmarked!', 'success');
+    window.shareLesson = () => {
+        if (navigator.share) {
+            navigator.share({
+                title: document.title,
+                text: 'Check out this lesson on CodeLab',
+                url: window.location.href
+            });
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            lessonViewer.showNotification('Link copied to clipboard!', 'success');
+        }
+    };
+    
+    window.markAllComplete = () => {
+        if (confirm('Mark all lessons in this course as complete?')) {
+            lessonViewer.showNotification('Feature would mark all lessons as complete.', 'info');
+        }
+    };
+    
+    window.playbackSpeed = () => {
+        const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+        const currentBtn = document.querySelector('[onclick="playbackSpeed()"]');
+        const currentSpeed = parseFloat(currentBtn.textContent.match(/[\d.]+/)[0]);
+        const currentIndex = speeds.indexOf(currentSpeed);
+        const nextIndex = (currentIndex + 1) % speeds.length;
+        currentBtn.innerHTML = `<i class="fas fa-tachometer-alt me-1"></i>${speeds[nextIndex]}x`;
+    };
+    
+    window.downloadCode = () => {
+        const code = lessonViewer.editor?.getValue();
+        const blob = new Blob([code], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `codelab-lesson-{{ lesson.slug }}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+    
+    window.showReferences = () => {
+        const modal = new bootstrap.Modal(document.getElementById('referencesModal'));
+        modal.show();
+    };
+});
+
+// Clean up on page unload
+window.addEventListener('beforeunload', () => {
+    if (window.lessonViewer?.timeTracker) {
+        clearInterval(window.lessonViewer.timeTracker);
+    }
+});
+
+// Service worker for offline support
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(error => {
+            console.log('Service Worker registration failed:', error);
+        });
+    });
+}
+
+// Network status detection
+window.addEventListener('online', () => {
+    lessonViewer?.showNotification('Back online! Your changes will sync.', 'success');
+});
+
+window.addEventListener('offline', () => {
+    lessonViewer?.showNotification('You are offline. Changes will be saved locally.', 'warning');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,1736 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - CodeLab{% endblock %}
+
+{% block page_title %}Admin Dashboard{% endblock %}
+{% block page_subtitle %}System Overview & Management{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group flex-wrap">
+    <a href="{% url 'accounts:admin_user_list' %}" class="btn btn-outline-primary mb-2 mb-md-0">
+        <i class="fas fa-users me-2"></i>Manage Users
+    </a>
+    <a href="{% url 'accounts:course_add' %}" class="btn btn-primary mb-2 mb-md-0">
+        <i class="fas fa-plus me-2"></i>Add Course
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 1rem 0;
+    }
+    
+    .dashboard-content {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        width: 100%;
+    }
+    
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 1.5rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .dashboard-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: rotate(30deg);
+    }
+    
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+        padding: 0;
+        width: 100%;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        border: 1px solid #e2e8f0;
+        position: relative;
+        overflow: hidden;
+        min-height: 140px;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+    
+    .stat-users::before {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stat-courses::before {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    }
+    
+    .stat-enrollments::before {
+        background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+    }
+    
+    .stat-certificates::before {
+        background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .icon-users {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+    }
+    
+    .icon-courses {
+        background: rgba(72, 187, 120, 0.1);
+        color: #48bb78;
+    }
+    
+    .icon-enrollments {
+        background: rgba(237, 137, 54, 0.1);
+        color: #ed8936;
+    }
+    
+    .icon-certificates {
+        background: rgba(245, 101, 101, 0.1);
+        color: #f56565;
+    }
+    
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+        color: #2d3748;
+    }
+    
+    .stat-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.875rem;
+        color: #718096;
+        gap: 0.5rem;
+    }
+    
+    .stat-change {
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.125rem;
+        white-space: nowrap;
+    }
+    
+    .stat-change.positive {
+        color: #48bb78;
+    }
+    
+    .stat-change.negative {
+        color: #f56565;
+    }
+    
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+        border: 1px solid #e2e8f0;
+        width: 100%;
+    }
+    
+    .chart-header {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        gap: 0.5rem;
+    }
+    
+    .chart-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 0;
+    }
+    
+    .chart-wrapper {
+        position: relative;
+        height: 200px;
+        min-height: 200px;
+    }
+    
+    .enrollments-table {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+        width: 100%;
+    }
+    
+    .table-header {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e2e8f0;
+        gap: 0.5rem;
+    }
+    
+    .enrollments-table .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .enrollments-table table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        min-width: 600px;
+    }
+    
+    .enrollments-table th {
+        background: #f8f9fa;
+        padding: 0.75rem;
+        font-weight: 600;
+        color: #495057;
+        text-align: left;
+        border-bottom: 2px solid #dee2e6;
+        font-size: 0.875rem;
+    }
+    
+    .enrollments-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: background-color 0.2s ease;
+        font-size: 0.875rem;
+    }
+    
+    .enrollments-table tbody tr:hover td {
+        background: #f8f9ff;
+    }
+    
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 0.5rem;
+        flex-shrink: 0;
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+    }
+    
+    .user-details {
+        min-width: 0;
+        overflow: hidden;
+    }
+    
+    .user-name {
+        font-weight: 500;
+        color: #2d3748;
+        margin-bottom: 0.125rem;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .user-email {
+        font-size: 0.75rem;
+        color: #718096;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .status-badge {
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        white-space: nowrap;
+    }
+    
+    .status-active {
+        background: #c6f6d5;
+        color: #22543d;
+    }
+    
+    .system-stats {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+        border: 1px solid #e2e8f0;
+        width: 100%;
+    }
+    
+    .stat-item {
+        margin-bottom: 1.25rem;
+    }
+    
+    .stat-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        color: #718096;
+        flex-wrap: wrap;
+    }
+    
+    .progress-bar {
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 1s ease;
+    }
+    
+    .fill-success {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    }
+    
+    .fill-info {
+        background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    }
+    
+    .fill-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .fill-warning {
+        background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+    }
+    
+    .quick-actions {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+        border: 1px solid #e2e8f0;
+        width: 100%;
+    }
+    
+    .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        background: white;
+        color: #4a5568;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        text-align: center;
+        min-height: 100px;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .action-btn-primary {
+        border-color: #667eea;
+        color: #667eea;
+    }
+    
+    .action-btn-primary:hover {
+        background: #667eea;
+        color: white;
+    }
+    
+    .action-btn-success {
+        border-color: #48bb78;
+        color: #48bb78;
+    }
+    
+    .action-btn-success:hover {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .action-btn-info {
+        border-color: #4299e1;
+        color: #4299e1;
+    }
+    
+    .action-btn-info:hover {
+        background: #4299e1;
+        color: white;
+    }
+    
+    .action-btn-warning {
+        border-color: #ed8936;
+        color: #ed8936;
+    }
+    
+    .action-btn-warning:hover {
+        background: #ed8936;
+        color: white;
+    }
+    
+    .action-btn-danger {
+        border-color: #f56565;
+        color: #f56565;
+    }
+    
+    .action-btn-danger:hover {
+        background: #f56565;
+        color: white;
+    }
+    
+    .action-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .system-alerts {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+        width: 100%;
+    }
+    
+    .alert-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        background: #f56565;
+        color: white;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+    
+    .alert-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        border-radius: 8px;
+        background: #fff5f5;
+        margin-bottom: 0.75rem;
+        border-left: 4px solid #f56565;
+    }
+    
+    .alert-icon {
+        font-size: 1rem;
+        color: #f56565;
+        margin-top: 0.125rem;
+        flex-shrink: 0;
+    }
+    
+    .alert-content h6 {
+        margin-bottom: 0.125rem;
+        color: #742a2a;
+        font-size: 0.875rem;
+    }
+    
+    .alert-content p {
+        margin: 0;
+        font-size: 0.75rem;
+        color: #9b2c2c;
+    }
+    
+    .recent-activity {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        margin-top: 1.5rem;
+        border: 1px solid #e2e8f0;
+        width: 100%;
+    }
+    
+    .timeline {
+        position: relative;
+        padding-left: 24px;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 12px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.25rem;
+    }
+    
+    .timeline-marker {
+        position: absolute;
+        left: -24px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 0 0 2px #e9ecef;
+        z-index: 1;
+    }
+    
+    .timeline-marker-success {
+        background: #48bb78;
+        box-shadow: 0 0 0 2px rgba(72, 187, 120, 0.2);
+    }
+    
+    .timeline-marker-warning {
+        background: #ed8936;
+        box-shadow: 0 0 0 2px rgba(237, 137, 54, 0.2);
+    }
+    
+    .timeline-marker-info {
+        background: #4299e1;
+        box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+    }
+    
+    .timeline-marker-danger {
+        background: #f56565;
+        box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.2);
+    }
+    
+    .timeline-content {
+        padding: 0.75rem;
+        background: white;
+        border-radius: 6px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .timeline-content-header {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+        gap: 0.25rem;
+    }
+    
+    .timeline-user {
+        font-weight: 600;
+        color: #2d3748;
+        font-size: 0.875rem;
+    }
+    
+    .timeline-action {
+        color: #48bb78;
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+    
+    .timeline-details {
+        color: #718096;
+        margin-bottom: 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .timeline-time {
+        font-size: 0.7rem;
+        color: #a0aec0;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: #a0aec0;
+    }
+    
+    .empty-state-icon {
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
+        opacity: 0.5;
+    }
+    
+    /* Mobile-specific optimizations */
+    .mobile-stack {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .mobile-hide {
+        display: none;
+    }
+    
+    .mobile-show {
+        display: block;
+    }
+    
+    /* Touch-friendly adjustments */
+    button, 
+    .btn,
+    .action-btn,
+    .stat-card {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .dashboard-content {
+            background: #1a202c;
+        }
+        
+        .stat-card {
+            background: #2d3748;
+            border-color: #4a5568;
+        }
+        
+        .stat-value {
+            color: #e2e8f0;
+        }
+        
+        .chart-container,
+        .enrollments-table,
+        .system-stats,
+        .quick-actions,
+        .system-alerts,
+        .recent-activity {
+            background: #2d3748;
+            border-color: #4a5568;
+        }
+        
+        .chart-title {
+            color: #e2e8f0;
+        }
+        
+        .enrollments-table th {
+            background: #2d3748;
+            color: #e2e8f0;
+            border-bottom-color: #4a5568;
+        }
+        
+        .enrollments-table td {
+            background: #1a202c;
+            color: #e2e8f0;
+            border-bottom-color: #4a5568;
+        }
+        
+        .enrollments-table tbody tr:hover td {
+            background: #2d3748;
+        }
+        
+        .user-name {
+            color: #e2e8f0;
+        }
+        
+        .user-email {
+            color: #cbd5e0;
+        }
+        
+        .action-btn {
+            background: #2d3748;
+            border-color: #4a5568;
+            color: #e2e8f0;
+        }
+        
+        .alert-item {
+            background: #2d3748;
+            border-color: #f56565;
+        }
+        
+        .alert-content h6 {
+            color: #feb2b2;
+        }
+        
+        .alert-content p {
+            color: #fc8181;
+        }
+        
+        .timeline-content {
+            background: #2d3748;
+            border-color: #4a5568;
+        }
+        
+        .timeline-user {
+            color: #e2e8f0;
+        }
+        
+        .timeline-details {
+            color: #cbd5e0;
+        }
+        
+        .progress-bar {
+            background: #4a5568;
+        }
+    }
+    
+    /* Tablet: 768px and up */
+    @media (min-width: 768px) {
+        .dashboard-container {
+            padding: 1.5rem 0;
+        }
+        
+        .dashboard-header {
+            padding: 2rem;
+        }
+        
+        .stats-cards {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            padding: 1.5rem;
+        }
+        
+        .dashboard-grid {
+            padding: 2rem;
+            gap: 2rem;
+        }
+        
+        .chart-container {
+            padding: 1.5rem;
+        }
+        
+        .chart-header {
+            flex-direction: row;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .chart-wrapper {
+            height: 250px;
+        }
+        
+        .table-header {
+            flex-direction: row;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .timeline-content-header {
+            flex-direction: row;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .actions-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .mobile-hide {
+            display: block;
+        }
+        
+        .mobile-show {
+            display: none;
+        }
+    }
+    
+    /* Desktop: 992px and up */
+    @media (min-width: 992px) {
+        .dashboard-grid {
+            grid-template-columns: 2fr 1fr;
+        }
+        
+        .stats-cards {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        
+        .actions-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    /* Large Desktop: 1200px and up */
+    @media (min-width: 1200px) {
+        .stats-cards {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+        
+        .stat-card {
+            min-height: 160px;
+        }
+        
+        .chart-wrapper {
+            height: 300px;
+        }
+        
+        .actions-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    /* Small Mobile: 576px and below */
+    @media (max-width: 576px) {
+        .dashboard-header {
+            padding: 1rem;
+        }
+        
+        .stat-card {
+            padding: 1rem;
+            min-height: 120px;
+        }
+        
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+        }
+        
+        .dashboard-grid {
+            padding: 1rem;
+            gap: 1rem;
+        }
+        
+        .chart-container,
+        .enrollments-table,
+        .system-stats,
+        .quick-actions,
+        .system-alerts,
+        .recent-activity {
+            padding: 1rem;
+        }
+        
+        .chart-wrapper {
+            height: 180px;
+        }
+        
+        .actions-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .action-btn {
+            padding: 0.75rem;
+            min-height: 90px;
+        }
+        
+        .action-icon {
+            font-size: 1.25rem;
+        }
+        
+        .btn-group {
+            width: 100%;
+        }
+        
+        .btn-group .btn {
+            flex: 1;
+            text-align: center;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+        }
+    }
+    
+    /* Extra Small Mobile: 375px and below */
+    @media (max-width: 375px) {
+        .stats-cards {
+            grid-template-columns: 1fr;
+        }
+        
+        .actions-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stat-card {
+            min-height: 110px;
+        }
+        
+        .chart-wrapper {
+            height: 160px;
+        }
+        
+        .user-name,
+        .user-email {
+            font-size: 0.75rem;
+        }
+        
+        .enrollments-table th,
+        .enrollments-table td {
+            padding: 0.5rem;
+            font-size: 0.75rem;
+        }
+    }
+    
+    /* Landscape mode optimization */
+    @media (max-height: 500px) and (orientation: landscape) {
+        .dashboard-container {
+            min-height: auto;
+        }
+        
+        .stat-card {
+            min-height: 100px;
+        }
+        
+        .chart-wrapper {
+            height: 150px;
+        }
+    }
+    
+    /* High DPI screens */
+    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+        .stat-card,
+        .chart-container,
+        .enrollments-table,
+        .system-stats,
+        .quick-actions,
+        .system-alerts,
+        .recent-activity {
+            border-width: 0.5px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="container-fluid px-3 px-md-4">
+        <div class="dashboard-content">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 mb-md-4 gap-3">
+                    <div>
+                        <h1 class="h4 h3-md mb-2">Admin Dashboard</h1>
+                        <p class="mb-0 opacity-75 small">System Overview & Management</p>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 w-100 w-md-auto">
+                        <a href="{% url 'accounts:admin_user_list' %}" class="btn btn-outline-light flex-grow-1 flex-md-grow-0">
+                            <i class="fas fa-users me-1 me-md-2"></i>
+                            <span class="d-none d-md-inline">Manage Users</span>
+                            <span class="d-md-none">Users</span>
+                        </a>
+                        <a href="{% url 'accounts:course_add' %}" class="btn btn-light flex-grow-1 flex-md-grow-0">
+                            <i class="fas fa-plus me-1 me-md-2"></i>
+                            <span class="d-none d-md-inline">Add Course</span>
+                            <span class="d-md-none">Course</span>
+                        </a>
+                        <button class="btn btn-outline-light d-md-none" id="mobileMenuBtn">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Statistics Cards -->
+                <div class="stats-cards">
+                    <div class="stat-card stat-users">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-icon icon-users">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-value">{{ total_users }}</div>
+                                <div class="stat-label">
+                                    <span>Total Users</span>
+                                </div>
+                            </div>
+                            <span class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                {{ new_users_today }} today
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-courses">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-icon icon-courses">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                                <div class="stat-value">{{ active_courses }}</div>
+                                <div class="stat-label">
+                                    <span>Active Courses</span>
+                                </div>
+                            </div>
+                            <span class="text-muted small">{{ draft_courses }} drafts</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-enrollments">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-icon icon-enrollments">
+                                    <i class="fas fa-user-graduate"></i>
+                                </div>
+                                <div class="stat-value">{{ total_enrollments }}</div>
+                                <div class="stat-label">
+                                    <span>Enrollments</span>
+                                </div>
+                            </div>
+                            <span class="text-muted small">{{ avg_course_completion|floatformat:0 }}% avg</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-certificates">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-icon icon-certificates">
+                                    <i class="fas fa-certificate"></i>
+                                </div>
+                                <div class="stat-value">{{ total_certificates }}</div>
+                                <div class="stat-label">
+                                    <span>Certificates</span>
+                                </div>
+                            </div>
+                            <span class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                {{ new_certificates_today }} today
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Dashboard Grid -->
+            <div class="dashboard-grid">
+                <!-- Left Column -->
+                <div>
+                    <!-- Charts -->
+                    <div class="row g-3">
+                        <div class="col-12 col-lg-6">
+                            <div class="chart-container">
+                                <div class="chart-header">
+                                    <h5 class="chart-title">Certificates per Course</h5>
+                                    <select class="form-select form-select-sm w-auto d-none d-md-block">
+                                        <option>Last 7 days</option>
+                                        <option>Last 30 days</option>
+                                        <option>Last 90 days</option>
+                                    </select>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="certsChart"></canvas>
+                                </div>
+                                <div class="mt-2 d-md-none">
+                                    <select class="form-select form-select-sm">
+                                        <option>Last 7 days</option>
+                                        <option>Last 30 days</option>
+                                        <option>Last 90 days</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <div class="chart-container">
+                                <div class="chart-header">
+                                    <h5 class="chart-title">Exam Performance</h5>
+                                    <select class="form-select form-select-sm w-auto d-none d-md-block">
+                                        <option>This Month</option>
+                                        <option>Last Month</option>
+                                        <option>This Quarter</option>
+                                    </select>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="examsChart"></canvas>
+                                </div>
+                                <div class="mt-2 d-md-none">
+                                    <select class="form-select form-select-sm">
+                                        <option>This Month</option>
+                                        <option>Last Month</option>
+                                        <option>This Quarter</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Enrollments -->
+                    <div class="enrollments-table">
+                        <div class="table-header">
+                            <h5 class="mb-0">Recent Enrollments</h5>
+                            <a href="#" class="btn btn-sm btn-outline-primary d-none d-md-inline-block">View All</a>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th class="d-none d-md-table-cell">Course</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for enrollment in recent_enrollments %}
+                                    <tr>
+                                        <td>
+                                            <div class="user-info">
+                                                {% if enrollment.student.profile.profile_picture %}
+                                                <img src="{{ enrollment.student.profile.profile_picture.url }}" 
+                                                     class="user-avatar"
+                                                     alt="{{ enrollment.student.username }}"
+                                                     loading="lazy">
+                                                {% else %}
+                                                <div class="user-avatar bg-light text-dark d-flex align-items-center justify-content-center">
+                                                    {{ enrollment.student.username|first|upper }}
+                                                </div>
+                                                {% endif %}
+                                                <div class="user-details">
+                                                    <div class="user-name">
+                                                        {{ enrollment.student.get_full_name|default:enrollment.student.username|truncatechars:15 }}
+                                                    </div>
+                                                    <div class="user-email d-none d-md-block">
+                                                        {{ enrollment.student.email|truncatechars:20 }}
+                                                    </div>
+                                                    <div class="user-email d-md-none small">
+                                                        {{ enrollment.course.title|truncatechars:15 }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="d-none d-md-table-cell">{{ enrollment.course.title|truncatechars:25 }}</td>
+                                        <td>
+                                            <span class="d-none d-md-inline">{{ enrollment.enrolled_at|date:"M d, Y" }}</span>
+                                            <span class="d-md-none">{{ enrollment.enrolled_at|date:"m/d" }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge status-active">
+                                                <i class="fas fa-circle fa-xs"></i>
+                                                <span class="d-none d-md-inline">Active</span>
+                                                <span class="d-md-none">A</span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="empty-state">
+                                            <div class="empty-state-icon">
+                                                <i class="fas fa-user-graduate"></i>
+                                            </div>
+                                            <p class="mb-0">No recent enrollments</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3 d-md-none">
+                            <a href="#" class="btn btn-sm btn-outline-primary w-100">View All Enrollments</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column -->
+                <div>
+                    <!-- System Statistics -->
+                    <div class="system-stats">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">System Statistics</h5>
+                            <span class="badge bg-primary">Live</span>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <span>Completion Rate</span>
+                                <span>{{ completion_rate }}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill fill-success" style="width: {{ completion_rate }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <span>Exam Score</span>
+                                <span>{{ avg_exam_score }}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill fill-info" style="width: {{ avg_exam_score }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <span>Pass Rate</span>
+                                <span>{{ pass_rate }}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill fill-primary" style="width: {{ pass_rate }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <span>Engagement</span>
+                                <span>{{ engagement_rate }}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill fill-warning" style="width: {{ engagement_rate }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <h5 class="mb-3">Quick Actions</h5>
+                        <div class="actions-grid">
+                            <a href="{% url 'accounts:admin_user_add' %}" class="action-btn action-btn-primary">
+                                <div class="action-icon">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <span class="small">Add User</span>
+                            </a>
+                            
+                            <a href="{% url 'accounts:course_add' %}" class="action-btn action-btn-success">
+                                <div class="action-icon">
+                                    <i class="fas fa-plus-circle"></i>
+                                </div>
+                                <span class="small">Add Course</span>
+                            </a>
+                            
+                            <a href="{% url 'accounts:admin_lesson_add_quick' %}" class="action-btn action-btn-info">
+                                <div class="action-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <span class="small">Add Lesson</span>
+                            </a>
+                            
+                            <a href="{% url 'accounts:admin_assignment_add_quick' %}" class="action-btn action-btn-warning">
+                                <div class="action-icon">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <span class="small">Assignment</span>
+                            </a>
+                            
+                            <a href="{% url 'accounts:admin_exam_add_quick' %}" class="action-btn action-btn-danger">
+                                <div class="action-icon">
+                                    <i class="fas fa-file-signature"></i>
+                                </div>
+                                <span class="small">Add Exam</span>
+                            </a>
+                            
+                            <a href="{% url 'accounts:admin_certificate_list' %}" class="action-btn action-btn-primary">
+                                <div class="action-icon">
+                                    <i class="fas fa-certificate"></i>
+                                </div>
+                                <span class="small">Certificates</span>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- System Alerts -->
+                    {% if system_alerts %}
+                    <div class="system-alerts">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">System Alerts</h5>
+                            <span class="alert-count">{{ system_alerts|length }}</span>
+                        </div>
+                        
+                        {% for alert in system_alerts %}
+                        <div class="alert-item">
+                            <div class="alert-icon">
+                                <i class="fas fa-{{ alert.icon }}"></i>
+                            </div>
+                            <div class="alert-content">
+                                <h6>{{ alert.title }}</h6>
+                                <p>{{ alert.message }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="recent-activity">
+                <div class="table-header">
+                    <h5 class="mb-0">Recent Activity</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary d-none d-md-inline-block">View All</a>
+                </div>
+                
+                <div class="timeline">
+                    {% for activity in recent_activity %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker timeline-marker-{{ activity.action_color }}"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-content-header">
+                                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-1">
+                                    <span class="timeline-user">{{ activity.user.get_full_name|default:activity.user.username|truncatechars:15 }}</span>
+                                    <span class="timeline-action text-{{ activity.action_color }}">{{ activity.action }}</span>
+                                </div>
+                                <small class="timeline-time">{{ activity.timestamp|timesince }} ago</small>
+                            </div>
+                            <div class="timeline-details">
+                                {{ activity.details|truncatechars:60 }}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <p class="mb-0">No recent activity</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-3 d-md-none">
+                    <a href="#" class="btn btn-sm btn-outline-primary w-100">View All Activity</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Menu Modal -->
+<div class="modal fade" id="mobileMenuModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-bottom">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Actions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group">
+                    <a href="{% url 'accounts:admin_user_add' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-plus me-2"></i>Add User
+                    </a>
+                    <a href="{% url 'accounts:course_add' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-plus-circle me-2"></i>Add Course
+                    </a>
+                    <a href="{% url 'accounts:admin_lesson_add_quick' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-alt me-2"></i>Add Lesson
+                    </a>
+                    <a href="{% url 'accounts:admin_assignment_add_quick' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tasks me-2"></i>Add Assignment
+                    </a>
+                    <a href="{% url 'accounts:admin_exam_add_quick' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-signature me-2"></i>Add Exam
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mobile menu functionality
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenuModal = new bootstrap.Modal(document.getElementById('mobileMenuModal'));
+    
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', function() {
+            mobileMenuModal.show();
+        });
+    }
+    
+    // Initialize certificates chart
+    const certsCtx = document.getElementById('certsChart').getContext('2d');
+    const certsChart = new Chart(certsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ certs_labels|safe }},
+            datasets: [{
+                data: {{ certs_data|safe }},
+                backgroundColor: [
+                    'rgba(102, 126, 234, 0.8)',
+                    'rgba(76, 201, 240, 0.8)',
+                    'rgba(248, 150, 30, 0.8)',
+                    'rgba(247, 37, 133, 0.8)',
+                    'rgba(111, 66, 193, 0.8)'
+                ],
+                borderWidth: 1,
+                borderColor: 'white'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        font: {
+                            size: window.innerWidth < 768 ? 9 : 11
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            cutout: window.innerWidth < 768 ? '55%' : '65%',
+            animation: {
+                animateScale: true,
+                animateRotate: true
+            }
+        }
+    });
+    
+    // Initialize exams chart
+    const examsCtx = document.getElementById('examsChart').getContext('2d');
+    const examsChart = new Chart(examsCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ exam_labels|safe }},
+            datasets: [
+                {
+                    label: 'Passed',
+                    data: {{ passed_data|safe }},
+                    backgroundColor: 'rgba(72, 187, 120, 0.8)',
+                    borderRadius: 4,
+                    borderSkipped: false
+                },
+                {
+                    label: 'Failed',
+                    data: {{ failed_data|safe }},
+                    backgroundColor: 'rgba(245, 101, 101, 0.8)',
+                    borderRadius: 4,
+                    borderSkipped: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: window.innerWidth < 768 ? 9 : 11
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        font: {
+                            size: window.innerWidth < 768 ? 9 : 11
+                        }
+                    },
+                    grid: {
+                        borderDash: [2, 2]
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: window.innerWidth < 768 ? 9 : 11
+                        },
+                        usePointStyle: true,
+                        padding: 10
+                    }
+                }
+            },
+            animation: {
+                duration: 800,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+    
+    // Handle window resize for charts
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+            certsChart.resize();
+            examsChart.resize();
+        }, 250);
+    });
+    
+    // Touch swipe support for mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    document.addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+    
+    document.addEventListener('touchend', function(e) {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+    
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        const swipeDistance = touchEndX - touchStartX;
+        
+        if (Math.abs(swipeDistance) > swipeThreshold) {
+            if (swipeDistance > 0) {
+                // Right swipe - show previous stats if applicable
+                console.log('Right swipe detected');
+            } else {
+                // Left swipe - show next stats if applicable
+                console.log('Left swipe detected');
+            }
+        }
+    }
+    
+    // Real-time updates
+    function updateDashboardData() {
+        fetch('{% url "accounts:admin_dashboard" %}?partial=true')
+            .then(response => response.json())
+            .then(data => {
+                // Update stats cards with animation
+                updateStatCard('.stat-users .stat-value', data.total_users);
+                updateStatCard('.stat-courses .stat-value', data.active_courses);
+                updateStatCard('.stat-enrollments .stat-value', data.total_enrollments);
+                updateStatCard('.stat-certificates .stat-value', data.total_certificates);
+                
+                // Update charts
+                if (data.certs_data) {
+                    certsChart.data.datasets[0].data = data.certs_data;
+                    certsChart.update('none');
+                }
+                
+                if (data.passed_data && data.failed_data) {
+                    examsChart.data.datasets[0].data = data.passed_data;
+                    examsChart.data.datasets[1].data = data.failed_data;
+                    examsChart.update('none');
+                }
+            })
+            .catch(error => console.error('Error updating dashboard:', error));
+    }
+    
+    // Animate stat card value updates
+    function updateStatCard(selector, newValue) {
+        const element = document.querySelector(selector);
+        if (!element) return;
+        
+        const currentValue = parseInt(element.textContent.replace(/,/g, ''));
+        if (currentValue === newValue) return;
+        
+        animateValue(element, currentValue, newValue, 500);
+    }
+    
+    function animateValue(element, start, end, duration) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const value = Math.floor(progress * (end - start) + start);
+            element.textContent = value.toLocaleString();
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+    
+    // Add pull-to-refresh for mobile
+    let touchStartY = 0;
+    let isRefreshing = false;
+    
+    document.addEventListener('touchstart', function(e) {
+        if (window.scrollY === 0) {
+            touchStartY = e.touches[0].clientY;
+        }
+    });
+    
+    document.addEventListener('touchmove', function(e) {
+        if (!touchStartY) return;
+        
+        const touchY = e.touches[0].clientY;
+        const pullDistance = touchY - touchStartY;
+        
+        if (pullDistance > 100 && !isRefreshing) {
+            isRefreshing = true;
+            showRefreshIndicator();
+            updateDashboardData();
+            setTimeout(() => {
+                hideRefreshIndicator();
+                isRefreshing = false;
+            }, 1000);
+        }
+    });
+    
+    function showRefreshIndicator() {
+        let indicator = document.getElementById('refresh-indicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.id = 'refresh-indicator';
+            indicator.className = 'refresh-indicator';
+            indicator.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Refreshing...';
+            document.querySelector('.dashboard-header').prepend(indicator);
+        }
+        indicator.style.display = 'block';
+    }
+    
+    function hideRefreshIndicator() {
+        const indicator = document.getElementById('refresh-indicator');
+        if (indicator) {
+            indicator.style.display = 'none';
+        }
+    }
+    
+    // Add CSS for refresh indicator
+    const refreshStyle = document.createElement('style');
+    refreshStyle.textContent = `
+        .refresh-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-align: center;
+            padding: 10px;
+            display: none;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .stat-card {
+            animation: fadeInUp 0.3s ease-out;
+            animation-fill-mode: both;
+        }
+        
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+        
+        @media (max-width: 768px) {
+            .chart-container {
+                animation: fadeInUp 0.4s ease-out;
+                animation-fill-mode: both;
+            }
+            
+            .chart-container:nth-child(1) { animation-delay: 0.2s; }
+            .chart-container:nth-child(2) { animation-delay: 0.3s; }
+        }
+        
+        /* Improve touch feedback */
+        .stat-card:active {
+            transform: scale(0.98);
+        }
+        
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Prevent text selection on mobile */
+        .stat-card,
+        .action-btn {
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        /* Smooth scrolling */
+        .dashboard-container {
+            scroll-behavior: smooth;
+        }
+    `;
+    document.head.appendChild(refreshStyle);
+    
+    // Update data every 60 seconds
+    setInterval(updateDashboardData, 60000);
+    
+    // Handle device orientation changes
+    window.addEventListener('orientationchange', function() {
+        setTimeout(function() {
+            certsChart.resize();
+            examsChart.resize();
+        }, 300);
+    });
+});
+</script>
+{% endblock %}

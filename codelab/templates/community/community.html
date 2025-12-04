@@ -1,0 +1,1172 @@
+{% extends 'base.html' %}
+
+{% block title %}Developer Community - CodeLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --terminal-bg: #0d1117;
+        --editor-bg: #161b22;
+        --border-color: #30363d;
+        --text-light: #c9d1d9;
+        --text-muted: #8b949e;
+        --primary-blue: #58a6ff;
+        --success-green: #3fb950;
+        --warning-orange: #d29922;
+        --danger-red: #f85149;
+        --accent-purple: #bc8cff;
+        --code-yellow: #e3b341;
+    }
+
+    body {
+        background: var(--terminal-bg);
+        color: var(--text-light);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    /* Terminal Header */
+    .terminal-header {
+        background: var(--editor-bg);
+        border-bottom: 1px solid var(--border-color);
+        border-radius: 8px 8px 0 0;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'Courier New', monospace;
+    }
+
+    .terminal-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+
+    .dot-red { background: var(--danger-red); }
+    .dot-yellow { background: var(--warning-orange); }
+    .dot-green { background: var(--success-green); }
+
+    .terminal-title {
+        margin-left: 1rem;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+
+    /* Code Card */
+    .code-card {
+        background: var(--editor-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 0 0 8px 8px;
+        font-family: 'Courier New', monospace;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .code-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, var(--primary-blue), var(--accent-purple));
+    }
+
+    .card-header {
+        background: rgba(22, 27, 34, 0.8);
+        border-bottom: 1px solid var(--border-color);
+        backdrop-filter: blur(10px);
+    }
+
+    /* Code Lines */
+    .code-line {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border-color);
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        line-height: 1.6;
+        display: flex;
+        gap: 1rem;
+    }
+
+    .code-line:hover {
+        background: rgba(88, 166, 255, 0.05);
+    }
+
+    .line-number {
+        color: var(--text-muted);
+        min-width: 40px;
+        text-align: right;
+        user-select: none;
+    }
+
+    .line-content {
+        flex: 1;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .code-keyword { color: var(--primary-blue); }
+    .code-string { color: var(--success-green); }
+    .code-comment { color: var(--text-muted); }
+    .code-function { color: var(--accent-purple); }
+    .code-number { color: var(--code-yellow); }
+
+    /* Chip Badges */
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        font-family: 'Courier New', monospace;
+        border: 1px solid transparent;
+        background: rgba(88, 166, 255, 0.1);
+        color: var(--primary-blue);
+    }
+
+    .chip-success {
+        background: rgba(63, 185, 80, 0.1);
+        color: var(--success-green);
+        border-color: rgba(63, 185, 80, 0.3);
+    }
+
+    .chip-warning {
+        background: rgba(210, 153, 34, 0.1);
+        color: var(--warning-orange);
+        border-color: rgba(210, 153, 34, 0.3);
+    }
+
+    .chip-danger {
+        background: rgba(248, 81, 73, 0.1);
+        color: var(--danger-red);
+        border-color: rgba(248, 81, 73, 0.3);
+    }
+
+    /* Button Styles */
+    .btn-dev {
+        background: rgba(88, 166, 255, 0.1);
+        color: var(--primary-blue);
+        border: 1px solid var(--primary-blue);
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    .btn-dev:hover {
+        background: var(--primary-blue);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(88, 166, 255, 0.2);
+    }
+
+    .btn-dev-outline {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-light);
+    }
+
+    .btn-dev-outline:hover {
+        background: var(--border-color);
+        border-color: var(--text-light);
+    }
+
+    /* Developer Avatar */
+    .dev-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, var(--primary-blue), var(--accent-purple));
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1rem;
+        font-family: 'Courier New', monospace;
+    }
+
+    /* Stats Panel */
+    .stats-panel {
+        background: var(--editor-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stats-panel::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--primary-blue), var(--accent-purple));
+    }
+
+    .stat-value {
+        font-family: 'Courier New', monospace;
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--primary-blue), var(--accent-purple));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 0.5rem;
+    }
+
+    /* Tags */
+    .tag-cloud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tag {
+        background: rgba(88, 166, 255, 0.1);
+        color: var(--primary-blue);
+        padding: 0.375rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        border: 1px solid rgba(88, 166, 255, 0.2);
+        font-family: 'Courier New', monospace;
+        transition: all 0.2s ease;
+    }
+
+    .tag:hover {
+        background: rgba(88, 166, 255, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .tag-popular {
+        background: rgba(210, 153, 34, 0.1);
+        color: var(--warning-orange);
+        border-color: rgba(210, 153, 34, 0.3);
+    }
+
+    /* Search Box */
+    .search-box {
+        background: var(--editor-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .search-input {
+        background: transparent;
+        border: none;
+        color: var(--text-light);
+        flex: 1;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        outline: none;
+    }
+
+    .search-input::placeholder {
+        color: var(--text-muted);
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+        position: fixed;
+        bottom: 80px;
+        right: 20px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .action-btn {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--primary-blue);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        box-shadow: 0 8px 25px rgba(88, 166, 255, 0.4);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .action-btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+
+    .action-btn:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .action-btn:hover {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 12px 30px rgba(88, 166, 255, 0.6);
+    }
+
+    .action-btn-secondary {
+        background: var(--success-green);
+        box-shadow: 0 8px 25px rgba(63, 185, 80, 0.4);
+    }
+
+    .action-tooltip {
+        position: absolute;
+        right: 70px;
+        background: var(--editor-bg);
+        color: var(--text-light);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        opacity: 0;
+        transform: translateX(10px);
+        transition: all 0.3s ease;
+        pointer-events: none;
+        border: 1px solid var(--border-color);
+        font-family: 'Courier New', monospace;
+    }
+
+    .action-btn:hover .action-tooltip {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    /* Status Indicators */
+    .status-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+
+    .status-online {
+        background: var(--success-green);
+        box-shadow: 0 0 8px rgba(63, 185, 80, 0.5);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    /* Leaderboard */
+    .leaderboard-item {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .leaderboard-item:hover {
+        background: rgba(88, 166, 255, 0.05);
+    }
+
+    .rank-badge {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--border-color);
+        color: var(--text-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        font-weight: 600;
+        font-family: 'Courier New', monospace;
+    }
+
+    .rank-badge.gold {
+        background: linear-gradient(135deg, var(--warning-orange), #b08800);
+    }
+
+    .rank-badge.silver {
+        background: linear-gradient(135deg, var(--text-muted), #6c757d);
+    }
+
+    .rank-badge.bronze {
+        background: linear-gradient(135deg, #cd7f32, #a0522d);
+    }
+
+    /* Code Block */
+    .code-block {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 1rem;
+        margin: 1rem 0;
+        overflow-x: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    .code-block-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .code-language {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    /* Loading Animation */
+    @keyframes loading {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .loading-shimmer {
+        background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(88, 166, 255, 0.1) 50%,
+            transparent 100%
+        );
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .terminal-header {
+            padding: 0.5rem;
+        }
+
+        .code-line {
+            padding: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .line-number {
+            min-width: 30px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+        }
+
+        .quick-actions {
+            bottom: 70px;
+            right: 15px;
+        }
+
+        .action-btn {
+            width: 50px;
+            height: 50px;
+            font-size: 1.125rem;
+        }
+
+        .action-tooltip {
+            display: none;
+        }
+
+        .dev-avatar {
+            width: 32px;
+            height: 32px;
+            font-size: 0.875rem;
+        }
+
+        .chip {
+            padding: 0.125rem 0.5rem;
+            font-size: 0.675rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .terminal-title {
+            display: none;
+        }
+
+        .code-card {
+            margin: 0 -15px;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+        }
+
+        .stats-panel {
+            padding: 1rem;
+        }
+
+        .leaderboard-item {
+            padding: 0.75rem;
+        }
+
+        .tag {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.675rem;
+        }
+    }
+
+    /* Dark mode optimizations */
+    @media (prefers-color-scheme: dark) {
+        .code-block {
+            background: rgba(0, 0, 0, 0.5);
+        }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+        .action-btn,
+        .leaderboard-item,
+        .code-line {
+            transition: none;
+        }
+
+        .action-btn:hover {
+            transform: none;
+        }
+
+        .status-online {
+            animation: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}<i class="fas fa-code me-2"></i>Developer Community{% endblock %}
+{% block page_subtitle %}Connect, collaborate, and code with fellow developers{% endblock %}
+
+{% block page_actions %}
+<button class="btn-dev" onclick="createNewDiscussion()">
+    <i class="fas fa-terminal me-2"></i>New Discussion
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Terminal Welcome -->
+    <div class="mb-4">
+        <div class="terminal-header">
+            <div class="terminal-dot dot-red"></div>
+            <div class="terminal-dot dot-yellow"></div>
+            <div class="terminal-dot dot-green"></div>
+            <span class="terminal-title">community.terminal</span>
+            <span class="ms-auto text-muted small">
+                <span class="status-indicator status-online"></span>
+                {{ online_users|default:"0" }} developers online
+            </span>
+        </div>
+        <div class="code-card">
+            <div class="code-line">
+                <span class="line-number">1</span>
+                <span class="line-content code-comment">// Welcome to CodeLab Developer Community</span>
+            </div>
+            <div class="code-line">
+                <span class="line-number">2</span>
+                <span class="line-content">
+                    <span class="code-keyword">const</span> community = <span class="code-function">new</span> DeveloperCommunity({
+                </span>
+            </div>
+            <div class="code-line">
+                <span class="line-number">3</span>
+                <span class="line-content">&nbsp;&nbsp;members: <span class="code-number">{{ active_users|default:"0" }}</span>,</span>
+            </div>
+            <div class="code-line">
+                <span class="line-number">4</span>
+                <span class="line-content">&nbsp;&nbsp;discussions: <span class="code-number">{{ total_discussions|default:"0" }}</span>,</span>
+            </div>
+            <div class="code-line">
+                <span class="line-number">5</span>
+                <span class="line-content">&nbsp;&nbsp;online: <span class="code-number">{{ online_users|default:"0" }}</span></span>
+            </div>
+            <div class="code-line">
+                <span class="line-number">6</span>
+                <span class="line-content">});</span>
+            </div>
+            <div class="code-line">
+                <span class="line-number">7</span>
+                <span class="line-content code-comment">// Ready to connect and code!</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8 mb-4">
+            <!-- Active Discussions -->
+            <div class="code-card mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-terminal me-2"></i>Active Discussions</h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-dev-outline btn-sm" onclick="filterDiscussions('recent')">
+                                <i class="fas fa-clock me-1"></i>Recent
+                            </button>
+                            <button class="btn btn-dev-outline btn-sm" onclick="filterDiscussions('popular')">
+                                <i class="fas fa-fire me-1"></i>Hot
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_discussions %}
+                        {% for discussion in recent_discussions %}
+                        <div class="code-line" onclick="window.location='{{ discussion.get_absolute_url }}'">
+                            <span class="line-number">{{ forloop.counter }}</span>
+                            <span class="line-content">
+                                <span class="code-keyword">const</span> 
+                                <span class="code-function">discussion_{{ discussion.id }}</span> = {
+                                <span class="code-string">"{{ discussion.title|truncatechars:50 }}"</span>
+                                <span class="code-comment">// by {{ discussion.author.username }}</span>
+                            </span>
+                            <div class="d-flex gap-2 ms-auto">
+                                {% if discussion.is_pinned %}
+                                <span class="chip chip-warning">
+                                    <i class="fas fa-thumbtack fa-xs"></i>
+                                </span>
+                                {% endif %}
+                                {% if discussion.is_solved %}
+                                <span class="chip chip-success">
+                                    <i class="fas fa-check fa-xs"></i>
+                                </span>
+                                {% endif %}
+                                <span class="chip">
+                                    <i class="fas fa-comment fa-xs"></i> {{ discussion.comment_count|default:"0" }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="code-line">
+                        <span class="line-number">1</span>
+                        <span class="line-content code-comment">
+                            // No active discussions. Start the conversation!
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Technical Forums -->
+            <div class="code-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-code-branch me-2"></i>Technical Forums</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if forums %}
+                        {% for forum in forums|slice:":4" %}
+                        <div class="code-line" onclick="window.location='{{ forum.get_absolute_url }}'">
+                            <span class="line-number">{{ forloop.counter }}</span>
+                            <span class="line-content">
+                                <span class="code-keyword">class</span> <span class="code-function">{{ forum.name|slugify|slice:":20" }}</span> 
+                                <span class="code-keyword">extends</span> Forum {
+                            </span>
+                            <div class="d-flex gap-2 ms-auto align-items-center">
+                                <span class="chip">
+                                    <i class="fas fa-file-code fa-xs"></i> {{ forum.discussions.count }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="code-line ps-5">
+                            <span class="line-content code-comment">
+                                // {{ forum.description|truncatechars:80 }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="code-line">
+                        <span class="line-number">1</span>
+                        <span class="line-content code-comment">
+                            // No forums available
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Developer Stats -->
+            <div class="stats-panel mb-4">
+                <div class="row text-center">
+                    <div class="col-6 mb-4">
+                        <div class="stat-value">{{ total_discussions|default:"0" }}</div>
+                        <div class="stat-label">Issues</div>
+                    </div>
+                    <div class="col-6 mb-4">
+                        <div class="stat-value">{{ total_comments|default:"0" }}</div>
+                        <div class="stat-label">PRs</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-value">{{ forums|length|default:"0" }}</div>
+                        <div class="stat-label">Repos</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-value">{{ active_users|default:"0" }}</div>
+                        <div class="stat-label">Devs</div>
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-code-branch me-1"></i> Updated in real-time
+                    </small>
+                </div>
+            </div>
+
+            <!-- Top Contributors -->
+            <div class="code-card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-trophy me-2"></i>Top Contributors</h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if top_contributors %}
+                        {% for contributor in top_contributors|slice:":5" %}
+                        <div class="leaderboard-item">
+                            <div class="rank-badge {% if forloop.counter == 1 %}gold{% elif forloop.counter == 2 %}silver{% elif forloop.counter == 3 %}bronze{% endif %}">
+                                {{ forloop.counter }}
+                            </div>
+                            <div class="dev-avatar">
+                                {{ contributor.username|first|upper }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-medium">{{ contributor.username|truncatechars:15 }}</div>
+                                <small class="text-muted">
+                                    <i class="fas fa-code me-1"></i>
+                                    {{ contributor.total_points|default:"0" }} commits
+                                </small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="leaderboard-item">
+                        <span class="text-muted">No contributors yet</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Tech Stack Tags -->
+            <div class="code-card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-tags me-2"></i>Tech Stack</h6>
+                </div>
+                <div class="card-body">
+                    <div class="tag-cloud">
+                        {% for tag in popular_tags %}
+                        <a href="{% url 'community:tag' tag.slug %}" class="tag {% if tag.is_popular %}tag-popular{% endif %}">
+                            {{ tag.name }}
+                        </a>
+                        {% empty %}
+                        <span class="text-muted small">No tags yet</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Box -->
+            <div class="search-box mb-4">
+                <i class="fas fa-search text-muted"></i>
+                <input type="text" class="search-input" placeholder="Search issues, PRs, discussions...">
+                <button class="btn-dev btn-sm">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Community Rules -->
+            <div class="code-card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-file-code me-2"></i>Developer Guidelines</h6>
+                </div>
+                <div class="card-body">
+                    <div class="code-block">
+                        <div class="code-block-header">
+                            <span class="code-language">rules.js</span>
+                            <button class="btn btn-dev-outline btn-sm">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <pre class="mb-0">// 1. Be respectful - we're all learning
+// 2. Share code, not just problems
+// 3. Use proper formatting
+// 4. Mark solutions as resolved
+// 5. Help others grow</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+    <button class="action-btn" onclick="createNewDiscussion()">
+        <i class="fas fa-terminal"></i>
+        <span class="action-tooltip">New Discussion</span>
+    </button>
+    <button class="action-btn action-btn-secondary" onclick="scrollToTop()">
+        <i class="fas fa-arrow-up"></i>
+        <span class="action-tooltip">Back to Top</span>
+    </button>
+</div>
+
+<!-- Create Discussion Modal -->
+<div class="modal fade" id="createDiscussionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content code-card">
+            <div class="terminal-header">
+                <div class="terminal-dot dot-red" data-bs-dismiss="modal" style="cursor: pointer;"></div>
+                <div class="terminal-dot dot-yellow"></div>
+                <div class="terminal-dot dot-green" id="submitDiscussion" style="cursor: pointer;"></div>
+                <span class="terminal-title">new_discussion.js</span>
+            </div>
+            <div class="modal-body">
+                <div class="code-line">
+                    <span class="line-number">1</span>
+                    <span class="line-content code-comment">// Create a new technical discussion</span>
+                </div>
+                <div class="mb-3">
+                    <input type="text" class="form-control search-input" placeholder="Discussion title..." id="discussionTitle">
+                </div>
+                <div class="mb-3">
+                    <textarea class="form-control search-input" rows="8" placeholder="Describe your issue or topic..." id="discussionContent"></textarea>
+                </div>
+                <div class="tag-cloud mb-3">
+                    <span class="chip chip-success" onclick="addTag('javascript')">JavaScript</span>
+                    <span class="chip" onclick="addTag('python')">Python</span>
+                    <span class="chip" onclick="addTag('react')">React</span>
+                    <span class="chip" onclick="addTag('nodejs')">Node.js</span>
+                    <span class="chip" onclick="addTag('help')">Help</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Live Feed Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="liveFeed" class="toast code-card" role="alert">
+        <div class="terminal-header">
+            <div class="terminal-dot dot-green"></div>
+            <span class="terminal-title">live_feed</span>
+            <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body p-0">
+            <div class="code-line" id="liveFeedContent">
+                <span class="line-content code-comment">// Listening for activity...</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize terminal functionality
+    initTerminal();
+    
+    // Real-time activity feed
+    const liveFeedToast = new bootstrap.Toast(document.getElementById('liveFeed'));
+    let activitySocket = null;
+    
+    function initWebSocket() {
+        if ('WebSocket' in window) {
+            activitySocket = new WebSocket('ws://' + window.location.host + '/ws/community/');
+            
+            activitySocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                updateLiveFeed(data);
+                liveFeedToast.show();
+            };
+            
+            activitySocket.onclose = function(e) {
+                console.log('WebSocket disconnected. Reconnecting...');
+                setTimeout(initWebSocket, 3000);
+            };
+        }
+    }
+    
+    function updateLiveFeed(data) {
+        const feedContent = document.getElementById('liveFeedContent');
+        const activityTypes = {
+            'discussion': '📝 Started discussion',
+            'comment': '💬 Added comment',
+            'like': '⭐ Received like',
+            'solution': '✅ Marked solution'
+        };
+        
+        feedContent.innerHTML = `
+            <span class="line-content">
+                <span class="code-comment">// ${new Date().toLocaleTimeString()}</span>
+                <br>
+                <span class="code-string">"${data.user}"</span> ${activityTypes[data.type] || 'performed action'}
+                <br>
+                <span class="code-comment">// ${data.details || ''}</span>
+            </span>
+        `;
+    }
+    
+    // Search functionality
+    const searchInput = document.querySelector('.search-input');
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            if (this.value.length >= 2) {
+                searchDiscussions(this.value);
+            }
+        }, 500);
+    });
+    
+    function searchDiscussions(query) {
+        fetch(`/api/community/search/?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                displaySearchResults(data);
+            })
+            .catch(error => console.error('Search error:', error));
+    }
+    
+    function displaySearchResults(results) {
+        // This would update the discussions list
+        console.log('Search results:', results);
+    }
+    
+    // Discussion filtering
+    window.filterDiscussions = function(filter) {
+        const discussions = document.querySelectorAll('.code-line[onclick*="discussion"]');
+        
+        discussions.forEach(discussion => {
+            discussion.style.display = 'flex';
+            
+            if (filter === 'recent') {
+                // Show all
+            } else if (filter === 'popular') {
+                const commentCount = parseInt(discussion.querySelector('.chip').textContent);
+                if (commentCount < 5) {
+                    discussion.style.display = 'none';
+                }
+            }
+        });
+    };
+    
+    // Create new discussion
+    window.createNewDiscussion = function() {
+        const modal = new bootstrap.Modal(document.getElementById('createDiscussionModal'));
+        modal.show();
+        
+        // Focus on title input
+        setTimeout(() => {
+            document.getElementById('discussionTitle').focus();
+        }, 500);
+    };
+    
+    // Submit discussion
+    document.getElementById('submitDiscussion').addEventListener('click', function() {
+        const title = document.getElementById('discussionTitle').value;
+        const content = document.getElementById('discussionContent').value;
+        
+        if (!title || !content) {
+            alert('Please fill in all fields');
+            return;
+        }
+        
+        fetch('/api/community/create-discussion/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                title: title,
+                content: content,
+                tags: getSelectedTags()
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = data.url;
+            } else {
+                alert('Error creating discussion: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to create discussion');
+        });
+    });
+    
+    function getSelectedTags() {
+        const tags = [];
+        document.querySelectorAll('.chip').forEach(chip => {
+            if (chip.style.backgroundColor) {
+                tags.push(chip.textContent.trim());
+            }
+        });
+        return tags;
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    window.addTag = function(tag) {
+        const chip = event.target;
+        if (chip.classList.contains('chip-success')) {
+            chip.classList.remove('chip-success');
+            chip.style.backgroundColor = '';
+        } else {
+            chip.classList.add('chip-success');
+        }
+    };
+    
+    // Scroll to top
+    window.scrollToTop = function() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    };
+    
+    // Initialize terminal typing effect
+    function initTerminal() {
+        const welcomeLines = document.querySelectorAll('.code-card .code-line');
+        welcomeLines.forEach((line, index) => {
+            line.style.opacity = '0';
+            line.style.transform = 'translateY(10px)';
+            
+            setTimeout(() => {
+                line.style.transition = 'all 0.3s ease';
+                line.style.opacity = '1';
+                line.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + N: New discussion
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            createNewDiscussion();
+        }
+        
+        // /: Focus search
+        if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            searchInput.focus();
+        }
+        
+        // Escape: Close modal
+        if (e.key === 'Escape') {
+            const modal = document.querySelector('.modal.show');
+            if (modal) {
+                bootstrap.Modal.getInstance(modal).hide();
+            }
+        }
+    });
+    
+    // Add keyboard shortcut hint
+    const searchBox = document.querySelector('.search-box');
+    if (searchBox) {
+        const shortcutHint = document.createElement('div');
+        shortcutHint.className = 'mt-2 small text-muted';
+        shortcutHint.innerHTML = '<i class="fas fa-keyboard me-1"></i>Press / to search';
+        searchBox.appendChild(shortcutHint);
+    }
+    
+    // Start WebSocket connection
+    initWebSocket();
+    
+    // Auto-refresh stats
+    setInterval(() => {
+        fetch('/api/community/stats/')
+            .then(response => response.json())
+            .then(data => {
+                updateStats(data);
+            });
+    }, 60000);
+    
+    function updateStats(data) {
+        const statElements = document.querySelectorAll('.stat-value');
+        if (statElements.length >= 4) {
+            statElements[0].textContent = data.total_discussions;
+            statElements[1].textContent = data.total_comments;
+            statElements[2].textContent = data.total_forums;
+            statElements[3].textContent = data.active_users;
+        }
+    }
+    
+    // Hover effects for code lines
+    document.querySelectorAll('.code-line').forEach(line => {
+        line.addEventListener('mouseenter', function() {
+            this.style.background = 'rgba(88, 166, 255, 0.05)';
+        });
+        
+        line.addEventListener('mouseleave', function() {
+            this.style.background = '';
+        });
+    });
+});
+</script>
+{% endblock %}

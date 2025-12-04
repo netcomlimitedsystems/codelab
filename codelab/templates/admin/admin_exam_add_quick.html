@@ -1,0 +1,4042 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit Exam{% else %}Create New Exam{% endif %} | CodeLab Admin{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    :root {
+        --primary-bg: #0a0f1e;
+        --secondary-bg: #111827;
+        --terminal-bg: #1a1b26;
+        --editor-bg: #24283b;
+        --card-bg: #1e1e2e;
+        --sidebar-bg: #181825;
+        --border-color: #313244;
+        --text-primary: #cdd6f4;
+        --text-secondary: #a6adc8;
+        --accent-blue: #7aa2f7;
+        --accent-green: #9ece6a;
+        --accent-yellow: #e0af68;
+        --accent-red: #f7768e;
+        --accent-purple: #bb9af7;
+        --gradient-primary: linear-gradient(135deg, #7aa2f7 0%, #bb9af7 100%);
+        --gradient-success: linear-gradient(135deg, #9ece6a 0%, #73daca 100%);
+        --gradient-warning: linear-gradient(135deg, #e0af68 0%, #ff9e64 100%);
+        --gradient-danger: linear-gradient(135deg, #f7768e 0%, #ff7a93 100%);
+    }
+
+    /* Terminal-inspired Background */
+    .exam-form-container {
+        background: var(--primary-bg);
+        min-height: 100vh;
+        padding: 2rem 0;
+        position: relative;
+        overflow-x: hidden;
+        font-family: 'Segoe UI', 'Roboto', sans-serif;
+    }
+
+    .exam-form-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(122, 162, 247, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(187, 154, 247, 0.1) 0%, transparent 50%),
+            linear-gradient(45deg, transparent 49%, rgba(9, 206, 106, 0.03) 50%, transparent 51%),
+            linear-gradient(-45deg, transparent 49%, rgba(9, 206, 106, 0.03) 50%, transparent 51%);
+        background-size: 400px 400px, 500px 500px, 80px 80px, 80px 80px;
+        animation: float 20s infinite linear;
+        pointer-events: none;
+    }
+
+    @keyframes float {
+        0% { background-position: 0% 0%, 0% 0%, 0 0, 0 0; }
+        100% { background-position: 100px 100px, 200px 200px, 40px 40px, 40px 40px; }
+    }
+
+    /* Main Card with Glassmorphism */
+    .exam-card {
+        background: rgba(30, 30, 46, 0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(122, 162, 247, 0.2);
+        border-radius: 24px;
+        box-shadow: 
+            0 20px 40px rgba(0, 0, 0, 0.3),
+            0 0 0 1px rgba(122, 162, 247, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .exam-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 
+            0 30px 60px rgba(0, 0, 0, 0.4),
+            0 0 0 1px rgba(122, 162, 247, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    /* Header with Gradient */
+    .exam-header {
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+        padding: 2.5rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .exam-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        right: -50%;
+        bottom: -50%;
+        background: 
+            radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+        animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* Progress Indicator - Timeline Style */
+    .form-progress {
+        background: var(--card-bg);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1.5rem;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .progress-timeline {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        margin: 0 2rem;
+    }
+
+    .progress-timeline::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(to right, 
+            var(--accent-blue) 0%, 
+            var(--accent-purple) 50%, 
+            var(--border-color) 50%, 
+            var(--border-color) 100%);
+        transform: translateY(-50%);
+        z-index: 1;
+    }
+
+    .timeline-step {
+        width: 48px;
+        height: 48px;
+        background: var(--card-bg);
+        border: 3px solid var(--border-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: var(--text-secondary);
+        position: relative;
+        z-index: 2;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+    }
+
+    .timeline-step:hover:not(.active):not(.completed) {
+        border-color: var(--accent-blue);
+        transform: scale(1.1);
+    }
+
+    .timeline-step.active {
+        background: var(--gradient-primary);
+        border-color: transparent;
+        color: white;
+        transform: scale(1.1);
+        box-shadow: 0 0 20px rgba(122, 162, 247, 0.4);
+    }
+
+    .timeline-step.completed {
+        background: var(--gradient-success);
+        border-color: transparent;
+        color: white;
+        box-shadow: 0 0 20px rgba(158, 206, 106, 0.4);
+    }
+
+    /* Form Sections with IDE Styling */
+    .form-section {
+        display: none;
+        animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .form-section.active {
+        display: block;
+    }
+
+    @keyframes slideIn {
+        from { 
+            opacity: 0;
+            transform: translateY(30px) scale(0.98);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* Enhanced Input Fields - IDE Style */
+    .form-field-enhanced {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    .form-label-enhanced {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-label-icon {
+        color: var(--accent-blue);
+        font-size: 1.2rem;
+        width: 24px;
+        text-align: center;
+    }
+
+    .input-enhanced {
+        background: rgba(26, 27, 38, 0.8);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.25rem 1.25rem 1.25rem 3.5rem;
+        width: 100%;
+        color: var(--text-primary);
+        font-size: 1rem;
+        font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+    }
+
+    .input-enhanced:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 
+            0 0 0 3px rgba(122, 162, 247, 0.1),
+            inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        outline: none;
+        background: rgba(26, 27, 38, 0.9);
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--accent-blue);
+        font-size: 1.1rem;
+        pointer-events: none;
+        transition: color 0.3s ease;
+    }
+
+    .input-enhanced:focus + .input-icon {
+        color: var(--accent-purple);
+        animation: bounce 0.5s ease;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(-50%) scale(1); }
+        50% { transform: translateY(-50%) scale(1.2); }
+    }
+
+    /* Question Cards - Developer Friendly */
+    .question-card-enhanced {
+        background: rgba(30, 30, 46, 0.9);
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .question-card-enhanced:hover {
+        border-color: var(--accent-blue);
+        transform: translateX(10px);
+        box-shadow: 
+            0 15px 30px rgba(0, 0, 0, 0.3),
+            0 0 0 1px rgba(122, 162, 247, 0.1);
+    }
+
+    .question-card-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--border-color);
+        transition: background-color 0.3s ease;
+    }
+
+    .question-card-enhanced:hover::before {
+        background: var(--accent-blue);
+    }
+
+    .question-card-header {
+        background: rgba(36, 40, 59, 0.8);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: move;
+        user-select: none;
+        backdrop-filter: blur(5px);
+    }
+
+    .question-handle {
+        width: 36px;
+        height: 36px;
+        background: rgba(122, 162, 247, 0.1);
+        border: 1px solid rgba(122, 162, 247, 0.2);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: var(--accent-blue);
+        cursor: move;
+        transition: all 0.3s ease;
+    }
+
+    .question-handle:hover {
+        background: rgba(122, 162, 247, 0.2);
+        transform: scale(1.1);
+    }
+
+    /* Choice Grid - Modern Layout */
+    .choice-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.25rem;
+        margin: 1.5rem 0;
+    }
+
+    .choice-card {
+        background: rgba(36, 40, 59, 0.8);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        cursor: pointer;
+        backdrop-filter: blur(5px);
+    }
+
+    .choice-card:hover {
+        border-color: var(--accent-blue);
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .choice-card.selected {
+        background: rgba(158, 206, 106, 0.1);
+        border-color: var(--accent-green);
+        box-shadow: 
+            0 10px 20px rgba(158, 206, 106, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .choice-letter {
+        position: absolute;
+        top: -12px;
+        left: 20px;
+        background: var(--card-bg);
+        border: 2px solid var(--border-color);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: var(--text-secondary);
+        font-family: 'Fira Code', monospace;
+        transition: all 0.3s ease;
+    }
+
+    .choice-card.selected .choice-letter {
+        background: var(--accent-green);
+        border-color: var(--accent-green);
+        color: var(--primary-bg);
+        box-shadow: 0 4px 12px rgba(158, 206, 106, 0.3);
+    }
+
+    .choice-input {
+        background: transparent;
+        border: none;
+        width: 100%;
+        padding: 0;
+        font-size: 1rem;
+        color: var(--text-primary);
+        outline: none;
+        font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+        resize: none;
+        min-height: 60px;
+    }
+
+    /* Code Editor for Code Questions */
+    .code-editor-section {
+        background: var(--terminal-bg);
+        border-radius: 12px;
+        overflow: hidden;
+        margin: 1.5rem 0;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    }
+
+    .code-editor-header {
+        background: #252525;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #333;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: 'Fira Code', monospace;
+    }
+
+    .window-controls {
+        display: flex;
+        gap: 8px;
+    }
+
+    .window-control {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .window-control.close { background: #ff5f57; }
+    .window-control.minimize { background: #ffbd2e; }
+    .window-control.maximize { background: #28ca42; }
+
+    .window-control:hover {
+        transform: scale(1.2);
+    }
+
+    /* AI Assistant - Futuristic */
+    .ai-assistant {
+        background: linear-gradient(135deg, 
+            rgba(122, 162, 247, 0.1) 0%, 
+            rgba(187, 154, 247, 0.1) 100%);
+        border: 2px solid rgba(122, 162, 247, 0.3);
+        border-radius: 16px;
+        padding: 2rem;
+        margin: 2rem 0;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+    }
+
+    .ai-assistant::before {
+        content: '🤖';
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 3rem;
+        opacity: 0.1;
+        animation: floatBot 3s ease-in-out infinite;
+    }
+
+    @keyframes floatBot {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-10px) rotate(5deg); }
+    }
+
+    .ai-suggestions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .ai-suggestion-btn {
+        background: rgba(30, 30, 46, 0.8);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--text-primary);
+        backdrop-filter: blur(5px);
+    }
+
+    .ai-suggestion-btn:hover {
+        border-color: var(--accent-blue);
+        transform: translateX(10px);
+        box-shadow: 0 8px 20px rgba(122, 162, 247, 0.2);
+    }
+
+    /* Live Preview - Device Mockup */
+    .live-preview-section {
+        background: rgba(30, 30, 46, 0.8);
+        border: 2px dashed rgba(122, 162, 247, 0.3);
+        border-radius: 20px;
+        padding: 2rem;
+        margin: 2rem 0;
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .live-preview-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            linear-gradient(45deg, transparent 49%, rgba(122, 162, 247, 0.05) 50%, transparent 51%),
+            linear-gradient(-45deg, transparent 49%, rgba(122, 162, 247, 0.05) 50%, transparent 51%);
+        background-size: 30px 30px;
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    .preview-device {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Floating Action Buttons */
+    .fab-container {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+
+    .fab {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        color: white;
+        border: none;
+        box-shadow: 
+            0 8px 25px rgba(122, 162, 247, 0.4),
+            0 0 0 1px rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .fab::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, 
+            transparent, 
+            rgba(255, 255, 255, 0.3), 
+            transparent);
+        transition: left 0.7s ease;
+    }
+
+    .fab:hover {
+        transform: scale(1.1) rotate(90deg);
+        box-shadow: 
+            0 12px 35px rgba(122, 162, 247, 0.6),
+            0 0 0 2px rgba(255, 255, 255, 0.2);
+    }
+
+    .fab:hover::before {
+        left: 100%;
+    }
+
+    .fab-menu {
+        display: none;
+        flex-direction: column;
+        gap: 0.75rem;
+        animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .fab-menu.active {
+        display: flex;
+    }
+
+    .fab-menu-item {
+        background: rgba(30, 30, 46, 0.9);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 0.75rem 1.25rem;
+        color: var(--text-primary);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+    }
+
+    .fab-menu-item:hover {
+        transform: translateX(-10px);
+        border-color: var(--accent-blue);
+        box-shadow: 0 12px 25px rgba(122, 162, 247, 0.3);
+    }
+
+    /* Form Navigation */
+    .form-navigation {
+        background: rgba(30, 30, 46, 0.9);
+        border-top: 1px solid var(--border-color);
+        padding: 1.5rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        backdrop-filter: blur(10px);
+        position: sticky;
+        bottom: 0;
+        z-index: 100;
+    }
+
+    /* Stats Cards */
+    .exam-stats {
+        background: rgba(36, 40, 59, 0.8);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+        border: 1px solid var(--border-color);
+        backdrop-filter: blur(10px);
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: rgba(26, 27, 38, 0.6);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .stat-item:hover {
+        transform: translateY(-5px);
+        border-color: var(--accent-blue);
+        box-shadow: 0 10px 20px rgba(122, 162, 247, 0.2);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Question Type Selector */
+    .question-type-selector {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+
+    .type-btn {
+        background: rgba(36, 40, 59, 0.8);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.25rem 1rem;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--text-primary);
+        backdrop-filter: blur(5px);
+    }
+
+    .type-btn:hover {
+        border-color: var(--accent-blue);
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(122, 162, 247, 0.2);
+    }
+
+    .type-btn.active {
+        background: var(--gradient-primary);
+        border-color: transparent;
+        color: white;
+        box-shadow: 
+            0 15px 30px rgba(122, 162, 247, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .type-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Toggle Switches */
+    .enhanced-switch {
+        padding: 1rem;
+        background: rgba(36, 40, 59, 0.8);
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color);
+        backdrop-filter: blur(5px);
+    }
+
+    .form-check-input {
+        width: 3em;
+        height: 1.5em;
+        background-color: var(--border-color);
+        border-color: var(--border-color);
+    }
+
+    .form-check-input:checked {
+        background-color: var(--accent-blue);
+        border-color: var(--accent-blue);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: rgba(36, 40, 59, 0.6);
+        border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--gradient-primary);
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-purple);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .exam-form-container {
+            padding: 1rem;
+        }
+        
+        .exam-header {
+            padding: 1.5rem;
+        }
+        
+        .progress-timeline {
+            margin: 0 0.5rem;
+        }
+        
+        .timeline-step {
+            width: 40px;
+            height: 40px;
+            font-size: 0.875rem;
+        }
+        
+        .choice-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .question-type-selector {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-navigation {
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+        }
+        
+        .fab-container {
+            bottom: 1rem;
+            right: 1rem;
+        }
+        
+        .fab {
+            width: 50px;
+            height: 50px;
+            font-size: 1.25rem;
+        }
+        
+        .input-enhanced {
+            padding: 1rem 1rem 1rem 3rem;
+        }
+        
+        .question-card-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        
+        .question-handle {
+            align-self: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .exam-card {
+            border-radius: 16px;
+        }
+        
+        .ai-suggestions {
+            grid-template-columns: 1fr;
+        }
+        
+        .stat-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .fab-menu-item {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+    }
+
+    /* Animation Classes */
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Validation States */
+    .input-error {
+        border-color: var(--accent-red) !important;
+        animation: shake 0.5s ease;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+
+    .input-success {
+        border-color: var(--accent-green) !important;
+    }
+
+    .validation-feedback {
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .validation-feedback.error {
+        color: var(--accent-red);
+    }
+
+    .validation-feedback.success {
+        color: var(--accent-green);
+    }
+
+    /* Loading States */
+    .loading-skeleton {
+        background: linear-gradient(90deg, 
+            rgba(122, 162, 247, 0.1) 25%, 
+            rgba(122, 162, 247, 0.2) 50%, 
+            rgba(122, 162, 247, 0.1) 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+        border-radius: 8px;
+    }
+
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* Print Styles */
+    @media print {
+        .exam-form-container {
+            background: white !important;
+        }
+        
+        .exam-card {
+            box-shadow: none !important;
+            border: 1px solid #ddd;
+        }
+        
+        .no-print {
+            display: none !important;
+        }
+    }
+
+    /* Accessibility */
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .focus-visible:focus {
+        outline: 3px solid var(--accent-blue);
+        outline-offset: 2px;
+    }
+
+    /* Toast Notifications */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .toast {
+        background: rgba(30, 30, 46, 0.95);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        animation: slideInRight 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        max-width: 400px;
+    }
+
+    @keyframes slideInRight {
+        from { 
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to { 
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    /* Dark/Light Mode Toggle */
+    .theme-toggle {
+        background: rgba(30, 30, 46, 0.8);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 0.5rem 1rem;
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        backdrop-filter: blur(5px);
+    }
+
+    .theme-toggle:hover {
+        border-color: var(--accent-blue);
+        transform: scale(1.05);
+    }
+
+    /* Keyboard Shortcuts */
+    .keyboard-shortcuts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(36, 40, 59, 0.8);
+        border-radius: 12px;
+        margin: 1rem 0;
+    }
+
+    .keyboard-shortcut {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .keyboard-key {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 0.25rem 0.5rem;
+        font-family: 'Fira Code', monospace;
+        font-size: 0.75rem;
+        color: var(--text-primary);
+        min-width: 24px;
+        text-align: center;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        opacity: 0.5;
+    }
+
+    /* Badge Styles */
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        border: 1px solid;
+    }
+
+    .badge.bg-primary {
+        background: var(--gradient-primary) !important;
+        border-color: transparent;
+    }
+
+    .badge.bg-success {
+        background: var(--gradient-success) !important;
+        border-color: transparent;
+    }
+
+    .badge.bg-warning {
+        background: var(--gradient-warning) !important;
+        border-color: transparent;
+    }
+
+    .badge.bg-danger {
+        background: var(--gradient-danger) !important;
+        border-color: transparent;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="exam-form-container">
+    <div class="container-fluid px-lg-5">
+        <!-- Floating Action Buttons -->
+        <div class="fab-container d-print-none">
+            <div class="fab-menu" id="fabMenu">
+                <button class="fab-menu-item" onclick="quickAddQuestion()">
+                    <i class="fas fa-plus me-2"></i>Quick Add
+                </button>
+                <button class="fab-menu-item" onclick="saveDraft()">
+                    <i class="fas fa-save me-2"></i>Save Draft
+                </button>
+                <button class="fab-menu-item" onclick="showPreview()">
+                    <i class="fas fa-eye me-2"></i>Preview
+                </button>
+                <button class="fab-menu-item" onclick="exportExamData()">
+                    <i class="fas fa-download me-2"></i>Export
+                </button>
+                <button class="fab-menu-item" onclick="toggleTheme()">
+                    <i class="fas fa-palette me-2"></i>Theme
+                </button>
+            </div>
+            <button class="fab" id="mainFab" onclick="toggleFabMenu()">
+                <i class="fas fa-plus" id="fabIcon"></i>
+            </button>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-xxl-10">
+                <div class="exam-card fade-in">
+                    <!-- Header -->
+                    <div class="exam-header">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div>
+                                <h1 class="h3 mb-2">
+                                    <i class="fas fa-code me-2"></i>
+                                    {% if form.instance.pk %}
+                                        ✨ Edit Exam: {{ form.instance.title }}
+                                    {% else %}
+                                        🚀 Create New Exam
+                                    {% endif %}
+                                </h1>
+                                <p class="mb-0 opacity-75">Advanced exam builder with real-time preview & AI assistance</p>
+                            </div>
+                            <div class="d-flex gap-3 align-items-center">
+                                <span class="badge bg-primary fs-6 px-3 py-2">
+                                    <i class="fas fa-terminal me-2"></i>DEV MODE
+                                </span>
+                                <button type="button" class="theme-toggle" id="themeToggleBtn">
+                                    <i class="fas fa-moon"></i>
+                                    <span class="d-none d-md-inline">Theme</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Timeline -->
+                    <div class="form-progress">
+                        <div class="progress-timeline">
+                            <div class="timeline-step active" data-step="1">
+                                <span>1</span>
+                                <div class="timeline-tooltip">Exam Info</div>
+                            </div>
+                            <div class="timeline-step" data-step="2">
+                                <span>2</span>
+                                <div class="timeline-tooltip">Settings</div>
+                            </div>
+                            <div class="timeline-step" data-step="3">
+                                <span>3</span>
+                                <div class="timeline-tooltip">Questions</div>
+                            </div>
+                            <div class="timeline-step" data-step="4">
+                                <span>4</span>
+                                <div class="timeline-tooltip">Review</div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-3">
+                            <small class="text-muted" id="stepTitle">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Exam Information
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Main Form -->
+                    <form method="post" id="enhancedExamForm" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Step 1: Exam Information -->
+                        <div class="form-section active" id="step1">
+                            <div class="card-body p-4 p-md-5">
+                                <div class="row g-4">
+                                    <div class="col-md-8">
+                                        <h4 class="mb-4 d-flex align-items-center">
+                                            <i class="fas fa-info-circle me-2 text-primary"></i>
+                                            Exam Information
+                                        </h4>
+                                        
+                                        <div class="row g-4">
+                                            <div class="col-md-8">
+                                                <div class="form-field-enhanced">
+                                                    <label class="form-label-enhanced" for="id_title">
+                                                        <i class="fas fa-heading form-label-icon"></i>
+                                                        Exam Title *
+                                                    </label>
+                                                    <i class="fas fa-heading input-icon"></i>
+                                                    <input type="text" 
+                                                           name="title" 
+                                                           id="id_title" 
+                                                           class="input-enhanced" 
+                                                           value="{{ form.title.value|default:'' }}" 
+                                                           maxlength="255" 
+                                                           required
+                                                           placeholder="Enter exam title"
+                                                           data-autosave="true">
+                                                    <div class="char-counter">
+                                                        <span id="titleCharCount">0</span>/255 characters
+                                                    </div>
+                                                    <div class="validation-feedback" id="titleFeedback"></div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-4">
+                                                <div class="form-field-enhanced">
+                                                    <label class="form-label-enhanced" for="id_course">
+                                                        <i class="fas fa-book form-label-icon"></i>
+                                                        Course *
+                                                    </label>
+                                                    <i class="fas fa-book input-icon"></i>
+                                                    <select name="course" 
+                                                            id="id_course" 
+                                                            class="input-enhanced select2-enhanced" 
+                                                            required>
+                                                        <option value="">Select a Course</option>
+                                                        {% for course in courses %}
+                                                        <option value="{{ course.id }}" 
+                                                                {% if form.course.value == course.id %}selected{% endif %}>
+                                                            {{ course.title }}
+                                                        </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <div class="validation-feedback" id="courseFeedback"></div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-4">
+                                                <div class="form-field-enhanced">
+                                                    <label class="form-label-enhanced" for="id_duration_minutes">
+                                                        <i class="fas fa-clock form-label-icon"></i>
+                                                        Duration (minutes)
+                                                    </label>
+                                                    <i class="fas fa-clock input-icon"></i>
+                                                    <input type="number" 
+                                                           name="duration_minutes" 
+                                                           id="id_duration_minutes" 
+                                                           class="input-enhanced" 
+                                                           value="{{ form.duration_minutes.value|default:'60' }}" 
+                                                           min="1"
+                                                           max="480"
+                                                           placeholder="60">
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-4">
+                                                <div class="form-field-enhanced">
+                                                    <label class="form-label-enhanced" for="id_pass_mark">
+                                                        <i class="fas fa-trophy form-label-icon"></i>
+                                                        Pass Mark (%)
+                                                    </label>
+                                                    <i class="fas fa-trophy input-icon"></i>
+                                                    <input type="number" 
+                                                           name="pass_mark" 
+                                                           id="id_pass_mark" 
+                                                           class="input-enhanced" 
+                                                           value="{{ form.pass_mark.value|default:'50' }}" 
+                                                           min="0" 
+                                                           max="100"
+                                                           placeholder="50">
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-4">
+                                                <div class="form-field-enhanced">
+                                                    <label class="form-label-enhanced" for="id_max_attempts">
+                                                        <i class="fas fa-redo form-label-icon"></i>
+                                                        Max Attempts
+                                                    </label>
+                                                    <i class="fas fa-redo input-icon"></i>
+                                                    <input type="number" 
+                                                           name="max_attempts" 
+                                                           id="id_max_attempts" 
+                                                           class="input-enhanced" 
+                                                           value="{{ form.max_attempts.value|default:'1' }}" 
+                                                           min="1"
+                                                           placeholder="1">
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-6">
+                                                <div class="form-field-enhanced">
+                                                    <label class="form-label-enhanced" for="id_scheduled_date">
+                                                        <i class="fas fa-calendar-alt form-label-icon"></i>
+                                                        Scheduled Date
+                                                    </label>
+                                                    <i class="fas fa-calendar-alt input-icon"></i>
+                                                    <input type="datetime-local" 
+                                                           name="scheduled_date" 
+                                                           id="id_scheduled_date" 
+                                                           class="input-enhanced flatpickr-input" 
+                                                           value="{{ form.scheduled_date.value|date:'Y-m-d\TH:i' }}"
+                                                           placeholder="Select date and time">
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-6">
+                                                <div class="form-field-enhanced">
+                                                    <label class="form-label-enhanced" for="id_tags">
+                                                        <i class="fas fa-tags form-label-icon"></i>
+                                                        Tags
+                                                    </label>
+                                                    <i class="fas fa-tags input-icon"></i>
+                                                    <input type="text" 
+                                                           name="tags" 
+                                                           id="id_tags" 
+                                                           class="input-enhanced" 
+                                                           placeholder="e.g., midterm, final, quiz">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <div class="exam-stats">
+                                            <h6 class="mb-3 d-flex align-items-center">
+                                                <i class="fas fa-chart-bar me-2"></i>
+                                                Exam Statistics
+                                            </h6>
+                                            <div class="stat-grid">
+                                                <div class="stat-item">
+                                                    <div class="stat-number" id="totalQuestionsStat">0</div>
+                                                    <small class="text-muted">Questions</small>
+                                                </div>
+                                                <div class="stat-item">
+                                                    <div class="stat-number" id="totalPointsStat">0</div>
+                                                    <small class="text-muted">Points</small>
+                                                </div>
+                                                <div class="stat-item">
+                                                    <div class="stat-number" id="estimatedTimeStat">0</div>
+                                                    <small class="text-muted">Minutes</small>
+                                                </div>
+                                                <div class="stat-item">
+                                                    <div class="stat-number" id="passRateStat">50%</div>
+                                                    <small class="text-muted">Pass Rate</small>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mt-4">
+                                                <div class="form-check enhanced-switch">
+                                                    <input class="form-check-input" 
+                                                           type="checkbox" 
+                                                           name="is_active" 
+                                                           id="id_is_active" 
+                                                           {% if form.is_active.value %}checked{% endif %}>
+                                                    <label class="form-check-label" for="id_is_active">
+                                                        <i class="fas fa-toggle-on me-2"></i>
+                                                        Active Exam
+                                                    </label>
+                                                    <div class="form-text text-muted">Inactive exams won't be visible to students</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mt-3">
+                                                <div class="keyboard-shortcuts">
+                                                    <div class="keyboard-shortcut">
+                                                        <kbd class="keyboard-key">⌘S</kbd>
+                                                        <span>Save Draft</span>
+                                                    </div>
+                                                    <div class="keyboard-shortcut">
+                                                        <kbd class="keyboard-key">⌘Q</kbd>
+                                                        <span>Add Question</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 2: Question Settings -->
+                        <div class="form-section" id="step2">
+                            <div class="card-body p-4 p-md-5">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h4 class="mb-4 d-flex align-items-center">
+                                            <i class="fas fa-cog me-2 text-primary"></i>
+                                            Question Settings
+                                        </h4>
+                                        
+                                        <div class="mb-4">
+                                            <label class="form-label-enhanced mb-3">
+                                                <i class="fas fa-random form-label-icon"></i>
+                                                Question Types
+                                            </label>
+                                            <div class="question-type-selector">
+                                                <button type="button" class="type-btn active" data-type="multiple-choice">
+                                                    <i class="fas fa-list-ul type-icon"></i>
+                                                    <span>Multiple Choice</span>
+                                                    <small class="text-muted mt-1">Select one answer</small>
+                                                </button>
+                                                <button type="button" class="type-btn" data-type="true-false">
+                                                    <i class="fas fa-check-double type-icon"></i>
+                                                    <span>True/False</span>
+                                                    <small class="text-muted mt-1">Binary choice</small>
+                                                </button>
+                                                <button type="button" class="type-btn" data-type="short-answer">
+                                                    <i class="fas fa-align-left type-icon"></i>
+                                                    <span>Short Answer</span>
+                                                    <small class="text-muted mt-1">Text response</small>
+                                                </button>
+                                                <button type="button" class="type-btn" data-type="code">
+                                                    <i class="fas fa-code type-icon"></i>
+                                                    <span>Code</span>
+                                                    <small class="text-muted mt-1">Programming question</small>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-4">
+                                            <div class="enhanced-switch">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" 
+                                                           type="checkbox" 
+                                                           name="shuffle_questions" 
+                                            <div class="col-md-4">
+                                                <div class="form-field-enhanced">
+                                                    <label class="form-label-enhanced" for="id_show_answers">
+                                                        <i class="fas fa-eye form-label-icon"></i>
+                                                        Answer Display
+                                                    </label>
+                                                    <div class="form-check enhanced-switch">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox" 
+                                                               name="show_answers" 
+                                                               id="id_show_answers" 
+                                                               checked>
+                                                        <label class="form-check-label" for="id_show_answers">
+                                                            Show Answers After Submission
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-text text-muted">Students can see correct answers after completing the exam</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-4">
+                                                <div class="form-field-enhanced">
+                                                    <label class="form-label-enhanced" for="id_time_per_question">
+                                                        <i class="fas fa-stopwatch form-label-icon"></i>
+                                                        Time Per Question (seconds)
+                                                    </label>
+                                                    <i class="fas fa-stopwatch input-icon"></i>
+                                                    <input type="number" 
+                                                           name="time_per_question" 
+                                                           id="id_time_per_question" 
+                                                           class="input-enhanced" 
+                                                           min="10"
+                                                           placeholder="Optional">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- AI Assistant Section -->
+                                        <div class="col-12 mt-4">
+                                            <div class="ai-assistant">
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <div>
+                                                        <h6 class="mb-1">
+                                                            <i class="fas fa-robot me-2"></i>
+                                                            AI Question Assistant
+                                                        </h6>
+                                                        <p class="text-muted mb-0">Generate questions automatically using AI</p>
+                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" id="refreshAI">
+                                                        <i class="fas fa-sync-alt me-1"></i>
+                                                        <span class="d-none d-md-inline">Refresh</span>
+                                                    </button>
+                                                </div>
+                                                <div class="ai-suggestions">
+                                                    <button type="button" class="ai-suggestion-btn" data-suggestion="multiple-choice">
+                                                        <i class="fas fa-list-ul me-2"></i>
+                                                        <div>
+                                                            <div>Generate MC Questions</div>
+                                                            <small class="text-muted">Multiple choice with 4 options</small>
+                                                        </div>
+                                                    </button>
+                                                    <button type="button" class="ai-suggestion-btn" data-suggestion="true-false">
+                                                        <i class="fas fa-check-double me-2"></i>
+                                                        <div>
+                                                            <div>True/False Questions</div>
+                                                            <small class="text-muted">Binary choice questions</small>
+                                                        </div>
+                                                    </button>
+                                                    <button type="button" class="ai-suggestion-btn" data-suggestion="theory">
+                                                        <i class="fas fa-book me-2"></i>
+                                                        <div>
+                                                            <div>Theory Questions</div>
+                                                            <small class="text-muted">Concept-based questions</small>
+                                                        </div>
+                                                    </button>
+                                                    <button type="button" class="ai-suggestion-btn" data-suggestion="code">
+                                                        <i class="fas fa-code me-2"></i>
+                                                        <div>
+                                                            <div>Code Questions</div>
+                                                            <small class="text-muted">Programming challenges</small>
+                                                        </div>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="live-preview-section">
+                                            <h6 class="mb-3 d-flex align-items-center">
+                                                <i class="fas fa-eye me-2"></i>
+                                                Live Preview
+                                            </h6>
+                                            <div class="preview-device">
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <h5 class="mb-0" id="previewExamTitle">Exam Preview</h5>
+                                                    <div class="badge bg-primary">
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        <span id="previewDuration">60 min</span>
+                                                    </div>
+                                                </div>
+                                                <div class="question-preview">
+                                                    <h6 id="previewQuestionTitle">Question 1</h6>
+                                                    <p class="mb-3" id="previewQuestionText">What is the time complexity of binary search algorithm?</p>
+                                                    <div class="choice-grid-sm">
+                                                        <div class="choice-card-sm">
+                                                            <div class="choice-letter">A</div>
+                                                            <span>O(1)</span>
+                                                        </div>
+                                                        <div class="choice-card-sm selected">
+                                                            <div class="choice-letter">B</div>
+                                                            <span>O(log n)</span>
+                                                        </div>
+                                                        <div class="choice-card-sm">
+                                                            <div class="choice-letter">C</div>
+                                                            <span>O(n)</span>
+                                                        </div>
+                                                        <div class="choice-card-sm">
+                                                            <div class="choice-letter">D</div>
+                                                            <span>O(n²)</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex justify-content-between mt-4">
+                                                    <button class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-arrow-left me-1"></i>
+                                                        Previous
+                                                    </button>
+                                                    <span class="text-muted">Question <span id="previewQuestionNum">1</span> of <span id="previewTotalQuestions">10</span></span>
+                                                    <button class="btn btn-sm btn-outline-primary">
+                                                        Next
+                                                        <i class="fas fa-arrow-right ms-1"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 3: Questions -->
+                        <div class="form-section" id="step3">
+                            <div class="card-body p-4 p-md-5">
+                                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                                    <div>
+                                        <h4 class="mb-1 d-flex align-items-center">
+                                            <i class="fas fa-question-circle me-2 text-primary"></i>
+                                            Exam Questions
+                                        </h4>
+                                        <small class="text-muted" id="questionCount">(0 questions added)</small>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-file-import me-2"></i>
+                                                Import
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#" onclick="importFromFile()"><i class="fas fa-file-alt me-2"></i>From File</a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="importFromLibrary()"><i class="fas fa-book me-2"></i>Question Library</a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="importFromCourse()"><i class="fas fa-graduation-cap me-2"></i>From Course</a></li>
+                                            </ul>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-plus me-2"></i>
+                                                Add Question
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#" onclick="addQuestion('multiple-choice')"><i class="fas fa-list-ul me-2"></i>Multiple Choice</a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="addQuestion('true-false')"><i class="fas fa-check-double me-2"></i>True/False</a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="addQuestion('short-answer')"><i class="fas fa-align-left me-2"></i>Short Answer</a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="addQuestion('code')"><i class="fas fa-code me-2"></i>Code Question</a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="addQuestion('essay')"><i class="fas fa-file-alt me-2"></i>Essay</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Questions Container -->
+                                <div id="questionsContainer" class="questions-list">
+                                    {% if questions %}
+                                        {% for question in questions %}
+                                            {% include "admin/partials/question_card.html" with question=question index=forloop.counter0 %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="empty-state">
+                                            <i class="fas fa-question-circle empty-state-icon"></i>
+                                            <h5 class="mb-3">No Questions Added</h5>
+                                            <p class="text-muted mb-4">Start by adding your first question or use AI to generate questions automatically</p>
+                                            <div class="d-flex gap-2 justify-content-center">
+                                                <button type="button" class="btn btn-primary" onclick="addQuestion('multiple-choice')">
+                                                    <i class="fas fa-plus me-2"></i>
+                                                    Add First Question
+                                                </button>
+                                                <button type="button" class="btn btn-outline-primary" onclick="generateAIQuestions()">
+                                                    <i class="fas fa-robot me-2"></i>
+                                                    Generate with AI
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Add Another Button -->
+                                <div class="text-center mt-5">
+                                    <button type="button" class="btn btn-lg btn-outline-primary" id="addAnotherQuestionBtn">
+                                        <i class="fas fa-plus-circle me-2"></i>
+                                        Add Another Question
+                                    </button>
+                                </div>
+                                
+                                <!-- Bulk Actions -->
+                                <div class="bulk-actions mt-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="mb-3">
+                                                <i class="fas fa-tasks me-2"></i>
+                                                Bulk Actions
+                                            </h6>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="selectAllQuestions()">
+                                                    <i class="fas fa-check-square me-1"></i>
+                                                    Select All
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="duplicateSelected()">
+                                                    <i class="fas fa-clone me-1"></i>
+                                                    Duplicate Selected
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="deleteSelected()">
+                                                    <i class="fas fa-trash me-1"></i>
+                                                    Delete Selected
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="randomizeOrder()">
+                                                    <i class="fas fa-random me-1"></i>
+                                                    Randomize Order
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="assignPointsToAll(1)">
+                                                    <i class="fas fa-star me-1"></i>
+                                                    1 Point Each
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 4: Review & Submit -->
+                        <div class="form-section" id="step4">
+                            <div class="card-body p-4 p-md-5">
+                                <h4 class="mb-4 d-flex align-items-center">
+                                    <i class="fas fa-check-circle me-2 text-primary"></i>
+                                    Review & Submit
+                                </h4>
+                                
+                                <div class="row g-4">
+                                    <!-- Exam Summary -->
+                                    <div class="col-lg-6">
+                                        <div class="card h-100">
+                                            <div class="card-header">
+                                                <h6 class="mb-0 d-flex align-items-center">
+                                                    <i class="fas fa-clipboard-list me-2"></i>
+                                                    Exam Summary
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="summary-item">
+                                                    <span class="summary-label">
+                                                        <i class="fas fa-heading me-2"></i>
+                                                        Title:
+                                                    </span>
+                                                    <span class="summary-value" id="reviewTitle">{{ form.title.value|default:"Untitled Exam" }}</span>
+                                                </div>
+                                                <div class="summary-item">
+                                                    <span class="summary-label">
+                                                        <i class="fas fa-book me-2"></i>
+                                                        Course:
+                                                    </span>
+                                                    <span class="summary-value" id="reviewCourse">{% if form.course.value %}{{ selected_course.title }}{% else %}Not selected{% endif %}</span>
+                                                </div>
+                                                <div class="summary-item">
+                                                    <span class="summary-label">
+                                                        <i class="fas fa-clock me-2"></i>
+                                                        Duration:
+                                                    </span>
+                                                    <span class="summary-value" id="reviewDuration">{{ form.duration_minutes.value|default:"60" }} minutes</span>
+                                                </div>
+                                                <div class="summary-item">
+                                                    <span class="summary-label">
+                                                        <i class="fas fa-trophy me-2"></i>
+                                                        Pass Mark:
+                                                    </span>
+                                                    <span class="summary-value" id="reviewPassMark">{{ form.pass_mark.value|default:"50" }}%</span>
+                                                </div>
+                                                <div class="summary-item">
+                                                    <span class="summary-label">
+                                                        <i class="fas fa-question-circle me-2"></i>
+                                                        Questions:
+                                                    </span>
+                                                    <span class="summary-value" id="reviewQuestions">0 questions</span>
+                                                </div>
+                                                <div class="summary-item">
+                                                    <span class="summary-label">
+                                                        <i class="fas fa-toggle-on me-2"></i>
+                                                        Status:
+                                                    </span>
+                                                    <span class="summary-value" id="reviewStatus">
+                                                        {% if form.is_active.value %}
+                                                            <span class="badge bg-success">Active</span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">Inactive</span>
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                                <div class="summary-item">
+                                                    <span class="summary-label">
+                                                        <i class="fas fa-calendar-alt me-2"></i>
+                                                        Scheduled:
+                                                    </span>
+                                                    <span class="summary-value" id="reviewSchedule">
+                                                        {% if form.scheduled_date.value %}
+                                                            {{ form.scheduled_date.value|date:"M d, Y H:i" }}
+                                                        {% else %}
+                                                            Anytime
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Validation Status -->
+                                    <div class="col-lg-6">
+                                        <div class="card h-100">
+                                            <div class="card-header">
+                                                <h6 class="mb-0 d-flex align-items-center">
+                                                    <i class="fas fa-check-double me-2"></i>
+                                                    Validation Status
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="validation-list">
+                                                    <div class="validation-item">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="validation-label">
+                                                                <i class="fas fa-heading me-2"></i>
+                                                                Exam Title
+                                                            </span>
+                                                            <span class="badge bg-success" id="validateTitle">
+                                                                <i class="fas fa-check me-1"></i>
+                                                                Valid
+                                                            </span>
+                                                        </div>
+                                                        <div class="validation-feedback mt-1" id="titleValidation"></div>
+                                                    </div>
+                                                    
+                                                    <div class="validation-item">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="validation-label">
+                                                                <i class="fas fa-book me-2"></i>
+                                                                Course Selection
+                                                            </span>
+                                                            <span class="badge bg-warning" id="validateCourse">
+                                                                <i class="fas fa-exclamation me-1"></i>
+                                                                Required
+                                                            </span>
+                                                        </div>
+                                                        <div class="validation-feedback mt-1" id="courseValidation"></div>
+                                                    </div>
+                                                    
+                                                    <div class="validation-item">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="validation-label">
+                                                                <i class="fas fa-question-circle me-2"></i>
+                                                                Questions Added
+                                                            </span>
+                                                            <span class="badge bg-danger" id="validateQuestions">
+                                                                <i class="fas fa-times me-1"></i>
+                                                                Required
+                                                            </span>
+                                                        </div>
+                                                        <div class="validation-feedback mt-1" id="questionsValidation"></div>
+                                                    </div>
+                                                    
+                                                    <div class="validation-item">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="validation-label">
+                                                                <i class="fas fa-check-circle me-2"></i>
+                                                                All Questions Valid
+                                                            </span>
+                                                            <span class="badge bg-danger" id="validateAllQuestions">
+                                                                <i class="fas fa-times me-1"></i>
+                                                                Check Required
+                                                            </span>
+                                                        </div>
+                                                        <div class="validation-feedback mt-1" id="allQuestionsValidation"></div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="alert alert-info mt-4">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    Please complete all validation checks before publishing the exam.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Export Options -->
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0 d-flex align-items-center">
+                                                    <i class="fas fa-download me-2"></i>
+                                                    Export Options
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row g-3">
+                                                    <div class="col-md-4">
+                                                        <button class="btn btn-outline-primary w-100" onclick="exportAsJSON()">
+                                                            <i class="fas fa-code me-2"></i>
+                                                            Export as JSON
+                                                        </button>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <button class="btn btn-outline-success w-100" onclick="exportAsPDF()">
+                                                            <i class="fas fa-file-pdf me-2"></i>
+                                                            Export as PDF
+                                                        </button>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <button class="btn btn-outline-dark w-100" onclick="printExam()">
+                                                            <i class="fas fa-print me-2"></i>
+                                                            Print Exam
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="export-preview mt-3">
+                                                    <pre id="jsonPreview"><code class="language-json">
+{
+  "exam": {
+    "title": "{{ form.title.value|default:'Untitled Exam' }}",
+    "course": "{% if form.course.value %}{{ selected_course.title }}{% else %}Not selected{% endif %}",
+    "duration": "{{ form.duration_minutes.value|default:'60' }} minutes",
+    "pass_mark": "{{ form.pass_mark.value|default:'50' }}%",
+    "questions": []
+  }
+}
+                                                    </code></pre>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Final Actions -->
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0 d-flex align-items-center">
+                                                    <i class="fas fa-rocket me-2"></i>
+                                                    Final Actions
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row g-4">
+                                                    <div class="col-md-8">
+                                                        <div class="form-check mb-3">
+                                                            <input class="form-check-input" 
+                                                                   type="checkbox" 
+                                                                   id="confirmPublish">
+                                                            <label class="form-check-label" for="confirmPublish">
+                                                                I confirm that all information is correct and ready to publish
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check mb-3">
+                                                            <input class="form-check-input" 
+                                                                   type="checkbox" 
+                                                                   id="notifyStudents">
+                                                            <label class="form-check-label" for="notifyStudents">
+                                                                Notify enrolled students about this exam
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="col-md-4">
+                                                        <div class="d-grid gap-2">
+                                                            <button type="button" class="btn btn-secondary" onclick="goToStep(3)">
+                                                                <i class="fas fa-arrow-left me-2"></i>
+                                                                Back to Questions
+                                                            </button>
+                                                            <button type="submit" 
+                                                                    class="btn btn-success btn-lg" 
+                                                                    id="submitBtn"
+                                                                    disabled>
+                                                                <i class="fas fa-save me-2"></i>
+                                                                {% if form.instance.pk %}Update Exam{% else %}Create Exam{% endif %}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Navigation -->
+                        <div class="form-navigation no-print">
+                            <div class="keyboard-shortcuts">
+                                <div class="keyboard-shortcut">
+                                    <kbd class="keyboard-key">Ctrl</kbd> + <kbd class="keyboard-key">S</kbd>
+                                    <span>Save Draft</span>
+                                </div>
+                                <div class="keyboard-shortcut">
+                                    <kbd class="keyboard-key">Ctrl</kbd> + <kbd class="keyboard-key">Q</kbd>
+                                    <span>Add Question</span>
+                                </div>
+                                <div class="keyboard-shortcut">
+                                    <kbd class="keyboard-key">Ctrl</kbd> + <kbd class="keyboard-key">←</kbd>/<kbd class="keyboard-key">→</kbd>
+                                    <span>Navigate</span>
+                                </div>
+                                <div class="keyboard-shortcut">
+                                    <kbd class="keyboard-key">Ctrl</kbd> + <kbd class="keyboard-key">D</kbd>
+                                    <span>Dark Mode</span>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-secondary" id="prevBtn" disabled>
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Previous
+                                </button>
+                                <button type="button" class="btn btn-primary" id="nextBtn">
+                                    Next
+                                    <i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container"></div>
+
+<!-- Question Templates (Hidden) -->
+<div id="questionTemplates" class="d-none">
+    <!-- Multiple Choice Template -->
+    <div class="question-card-enhanced" data-type="multiple-choice" data-index="__INDEX__">
+        <div class="question-card-header">
+            <div class="d-flex align-items-center">
+                <div class="question-handle">
+                    <i class="fas fa-grip-vertical"></i>
+                </div>
+                <div class="question-checkbox me-3">
+                    <input type="checkbox" class="form-check-input question-select">
+                </div>
+                <div>
+                    <h6 class="mb-0">Question #<span class="question-number">__NUMBER__</span></h6>
+                    <small class="text-muted">
+                        <i class="fas fa-list-ul me-1"></i>
+                        Multiple Choice
+                    </small>
+                </div>
+            </div>
+            <div class="question-actions">
+                <button type="button" class="btn btn-sm btn-outline-primary clone-question" title="Clone">
+                    <i class="fas fa-clone"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-question" title="Remove">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="form-field-enhanced mb-3">
+                <label class="form-label-enhanced">
+                    <i class="fas fa-question-circle me-2"></i>
+                    Question Text *
+                </label>
+                <textarea name="questions[__INDEX__][question_text]" 
+                          class="form-control question-text enhanced-textarea" 
+                          rows="3" 
+                          required
+                          placeholder="Enter the question text here..."
+                          data-autosize="true"></textarea>
+                <div class="char-counter">
+                    <span class="question-char-count">0</span>/1000 characters
+                </div>
+            </div>
+            
+            <div class="choice-grid">
+                <div class="choice-card" data-choice="a">
+                    <div class="choice-letter">A</div>
+                    <div class="choice-content">
+                        <textarea class="choice-input choice-a" 
+                                  name="questions[__INDEX__][choice_a]" 
+                                  rows="2"
+                                  placeholder="Enter choice A"
+                                  required></textarea>
+                        <button class="btn btn-sm btn-outline-primary set-correct-btn" data-choice="A">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="choice-card" data-choice="b">
+                    <div class="choice-letter">B</div>
+                    <div class="choice-content">
+                        <textarea class="choice-input choice-b" 
+                                  name="questions[__INDEX__][choice_b]" 
+                                  rows="2"
+                                  placeholder="Enter choice B"
+                                  required></textarea>
+                        <button class="btn btn-sm btn-outline-primary set-correct-btn" data-choice="B">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="choice-card" data-choice="c">
+                    <div class="choice-letter">C</div>
+                    <div class="choice-content">
+                        <textarea class="choice-input choice-c" 
+                                  name="questions[__INDEX__][choice_c]" 
+                                  rows="2"
+                                  placeholder="Enter choice C"
+                                  required></textarea>
+                        <button class="btn btn-sm btn-outline-primary set-correct-btn" data-choice="C">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="choice-card" data-choice="d">
+                    <div class="choice-letter">D</div>
+                    <div class="choice-content">
+                        <textarea class="choice-input choice-d" 
+                                  name="questions[__INDEX__][choice_d]" 
+                                  rows="2"
+                                  placeholder="Enter choice D"
+                                  required></textarea>
+                        <button class="btn btn-sm btn-outline-primary set-correct-btn" data-choice="D">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="form-field-enhanced">
+                        <label class="form-label-enhanced">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Correct Answer *
+                        </label>
+                        <select name="questions[__INDEX__][correct_choice]" 
+                                class="form-select correct-choice-select" 
+                                required>
+                            <option value="">Select correct choice</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-field-enhanced">
+                        <label class="form-label-enhanced">
+                            <i class="fas fa-star me-2"></i>
+                            Points
+                        </label>
+                        <input type="number" 
+                               name="questions[__INDEX__][points]" 
+                               class="form-control points-input" 
+                               value="1" 
+                               min="1" 
+                               max="10">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-field-enhanced">
+                        <label class="form-label-enhanced">
+                            <i class="fas fa-stopwatch me-2"></i>
+                            Time (sec)
+                        </label>
+                        <input type="number" 
+                               name="questions[__INDEX__][time_limit]" 
+                               class="form-control time-input" 
+                               value="60" 
+                               min="10">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="form-field-enhanced">
+                        <label class="form-label-enhanced">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            Explanation (Optional)
+                        </label>
+                        <textarea name="questions[__INDEX__][explanation]" 
+                                  class="form-control explanation-text" 
+                                  rows="2"
+                                  placeholder="Add explanation for the correct answer..."></textarea>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-field-enhanced">
+                        <label class="form-label-enhanced">
+                            <i class="fas fa-tags me-2"></i>
+                            Tags (Optional)
+                        </label>
+                        <input type="text" 
+                               name="questions[__INDEX__][tags]" 
+                               class="form-control tags-input" 
+                               placeholder="e.g., algorithm, complexity, basic">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="question-advanced mt-3" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-cogs me-2"></i>
+                            Advanced Settings
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" 
+                                           name="questions[__INDEX__][allow_partial]" 
+                                           class="form-check-input">
+                                    <label class="form-check-label">
+                                        Allow partial credit
+                                    </label>
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input type="checkbox" 
+                                           name="questions[__INDEX__][randomize_choices]" 
+                                           class="form-check-input" 
+                                           checked>
+                                    <label class="form-check-label">
+                                        Randomize choices
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-field-enhanced">
+                                    <label class="form-label-enhanced">Difficulty Level</label>
+                                    <select name="questions[__INDEX__][difficulty]" 
+                                            class="form-select">
+                                        <option value="easy">Easy</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="hard">Hard</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <button type="button" class="btn btn-sm btn-outline-primary toggle-advanced">
+                    <i class="fas fa-cogs me-1"></i>
+                    Advanced Settings
+                </button>
+                <div class="text-muted">
+                    <small>ID: <span class="question-id">Q-__INDEX__</span></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+{% include "admin/modals/import_modal.html" %}
+{% include "admin/modals/preview_modal.html" %}
+{% include "admin/modals/ai_assistant_modal.html" %}
+{% include "admin/modals/export_modal.html" %}
+
+<style>
+    /* Additional Styles */
+    .choice-grid-sm {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin: 1rem 0;
+    }
+    
+    .choice-card-sm {
+        background: rgba(36, 40, 59, 0.8);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all 0.2s ease;
+    }
+    
+    .choice-card-sm.selected {
+        background: rgba(158, 206, 106, 0.2);
+        border-color: var(--accent-green);
+    }
+    
+    .choice-content {
+        flex: 1;
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+    
+    .set-correct-btn {
+        flex-shrink: 0;
+        margin-top: 0.25rem;
+    }
+    
+    .question-checkbox {
+        padding: 0.5rem;
+    }
+    
+    .bulk-actions {
+        background: rgba(36, 40, 59, 0.5);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+    
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .summary-item:last-child {
+        border-bottom: none;
+    }
+    
+    .summary-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .summary-value {
+        font-weight: 500;
+        color: var(--text-primary);
+        text-align: right;
+    }
+    
+    .validation-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .validation-item {
+        padding: 1rem;
+        background: rgba(36, 40, 59, 0.5);
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .validation-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .export-preview {
+        background: var(--terminal-bg);
+        border-radius: 8px;
+        padding: 1rem;
+        font-family: 'Fira Code', monospace;
+        font-size: 0.875rem;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .enhanced-textarea {
+        background: rgba(26, 27, 38, 0.8);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        resize: vertical;
+        min-height: 100px;
+        max-height: 300px;
+        padding: 1rem;
+        font-family: 'Segoe UI', sans-serif;
+        transition: all 0.3s ease;
+    }
+    
+    .enhanced-textarea:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.1);
+        background: rgba(26, 27, 38, 0.9);
+    }
+    
+    .timeline-tooltip {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        margin-top: 8px;
+        z-index: 10;
+    }
+    
+    .timeline-step:hover .timeline-tooltip {
+        opacity: 1;
+        visibility: visible;
+        margin-top: 12px;
+    }
+    
+    /* Animation for success */
+    @keyframes success {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    .success-animation {
+        animation: success 0.5s ease;
+    }
+    
+    /* Loading spinner */
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--border-color);
+        border-top-color: var(--accent-blue);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Question transitions */
+    .question-enter {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    
+    .question-enter-active {
+        opacity: 1;
+        transform: translateY(0);
+        transition: all 0.3s ease;
+    }
+    
+    .question-exit {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .question-exit-active {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+<script>
+class EnhancedExamEditor {
+    constructor() {
+        this.config = {
+            autoSaveInterval: 30000,
+            maxQuestions: 100,
+            questionTypes: ['multiple-choice', 'true-false', 'short-answer', 'essay', 'code']
+        };
+        
+        this.state = {
+            currentStep: 1,
+            questionCount: {{ questions|length|default:0 }},
+            selectedQuestions: new Set(),
+            hasChanges: false,
+            isOnline: navigator.onLine,
+            aiEnabled: true
+        };
+        
+        this.init();
+    }
+    
+    init() {
+        this.initElements();
+        this.initEventListeners();
+        this.initComponents();
+        this.initAutoSave();
+        this.setupKeyboardShortcuts();
+        this.updateStats();
+        this.updatePreview();
+        this.checkDraft();
+    }
+    
+    initElements() {
+        this.form = document.getElementById('enhancedExamForm');
+        this.steps = document.querySelectorAll('.form-section');
+        this.progressSteps = document.querySelectorAll('.timeline-step');
+        this.nextBtn = document.getElementById('nextBtn');
+        this.prevBtn = document.getElementById('prevBtn');
+        this.questionsContainer = document.getElementById('questionsContainer');
+        this.questionTemplates = document.getElementById('questionTemplates');
+        this.fabMenu = document.querySelector('.fab-menu');
+        this.mainFab = document.getElementById('mainFab');
+        
+        // Initialize tooltips
+        const tooltips = document.querySelectorAll('[title]');
+        tooltips.forEach(el => {
+            new bootstrap.Tooltip(el);
+        });
+        
+        // Initialize charts if needed
+        this.initCharts();
+    }
+    
+    initEventListeners() {
+        // Navigation
+        this.nextBtn.addEventListener('click', () => this.nextStep());
+        this.prevBtn.addEventListener('click', () => this.prevStep());
+        
+        // Step indicators
+        this.progressSteps.forEach(step => {
+            step.addEventListener('click', (e) => {
+                if (e.target.closest('.timeline-step')) {
+                    const stepNum = parseInt(e.currentTarget.dataset.step);
+                    this.goToStep(stepNum);
+                }
+            });
+        });
+        
+        // FAB menu
+        this.mainFab.addEventListener('click', () => this.toggleFabMenu());
+        
+        // AI suggestions
+        document.querySelectorAll('.ai-suggestion-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.handleAISuggestion(e));
+        });
+        
+        // Refresh AI
+        document.getElementById('refreshAI')?.addEventListener('click', () => this.refreshAISuggestions());
+        
+        // Form submission
+        this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+        
+        // Input validation
+        this.setupInputValidation();
+        
+        // Theme toggle
+        document.getElementById('themeToggleBtn')?.addEventListener('click', () => this.toggleTheme());
+        
+        // Confirm publish
+        document.getElementById('confirmPublish')?.addEventListener('change', (e) => {
+            document.getElementById('submitBtn').disabled = !e.target.checked;
+        });
+        
+        // Add question buttons
+        document.getElementById('addAnotherQuestionBtn')?.addEventListener('click', () => this.addQuestion());
+        
+        // Network status
+        window.addEventListener('online', () => this.handleOnline());
+        window.addEventListener('offline', () => this.handleOffline());
+        
+        // Before unload
+        window.addEventListener('beforeunload', (e) => {
+            if (this.state.hasChanges) {
+                e.preventDefault();
+                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+            }
+        });
+        
+        // File upload for import
+        const importFileInput = document.createElement('input');
+        importFileInput.type = 'file';
+        importFileInput.accept = '.json,.txt,.csv';
+        importFileInput.style.display = 'none';
+        importFileInput.addEventListener('change', (e) => this.handleFileImport(e));
+        document.body.appendChild(importFileInput);
+    }
+    
+    initComponents() {
+        // Initialize Select2
+        $('.select2-enhanced').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Select a course',
+            allowClear: true
+        });
+        
+        // Initialize Flatpickr
+        flatpickr('.flatpickr-input', {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            time_24hr: true,
+            minDate: 'today'
+        });
+        
+        // Initialize Tagify
+        const tagInput = document.getElementById('id_tags');
+        if (tagInput) {
+            this.tagify = new Tagify(tagInput, {
+                whitelist: ['midterm', 'final', 'quiz', 'exam', 'test', 'assessment'],
+                dropdown: {
+                    maxItems: 20,
+                    enabled: 0,
+                    closeOnSelect: false
+                }
+            });
+        }
+        
+        // Initialize Sortable
+        this.initSortable();
+        
+        // Initialize EasyMDE for text areas
+        this.initMarkdownEditors();
+        
+        // Initialize auto-resize textareas
+        this.initAutoResize();
+    }
+    
+    initCharts() {
+        // Initialize statistics chart
+        const ctx = document.createElement('canvas');
+        ctx.id = 'statsChart';
+        document.querySelector('.exam-stats').appendChild(ctx);
+        
+        this.statsChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Easy', 'Medium', 'Hard'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: [
+                        'rgba(158, 206, 106, 0.8)',
+                        'rgba(224, 175, 104, 0.8)',
+                        'rgba(247, 118, 142, 0.8)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.label}: ${context.raw} questions`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    initSortable() {
+        this.sortable = Sortable.create(this.questionsContainer, {
+            animation: 150,
+            handle: '.question-handle',
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            onEnd: () => {
+                this.updateQuestionNumbers();
+                this.saveDraft(true);
+                this.showToast('Question order updated', 'success');
+            }
+        });
+    }
+    
+    initMarkdownEditors() {
+        document.querySelectorAll('.enhanced-textarea').forEach(textarea => {
+            const easyMDE = new EasyMDE({
+                element: textarea,
+                spellChecker: false,
+                status: false,
+                toolbar: ['bold', 'italic', 'heading', '|', 'code', 'quote', '|', 'link', 'image', '|', 'preview'],
+                autoDownloadFontAwesome: false,
+                placeholder: textarea.placeholder,
+                minHeight: '100px'
+            });
+            
+            easyMDE.codemirror.on('change', () => {
+                this.state.hasChanges = true;
+                this.updateStats();
+            });
+        });
+    }
+    
+    initAutoResize() {
+        const autoResize = (textarea) => {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        };
+        
+        document.querySelectorAll('textarea[data-autosize="true"]').forEach(textarea => {
+            textarea.addEventListener('input', () => autoResize(textarea));
+            autoResize(textarea);
+        });
+    }
+    
+    initAutoSave() {
+        // Auto-save on input
+        const saveDebounced = this.debounce(() => this.saveDraft(true), 2000);
+        
+        document.querySelectorAll('[data-autosave="true"]').forEach(input => {
+            input.addEventListener('input', () => {
+                this.state.hasChanges = true;
+                saveDebounced();
+            });
+        });
+        
+        // Periodic auto-save
+        setInterval(() => {
+            if (this.state.hasChanges) {
+                this.saveDraft(true);
+            }
+        }, this.config.autoSaveInterval);
+        
+        // Load draft on page load
+        this.loadDraft();
+    }
+    
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Don't trigger shortcuts when typing in inputs
+            if (e.target.matches('input, textarea, select')) return;
+            
+            // Ctrl/Cmd + S: Save
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                this.saveDraft();
+            }
+            
+            // Ctrl/Cmd + Q: Add question
+            if ((e.ctrlKey || e.metaKey) && e.key === 'q') {
+                e.preventDefault();
+                this.addQuestion();
+            }
+            
+            // Ctrl/Cmd + Arrow Right: Next step
+            if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowRight') {
+                e.preventDefault();
+                this.nextStep();
+            }
+            
+            // Ctrl/Cmd + Arrow Left: Previous step
+            if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowLeft') {
+                e.preventDefault();
+                this.prevStep();
+            }
+            
+            // Ctrl/Cmd + D: Toggle dark mode
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                this.toggleTheme();
+            }
+            
+            // Ctrl/Cmd + P: Preview
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                this.showPreview();
+            }
+            
+            // Escape: Close modals/FAB menu
+            if (e.key === 'Escape') {
+                this.closeAllModals();
+                this.closeFabMenu();
+            }
+        });
+    }
+    
+    setupInputValidation() {
+        // Real-time validation
+        const validateField = (input, validator) => {
+            const isValid = validator(input.value);
+            this.updateValidationFeedback(input, isValid);
+            return isValid;
+        };
+        
+        // Title validation
+        const titleInput = document.getElementById('id_title');
+        if (titleInput) {
+            titleInput.addEventListener('input', () => {
+                const isValid = titleInput.value.trim().length >= 3;
+                this.updateValidationBadge('validateTitle', isValid);
+                this.updateReview();
+            });
+        }
+        
+        // Course validation
+        const courseSelect = document.getElementById('id_course');
+        if (courseSelect) {
+            courseSelect.addEventListener('change', () => {
+                const isValid = courseSelect.value !== '';
+                this.updateValidationBadge('validateCourse', isValid);
+                this.updateReview();
+            });
+        }
+        
+        // Character counters
+        document.addEventListener('input', (e) => {
+            if (e.target.matches('textarea.question-text')) {
+                this.updateCharCounter(e.target);
+            }
+        });
+    }
+    
+    // Navigation Methods
+    nextStep() {
+        if (this.state.currentStep < 4) {
+            if (this.validateStep(this.state.currentStep)) {
+                this.goToStep(this.state.currentStep + 1);
+            }
+        }
+    }
+    
+    prevStep() {
+        if (this.state.currentStep > 1) {
+            this.goToStep(this.state.currentStep - 1);
+        }
+    }
+    
+    goToStep(step) {
+        // Validate current step
+        if (!this.validateStep(this.state.currentStep)) {
+            this.showToast('Please fix validation errors before proceeding', 'warning');
+            return;
+        }
+        
+        // Update UI
+        this.steps.forEach(s => s.classList.remove('active'));
+        document.getElementById(`step${step}`).classList.add('active');
+        
+        this.progressSteps.forEach(s => {
+            s.classList.remove('active', 'completed');
+            const stepNum = parseInt(s.dataset.step);
+            if (stepNum < step) {
+                s.classList.add('completed');
+            } else if (stepNum === step) {
+                s.classList.add('active');
+            }
+        });
+        
+        // Update navigation buttons
+        this.prevBtn.disabled = step === 1;
+        
+        if (step === 4) {
+            this.nextBtn.style.display = 'none';
+            this.updateValidationStatus();
+        } else {
+            this.nextBtn.style.display = 'block';
+            this.nextBtn.innerHTML = step === 3 ? 
+                'Review <i class="fas fa-arrow-right ms-2"></i>' : 
+                'Next <i class="fas fa-arrow-right ms-2"></i>';
+        }
+        
+        // Update step title
+        const stepTitles = {
+            1: 'Exam Information',
+            2: 'Question Settings',
+            3: 'Exam Questions',
+            4: 'Review & Submit'
+        };
+        document.getElementById('stepTitle').textContent = stepTitles[step];
+        
+        this.state.currentStep = step;
+        
+        // Save current step to draft
+        this.saveDraft(true);
+    }
+    
+    validateStep(step) {
+        switch(step) {
+            case 1:
+                return this.validateStep1();
+            case 2:
+                return this.validateStep2();
+            case 3:
+                return this.validateStep3();
+            default:
+                return true;
+        }
+    }
+    
+    validateStep1() {
+        let isValid = true;
+        
+        if (!this.validateTitle()) isValid = false;
+        if (!this.validateCourse()) isValid = false;
+        
+        return isValid;
+    }
+    
+    validateStep2() {
+        // Step 2 is optional
+        return true;
+    }
+    
+    validateStep3() {
+        const questions = this.questionsContainer.querySelectorAll('.question-card-enhanced');
+        if (questions.length === 0) {
+            this.showToast('Please add at least one question', 'warning');
+            return false;
+        }
+        
+        let allValid = true;
+        questions.forEach(question => {
+            if (!this.validateQuestion(question)) {
+                allValid = false;
+            }
+        });
+        
+        return allValid;
+    }
+    
+    // Question Management
+    addQuestion(type = 'multiple-choice') {
+        if (this.state.questionCount >= this.config.maxQuestions) {
+            this.showToast(`Maximum ${this.config.maxQuestions} questions allowed`, 'warning');
+            return;
+        }
+        
+        const template = this.questionTemplates.querySelector(`[data-type="${type}"]`);
+        if (!template) {
+            this.showToast('Question type not supported', 'error');
+            return;
+        }
+        
+        const newQuestion = template.cloneNode(true);
+        const index = this.state.questionCount;
+        
+        this.updateQuestionTemplate(newQuestion, index);
+        this.questionsContainer.appendChild(newQuestion);
+        
+        // Remove empty state
+        const emptyState = this.questionsContainer.querySelector('.empty-state');
+        if (emptyState) {
+            emptyState.remove();
+        }
+        
+        this.state.questionCount++;
+        this.updateQuestionNumbers();
+        this.updateStats();
+        this.addQuestionEventListeners(newQuestion);
+        
+        // Animate insertion
+        newQuestion.classList.add('question-enter');
+        setTimeout(() => {
+            newQuestion.classList.remove('question-enter');
+            newQuestion.classList.add('question-enter-active');
+            newQuestion.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 10);
+        
+        this.showToast('Question added successfully!', 'success');
+        this.state.hasChanges = true;
+    }
+    
+    updateQuestionTemplate(element, index) {
+        // Replace placeholders
+        const html = element.innerHTML
+            .replace(/__INDEX__/g, index)
+            .replace(/__NUMBER__/g, this.state.questionCount + 1);
+        
+        element.innerHTML = html;
+        element.dataset.index = index;
+    }
+    
+    addQuestionEventListeners(questionElement) {
+        // Remove button
+        questionElement.querySelector('.remove-question').addEventListener('click', () => {
+            this.removeQuestion(questionElement);
+        });
+        
+        // Clone button
+        questionElement.querySelector('.clone-question').addEventListener('click', () => {
+            this.cloneQuestion(questionElement);
+        });
+        
+        // Set correct answer buttons
+        questionElement.querySelectorAll('.set-correct-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const choice = e.target.dataset.choice || e.target.closest('.set-correct-btn').dataset.choice;
+                this.setCorrectAnswer(questionElement, choice);
+            });
+        });
+        
+        // Choice selection
+        questionElement.querySelectorAll('.choice-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (!e.target.matches('.choice-input, .set-correct-btn')) {
+                    const choice = card.dataset.choice;
+                    this.setCorrectAnswer(questionElement, choice.toUpperCase());
+                }
+            });
+        });
+        
+        // Correct choice select
+        const select = questionElement.querySelector('.correct-choice-select');
+        select.addEventListener('change', () => {
+            this.updateSelectedChoice(questionElement, select.value);
+        });
+        
+        // Advanced settings toggle
+        const toggleBtn = questionElement.querySelector('.toggle-advanced');
+        const advancedSection = questionElement.querySelector('.question-advanced');
+        
+        toggleBtn.addEventListener('click', () => {
+            const isVisible = advancedSection.style.display === 'block';
+            advancedSection.style.display = isVisible ? 'none' : 'block';
+            toggleBtn.innerHTML = isVisible ? 
+                '<i class="fas fa-cogs me-1"></i> Advanced Settings' :
+                '<i class="fas fa-times me-1"></i> Hide Settings';
+        });
+        
+        // Input validation
+        const inputs = questionElement.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                this.updateStats();
+                this.updatePreview();
+                this.state.hasChanges = true;
+            });
+        });
+        
+        // Auto-resize textareas
+        const textareas = questionElement.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            textarea.addEventListener('input', () => {
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+            });
+        });
+    }
+    
+    removeQuestion(questionElement) {
+        if (confirm('Are you sure you want to remove this question?')) {
+            // Animate removal
+            questionElement.classList.add('question-exit');
+            questionElement.classList.add('question-exit-active');
+            
+            setTimeout(() => {
+                questionElement.remove();
+                this.state.questionCount--;
+                this.updateQuestionNumbers();
+                this.updateStats();
+                
+                if (this.state.questionCount === 0) {
+                    this.showEmptyState();
+                }
+                
+                this.saveDraft(true);
+                this.showToast('Question removed', 'info');
+            }, 300);
+        }
+    }
+    
+    cloneQuestion(questionElement) {
+        const clone = questionElement.cloneNode(true);
+        const index = this.state.questionCount;
+        
+        this.updateQuestionTemplate(clone, index);
+        questionElement.after(clone);
+        
+        this.state.questionCount++;
+        this.updateQuestionNumbers();
+        this.updateStats();
+        this.addQuestionEventListeners(clone);
+        
+        this.showToast('Question cloned successfully!', 'success');
+    }
+    
+    setCorrectAnswer(questionElement, choice) {
+        const select = questionElement.querySelector('.correct-choice-select');
+        select.value = choice;
+        this.updateSelectedChoice(questionElement, choice);
+    }
+    
+    updateSelectedChoice(questionElement, choice) {
+        // Remove selection from all choices
+        questionElement.querySelectorAll('.choice-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        // Add selection to correct choice
+        const selectedCard = questionElement.querySelector(`[data-choice="${choice.toLowerCase()}"]`);
+        if (selectedCard) {
+            selectedCard.classList.add('selected');
+        }
+        
+        // Update set correct button states
+        questionElement.querySelectorAll('.set-correct-btn').forEach(btn => {
+            if (btn.dataset.choice === choice) {
+                btn.classList.add('btn-success');
+                btn.classList.remove('btn-outline-primary');
+            } else {
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+            }
+        });
+    }
+    
+    // Validation Methods
+    validateTitle() {
+        const input = document.getElementById('id_title');
+        const isValid = input.value.trim().length >= 3;
+        
+        this.updateValidationFeedback(input, isValid, 
+            isValid ? 'Title is valid' : 'Title must be at least 3 characters');
+        
+        return isValid;
+    }
+    
+    validateCourse() {
+        const select = document.getElementById('id_course');
+        const isValid = select.value !== '';
+        
+        this.updateValidationFeedback(select, isValid,
+            isValid ? 'Course selected' : 'Please select a course');
+        
+        return isValid;
+    }
+    
+    validateQuestion(questionElement) {
+        let isValid = true;
+        const errors = [];
+        
+        // Check question text
+        const questionText = questionElement.querySelector('.question-text');
+        if (!questionText?.value.trim()) {
+            errors.push('Question text is required');
+            isValid = false;
+        }
+        
+        // Check correct answer
+        const correctChoice = questionElement.querySelector('.correct-choice-select');
+        if (!correctChoice?.value) {
+            errors.push('Correct answer is required');
+            isValid = false;
+        }
+        
+        // Check choices for multiple choice
+        if (questionElement.dataset.type === 'multiple-choice') {
+            const choices = questionElement.querySelectorAll('.choice-input');
+            choices.forEach(choice => {
+                if (!choice.value.trim()) {
+                    errors.push('All choices are required');
+                    isValid = false;
+                }
+            });
+        }
+        
+        // Update visual feedback
+        if (isValid) {
+            questionElement.classList.remove('validation-error');
+        } else {
+            questionElement.classList.add('validation-error');
+        }
+        
+        return isValid;
+    }
+    
+    updateValidationFeedback(element, isValid, message = '') {
+        if (isValid) {
+            element.classList.remove('is-invalid');
+            element.classList.add('is-valid');
+        } else {
+            element.classList.remove('is-valid');
+            element.classList.add('is-invalid');
+        }
+        
+        // Update feedback message
+        const feedbackId = element.id + 'Feedback';
+        const feedbackElement = document.getElementById(feedbackId);
+        if (feedbackElement) {
+            feedbackElement.textContent = message;
+            feedbackElement.className = `validation-feedback ${isValid ? 'success' : 'error'}`;
+        }
+    }
+    
+    updateValidationBadge(elementId, isValid) {
+        const badge = document.getElementById(elementId);
+        if (isValid) {
+            badge.className = 'badge bg-success';
+            badge.innerHTML = '<i class="fas fa-check me-1"></i> Valid';
+        } else {
+            badge.className = 'badge bg-danger';
+            badge.innerHTML = '<i class="fas fa-times me-1"></i> Required';
+        }
+    }
+    
+    updateValidationStatus() {
+        // Update all validation badges
+        this.validateTitle();
+        this.validateCourse();
+        
+        const questions = this.questionsContainer.querySelectorAll('.question-card-enhanced');
+        const questionsBadge = document.getElementById('validateQuestions');
+        const allQuestionsBadge = document.getElementById('validateAllQuestions');
+        
+        if (questions.length > 0) {
+            this.updateValidationBadge('validateQuestions', true);
+            
+            let allValid = true;
+            questions.forEach(q => {
+                if (!this.validateQuestion(q)) allValid = false;
+            });
+            
+            this.updateValidationBadge('validateAllQuestions', allValid);
+        } else {
+            this.updateValidationBadge('validateQuestions', false);
+            this.updateValidationBadge('validateAllQuestions', false);
+        }
+    }
+    
+    // Stats & Preview
+    updateStats() {
+        const questions = this.questionsContainer.querySelectorAll('.question-card-enhanced');
+        const totalQuestions = questions.length;
+        let totalPoints = 0;
+        let totalTime = 0;
+        let difficultyCount = { easy: 0, medium: 0, hard: 0 };
+        
+        questions.forEach(question => {
+            const pointsInput = question.querySelector('.points-input');
+            const timeInput = question.querySelector('.time-input');
+            const difficultySelect = question.querySelector('select[name$="[difficulty]"]');
+            
+            if (pointsInput) totalPoints += parseInt(pointsInput.value) || 1;
+            if (timeInput) totalTime += parseInt(timeInput.value) || 60;
+            if (difficultySelect) difficultyCount[difficultySelect.value] = (difficultyCount[difficultySelect.value] || 0) + 1;
+        });
+        
+        // Update statistics
+        document.getElementById('totalQuestionsStat').textContent = totalQuestions;
+        document.getElementById('totalPointsStat').textContent = totalPoints;
+        document.getElementById('estimatedTimeStat').textContent = Math.ceil(totalTime / 60);
+        
+        // Update chart
+        if (this.statsChart) {
+            this.statsChart.data.datasets[0].data = [
+                difficultyCount.easy,
+                difficultyCount.medium,
+                difficultyCount.hard
+            ];
+            this.statsChart.update();
+        }
+    }
+    
+    updatePreview() {
+        const firstQuestion = this.questionsContainer.querySelector('.question-card-enhanced');
+        if (firstQuestion) {
+            const questionText = firstQuestion.querySelector('.question-text')?.value || 'Question preview...';
+            document.getElementById('previewQuestionText').textContent = questionText;
+            
+            // Update choices preview for multiple choice
+            if (firstQuestion.dataset.type === 'multiple-choice') {
+                const previewChoices = document.querySelector('.choice-grid-sm');
+                previewChoices.innerHTML = '';
+                
+                ['a', 'b', 'c', 'd'].forEach(choice => {
+                    const choiceInput = firstQuestion.querySelector(`.choice-${choice}`);
+                    if (choiceInput) {
+                        const choiceCard = document.createElement('div');
+                        choiceCard.className = 'choice-card-sm';
+                        choiceCard.innerHTML = `
+                            <div class="choice-letter">${choice.toUpperCase()}</div>
+                            <span>${choiceInput.value || `Choice ${choice.toUpperCase()}`}</span>
+                        `;
+                        previewChoices.appendChild(choiceCard);
+                    }
+                });
+            }
+            
+            // Update question count
+            const totalQuestions = this.questionsContainer.querySelectorAll('.question-card-enhanced').length;
+            document.getElementById('previewTotalQuestions').textContent = totalQuestions;
+        }
+    }
+    
+    updateReview() {
+        document.getElementById('reviewTitle').textContent = 
+            document.getElementById('id_title').value || 'Untitled Exam';
+        
+        const courseSelect = document.getElementById('id_course');
+        const selectedOption = courseSelect.options[courseSelect.selectedIndex];
+        document.getElementById('reviewCourse').textContent = 
+            selectedOption?.text || 'Not selected';
+        
+        document.getElementById('reviewDuration').textContent = 
+            document.getElementById('id_duration_minutes').value + ' minutes';
+        
+        document.getElementById('reviewPassMark').textContent = 
+            document.getElementById('id_pass_mark').value + '%';
+        
+        const questionCount = this.questionsContainer.querySelectorAll('.question-card-enhanced').length;
+        document.getElementById('reviewQuestions').textContent = `${questionCount} questions`;
+        
+        // Update JSON preview
+        this.updateJSONPreview();
+    }
+    
+    updateJSONPreview() {
+        const preview = document.getElementById('jsonPreview');
+        const data = {
+            exam: {
+                title: document.getElementById('id_title').value || 'Untitled Exam',
+                course: document.getElementById('id_course').options[document.getElementById('id_course').selectedIndex]?.text || 'Not selected',
+                duration: document.getElementById('id_duration_minutes').value + ' minutes',
+                pass_mark: document.getElementById('id_pass_mark').value + '%',
+                questions: this.getQuestionsData()
+            }
+        };
+        
+        preview.textContent = JSON.stringify(data, null, 2);
+        Prism.highlightElement(preview);
+    }
+    
+    // Draft Management
+    saveDraft(auto = false) {
+        if (!this.state.isOnline) {
+            this.showToast('Offline - draft will be saved locally', 'warning');
+        }
+        
+        const draft = {
+            title: document.getElementById('id_title').value,
+            course: document.getElementById('id_course').value,
+            duration_minutes: document.getElementById('id_duration_minutes').value,
+            pass_mark: document.getElementById('id_pass_mark').value,
+            scheduled_date: document.getElementById('id_scheduled_date').value,
+            is_active: document.getElementById('id_is_active').checked,
+            tags: document.getElementById('id_tags').value,
+            questions: this.getQuestionsData(),
+            currentStep: this.state.currentStep,
+            timestamp: new Date().toISOString(),
+            version: '1.0'
+        };
+        
+        localStorage.setItem('examDraft', JSON.stringify(draft));
+        this.state.hasChanges = false;
+        
+        if (!auto) {
+            this.showToast('Draft saved successfully!', 'success');
+        }
+    }
+    
+    loadDraft() {
+        const saved = localStorage.getItem('examDraft');
+        if (saved) {
+            try {
+                const draft = JSON.parse(saved);
+                
+                // Check if draft is recent (less than 24 hours old)
+                const draftAge = Date.now() - new Date(draft.timestamp).getTime();
+                if (draftAge > 24 * 60 * 60 * 1000) {
+                    if (confirm('Found an old draft. Load it?')) {
+                        this.loadDraftData(draft);
+                    }
+                } else {
+                    this.loadDraftData(draft);
+                }
+            } catch (e) {
+                console.error('Error loading draft:', e);
+            }
+        }
+    }
+    
+    loadDraftData(draft) {
+        // Load basic data
+        document.getElementById('id_title').value = draft.title || '';
+        document.getElementById('id_course').value = draft.course || '';
+        document.getElementById('id_duration_minutes').value = draft.duration_minutes || '60';
+        document.getElementById('id_pass_mark').value = draft.pass_mark || '50';
+        document.getElementById('id_scheduled_date').value = draft.scheduled_date || '';
+        document.getElementById('id_is_active').checked = draft.is_active || false;
+        
+        if (draft.tags && this.tagify) {
+            this.tagify.addTags(draft.tags);
+        }
+        
+        // Load questions
+        if (draft.questions && draft.questions.length > 0) {
+            this.questionsContainer.innerHTML = '';
+            draft.questions.forEach((q, index) => {
+                this.addQuestion(q.type || 'multiple-choice');
+                // TODO: Populate question data
+            });
+        }
+        
+        // Restore step
+        if (draft.currentStep) {
+            this.goToStep(draft.currentStep);
+        }
+        
+        this.updateStats();
+        this.updateReview();
+        this.updatePreview();
+        
+        this.showToast('Draft loaded successfully!', 'success');
+    }
+    
+    checkDraft() {
+        const saved = localStorage.getItem('examDraft');
+        if (saved && !this.state.hasChanges) {
+            const draft = JSON.parse(saved);
+            const draftTime = new Date(draft.timestamp).toLocaleTimeString();
+            this.showToast(`Auto-saved draft available from ${draftTime}`, 'info');
+        }
+    }
+    
+    // AI Features
+    handleAISuggestion(event) {
+        const suggestion = event.currentTarget.dataset.suggestion;
+        
+        // Show loading state
+        const originalHTML = event.currentTarget.innerHTML;
+        event.currentTarget.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+        event.currentTarget.disabled = true;
+        
+        // Simulate AI processing
+        setTimeout(() => {
+            event.currentTarget.innerHTML = originalHTML;
+            event.currentTarget.disabled = false;
+            
+            this.generateAIQuestion(suggestion);
+        }, 1500);
+    }
+    
+    generateAIQuestion(type) {
+        const aiQuestions = {
+            'multiple-choice': {
+                question: "Which data structure uses LIFO (Last In, First Out) principle?",
+                choices: {
+                    a: "Queue",
+                    b: "Stack",
+                    c: "Linked List",
+                    d: "Tree"
+                },
+                correct: "B",
+                explanation: "Stack uses LIFO principle, while Queue uses FIFO.",
+                difficulty: "easy",
+                tags: "data-structures, basics"
+            },
+            'true-false': {
+                question: "Python is a compiled language.",
+                correct: "False",
+                explanation: "Python is an interpreted language.",
+                difficulty: "easy",
+                tags: "python, basics"
+            },
+            'theory': {
+                question: "Explain the concept of recursion in programming.",
+                type: "essay",
+                difficulty: "medium",
+                tags: "algorithms, recursion"
+            },
+            'code': {
+                question: "Write a function to check if a string is a palindrome.",
+                type: "code",
+                language: "python",
+                difficulty: "medium",
+                tags: "algorithms, strings, python"
+            }
+        };
+        
+        const questionData = aiQuestions[type];
+        if (questionData) {
+            this.addQuestion(type);
+            
+            // Get the last added question
+            const questions = this.questionsContainer.querySelectorAll('.question-card-enhanced');
+            const lastQuestion = questions[questions.length - 1];
+            
+            if (lastQuestion) {
+                // Populate with AI data
+                const questionText = lastQuestion.querySelector('.question-text');
+                if (questionText) questionText.value = questionData.question;
+                
+                if (type === 'multiple-choice' && questionData.choices) {
+                    Object.keys(questionData.choices).forEach(choice => {
+                        const input = lastQuestion.querySelector(`.choice-${choice}`);
+                        if (input) input.value = questionData.choices[choice];
+                    });
+                    
+                    const correctChoice = lastQuestion.querySelector('.correct-choice-select');
+                    if (correctChoice) correctChoice.value = questionData.correct;
+                }
+                
+                const explanation = lastQuestion.querySelector('.explanation-text');
+                if (explanation && questionData.explanation) {
+                    explanation.value = questionData.explanation;
+                }
+                
+                const tagsInput = lastQuestion.querySelector('.tags-input');
+                if (tagsInput && questionData.tags) {
+                    tagsInput.value = questionData.tags;
+                }
+                
+                const difficultySelect = lastQuestion.querySelector('select[name$="[difficulty]"]');
+                if (difficultySelect && questionData.difficulty) {
+                    difficultySelect.value = questionData.difficulty;
+                }
+                
+                // Update UI
+                this.updateSelectedChoice(lastQuestion, questionData.correct);
+                this.updateStats();
+                this.updatePreview();
+                
+                this.showToast('AI question generated!', 'success');
+            }
+        }
+    }
+    
+    refreshAISuggestions() {
+        document.querySelectorAll('.ai-suggestion-btn').forEach(btn => {
+            btn.classList.add('success-animation');
+            setTimeout(() => btn.classList.remove('success-animation'), 500);
+        });
+        
+        this.showToast('AI suggestions refreshed', 'info');
+    }
+    
+    generateAIQuestions() {
+        if (confirm('Generate 5 AI questions? This will add them to your exam.')) {
+            const types = ['multiple-choice', 'true-false', 'theory', 'code'];
+            
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const type = types[Math.floor(Math.random() * types.length)];
+                    this.generateAIQuestion(type);
+                }, i * 500);
+            }
+            
+            this.showToast('Generating AI questions...', 'info');
+        }
+    }
+    
+    // UI Interactions
+    toggleTheme() {
+        const html = document.documentElement;
+        const currentTheme = html.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        html.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        
+        const icon = document.querySelector('#themeToggleBtn i');
+        icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        
+        this.showToast(`${newTheme === 'dark' ? 'Dark' : 'Light'} mode activated`, 'success');
+    }
+    
+    toggleFabMenu() {
+        this.fabMenu.classList.toggle('active');
+        const icon = this.mainFab.querySelector('i');
+        
+        if (this.fabMenu.classList.contains('active')) {
+            icon.className = 'fas fa-times';
+            this.mainFab.style.transform = 'rotate(45deg)';
+        } else {
+            icon.className = 'fas fa-plus';
+            this.mainFab.style.transform = 'rotate(0)';
+        }
+    }
+    
+    closeFabMenu() {
+        this.fabMenu.classList.remove('active');
+        this.mainFab.querySelector('i').className = 'fas fa-plus';
+        this.mainFab.style.transform = 'rotate(0)';
+    }
+    
+    showEmptyState() {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-state';
+        emptyState.innerHTML = `
+            <i class="fas fa-question-circle empty-state-icon"></i>
+            <h5 class="mb-3">No Questions Added</h5>
+            <p class="text-muted mb-4">Start by adding your first question or use AI to generate questions automatically</p>
+            <div class="d-flex gap-2 justify-content-center">
+                <button type="button" class="btn btn-primary" onclick="examEditor.addQuestion('multiple-choice')">
+                    <i class="fas fa-plus me-2"></i>
+                    Add First Question
+                </button>
+                <button type="button" class="btn btn-outline-primary" onclick="examEditor.generateAIQuestions()">
+                    <i class="fas fa-robot me-2"></i>
+                    Generate with AI
+                </button>
+            </div>
+        `;
+        this.questionsContainer.appendChild(emptyState);
+    }
+    
+    // Bulk Actions
+    selectAllQuestions() {
+        const checkboxes = this.questionsContainer.querySelectorAll('.question-select');
+        const allSelected = Array.from(checkboxes).every(cb => cb.checked);
+        
+        checkboxes.forEach(cb => {
+            cb.checked = !allSelected;
+            this.updateQuestionSelection(cb);
+        });
+        
+        this.showToast(allSelected ? 'All questions deselected' : 'All questions selected', 'info');
+    }
+    
+    duplicateSelected() {
+        const selected = Array.from(this.questionsContainer.querySelectorAll('.question-select:checked'));
+        if (selected.length === 0) {
+            this.showToast('No questions selected', 'warning');
+            return;
+        }
+        
+        selected.forEach(checkbox => {
+            const question = checkbox.closest('.question-card-enhanced');
+            this.cloneQuestion(question);
+        });
+        
+        this.showToast(`${selected.length} questions duplicated`, 'success');
+    }
+    
+    deleteSelected() {
+        const selected = Array.from(this.questionsContainer.querySelectorAll('.question-select:checked'));
+        if (selected.length === 0) {
+            this.showToast('No questions selected', 'warning');
+            return;
+        }
+        
+        if (confirm(`Delete ${selected.length} selected questions?`)) {
+            selected.forEach(checkbox => {
+                const question = checkbox.closest('.question-card-enhanced');
+                this.removeQuestion(question);
+            });
+        }
+    }
+    
+    randomizeOrder() {
+        const questions = Array.from(this.questionsContainer.querySelectorAll('.question-card-enhanced'));
+        
+        // Fisher-Yates shuffle
+        for (let i = questions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            this.questionsContainer.insertBefore(questions[j], questions[i]);
+        }
+        
+        this.updateQuestionNumbers();
+        this.showToast('Questions randomized', 'success');
+    }
+    
+    assignPointsToAll(points) {
+        const pointsInputs = this.questionsContainer.querySelectorAll('.points-input');
+        pointsInputs.forEach(input => {
+            input.value = points;
+        });
+        
+        this.updateStats();
+        this.showToast(`All questions set to ${points} point${points !== 1 ? 's' : ''}`, 'success');
+    }
+    
+    updateQuestionSelection(checkbox) {
+        const question = checkbox.closest('.question-card-enhanced');
+        if (checkbox.checked) {
+            question.classList.add('selected');
+            this.state.selectedQuestions.add(question);
+        } else {
+            question.classList.remove('selected');
+            this.state.selectedQuestions.delete(question);
+        }
+    }
+    
+    // Import/Export
+    handleFileImport(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                this.importQuestions(data);
+            } catch (error) {
+                this.showToast('Error parsing file: ' + error.message, 'error');
+            }
+        };
+        reader.readAsText(file);
+    }
+    
+    importQuestions(data) {
+        if (data.questions && Array.isArray(data.questions)) {
+            data.questions.forEach((q, index) => {
+                setTimeout(() => {
+                    this.addQuestion(q.type || 'multiple-choice');
+                    // TODO: Populate imported question data
+                }, index * 100);
+            });
+            
+            this.showToast(`${data.questions.length} questions imported`, 'success');
+        }
+    }
+    
+    exportAsJSON() {
+        const data = {
+            exam: {
+                title: document.getElementById('id_title').value,
+                course: document.getElementById('id_course').value,
+                duration: document.getElementById('id_duration_minutes').value,
+                pass_mark: document.getElementById('id_pass_mark').value,
+                questions: this.getQuestionsData()
+            },
+            exported_at: new Date().toISOString(),
+            version: '1.0'
+        };
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `exam-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        this.showToast('Exam exported as JSON', 'success');
+    }
+    
+    exportAsPDF() {
+        // Simulate PDF generation
+        this.showToast('PDF generation started...', 'info');
+        
+        // In a real implementation, this would call a PDF generation service
+        setTimeout(() => {
+            this.showToast('PDF generated successfully!', 'success');
+        }, 2000);
+    }
+    
+    printExam() {
+        window.print();
+    }
+    
+    getQuestionsData() {
+        const questions = [];
+        const questionCards = this.questionsContainer.querySelectorAll('.question-card-enhanced');
+        
+        questionCards.forEach((card, index) => {
+            const question = {
+                type: card.dataset.type,
+                question_text: card.querySelector('.question-text')?.value || '',
+                points: card.querySelector('.points-input')?.value || '1',
+                correct_choice: card.querySelector('.correct-choice-select')?.value || '',
+                explanation: card.querySelector('.explanation-text')?.value || '',
+                difficulty: card.querySelector('select[name$="[difficulty]"]')?.value || 'medium',
+                tags: card.querySelector('.tags-input')?.value || '',
+                choices: {}
+            };
+            
+            if (question.type === 'multiple-choice') {
+                ['a', 'b', 'c', 'd'].forEach(choice => {
+                    const input = card.querySelector(`.choice-${choice}`);
+                    if (input) question.choices[choice] = input.value;
+                });
+            }
+            
+            questions.push(question);
+        });
+        
+        return questions;
+    }
+    
+    // Network Handling
+    handleOnline() {
+        this.state.isOnline = true;
+        this.showToast('Back online! Syncing changes...', 'success');
+        
+        // Sync any pending changes
+        if (this.state.hasChanges) {
+            this.saveDraft(true);
+        }
+    }
+    
+    handleOffline() {
+        this.state.isOnline = false;
+        this.showToast('You are offline. Changes will be saved locally.', 'warning');
+    }
+    
+    // Form Submission
+    handleSubmit(event) {
+        event.preventDefault();
+        
+        // Validate all steps
+        if (!this.validateStep(1) || !this.validateStep(3)) {
+            this.showToast('Please fix all validation errors before submitting', 'warning');
+            this.goToStep(1);
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = document.getElementById('submitBtn');
+        const originalHTML = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+        submitBtn.disabled = true;
+        
+        // Clear draft
+        localStorage.removeItem('examDraft');
+        
+        // Submit form
+        setTimeout(() => {
+            this.form.submit();
+        }, 1000);
+    }
+    
+    // Utility Methods
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+    
+    updateCharCounter(textarea) {
+        const counter = textarea.nextElementSibling?.querySelector('.question-char-count');
+        if (counter) {
+            const count = textarea.value.length;
+            counter.textContent = count;
+            
+            // Update color based on length
+            if (count > 900) {
+                counter.style.color = 'var(--accent-red)';
+            } else if (count > 700) {
+                counter.style.color = 'var(--accent-yellow)';
+            } else {
+                counter.style.color = 'var(--text-secondary)';
+            }
+        }
+    }
+    
+    updateQuestionNumbers() {
+        const questions = this.questionsContainer.querySelectorAll('.question-card-enhanced');
+        questions.forEach((question, index) => {
+            const numberSpan = question.querySelector('.question-number');
+            if (numberSpan) {
+                numberSpan.textContent = index + 1;
+            }
+            
+            // Update IDs and names
+            question.dataset.index = index;
+            this.updateQuestionInputNames(question, index);
+        });
+        
+        document.getElementById('questionCount').textContent = `(${questions.length} questions)`;
+        document.getElementById('previewQuestionNum').textContent = '1';
+        document.getElementById('previewTotalQuestions').textContent = questions.length;
+    }
+    
+    updateQuestionInputNames(questionElement, index) {
+        const inputs = questionElement.querySelectorAll('[name^="questions["]');
+        inputs.forEach(input => {
+            const oldName = input.name;
+            const match = oldName.match(/questions\[(\d+)\](.+)/);
+            if (match) {
+                input.name = `questions[${index}]${match[2]}`;
+            }
+        });
+    }
+    
+    showPreview() {
+        const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+        modal.show();
+        
+        // Update preview content
+        this.updateFullPreview();
+    }
+    
+    updateFullPreview() {
+        // Update modal preview with all questions
+        const previewContainer = document.getElementById('fullPreview');
+        if (previewContainer) {
+            const questions = this.getQuestionsData();
+            previewContainer.innerHTML = `
+                <h4>${document.getElementById('id_title').value || 'Exam Preview'}</h4>
+                <p class="text-muted">Total questions: ${questions.length}</p>
+                ${questions.map((q, i) => `
+                    <div class="preview-question mb-4">
+                        <h6>${i + 1}. ${q.question_text}</h6>
+                        ${q.type === 'multiple-choice' ? `
+                            <div class="preview-choices mt-2">
+                                ${Object.entries(q.choices).map(([key, value]) => `
+                                    <div class="preview-choice ${key === q.correct_choice.toLowerCase() ? 'text-success' : ''}">
+                                        ${key.toUpperCase()}. ${value}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        ${q.explanation ? `<div class="preview-explanation mt-2"><small class="text-muted">${q.explanation}</small></div>` : ''}
+                    </div>
+                `).join('')}
+            `;
+        }
+    }
+    
+    closeAllModals() {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            const bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) bsModal.hide();
+        });
+    }
+    
+    showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast`;
+        toast.innerHTML = `
+            <div class="toast-icon bg-${type}">
+                <i class="fas fa-${this.getToastIcon(type)}"></i>
+            </div>
+            <div class="toast-content">
+                <div class="toast-message">${message}</div>
+                <button class="toast-close" onclick="this.parentElement.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        document.querySelector('.toast-container').appendChild(toast);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.remove();
+            }
+        }, 5000);
+    }
+    
+    getToastIcon(type) {
+        const icons = {
+            'success': 'check-circle',
+            'error': 'exclamation-circle',
+            'warning': 'exclamation-triangle',
+            'info': 'info-circle'
+        };
+        return icons[type] || 'info-circle';
+    }
+}
+
+// Initialize the editor
+document.addEventListener('DOMContentLoaded', () => {
+    window.examEditor = new EnhancedExamEditor();
+    
+    // Set theme from localStorage
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // Global functions for onclick handlers
+    window.quickAddQuestion = () => {
+        examEditor.addQuestion();
+        examEditor.goToStep(3);
+    };
+    
+    window.saveDraft = () => examEditor.saveDraft();
+    window.showPreview = () => examEditor.showPreview();
+    window.toggleTheme = () => examEditor.toggleTheme();
+    window.goToStep = (step) => examEditor.goToStep(step);
+    window.addQuestion = (type) => examEditor.addQuestion(type);
+    window.exportExamData = () => examEditor.exportAsJSON();
+    window.generateAIQuestions = () => examEditor.generateAIQuestions();
+    window.importFromFile = () => document.querySelector('input[type="file"]').click();
+    
+    // Service Worker for offline support
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(console.error);
+    }
+});
+
+// Additional CSS for toasts
+const toastStyles = document.createElement('style');
+toastStyles.textContent = `
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+}
+
+.toast {
+    background: rgba(30, 30, 46, 0.95);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: slideInRight 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.toast-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+.toast-content {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.toast-message {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.toast-close:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.bg-success { background: var(--gradient-success); }
+.bg-error { background: var(--gradient-danger); }
+.bg-warning { background: var(--gradient-warning); }
+.bg-info { background: var(--gradient-primary); }
+
+.validation-error {
+    border-left: 4px solid var(--accent-red) !important;
+    animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.selected {
+    background: rgba(122, 162, 247, 0.1) !important;
+    border-color: var(--accent-blue) !important;
+}
+
+.sortable-ghost {
+    opacity: 0.4;
+    background: rgba(122, 162, 247, 0.1);
+}
+
+.sortable-chosen {
+    background: rgba(122, 162, 247, 0.05);
+}
+`;
+document.head.appendChild(toastStyles);
+</script>
+{% endblock %}

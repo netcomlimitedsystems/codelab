@@ -1,0 +1,826 @@
+{% extends "base.html" %}
+
+{% block title %}Upgrade Account - CodeLab{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary mb-3">
+            <i class="fas fa-rocket me-3"></i>Upgrade Your Learning Experience
+        </h1>
+        <p class="lead text-muted">Unlock premium features and accelerate your learning journey</p>
+        
+        <!-- Current Plan Indicator -->
+        {% if current_plan %}
+        <div class="d-inline-block p-3 bg-light rounded-3">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-crown fa-2x text-warning me-3"></i>
+                <div class="text-start">
+                    <h5 class="mb-1">Your Current Plan</h5>
+                    <p class="mb-0">
+                        <span class="badge bg-primary fs-6">{{ current_plan.name }}</span>
+                        • ${{ current_plan.price }}/{{ current_plan.duration }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info d-inline-flex align-items-center">
+            <i class="fas fa-info-circle me-2"></i>
+            You're currently on the <strong>Free Plan</strong>. Upgrade to unlock premium features.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Toggle Billing Period -->
+    <div class="text-center mb-5">
+        <div class="btn-group" role="group">
+            <input type="radio" class="btn-check" name="billingPeriod" id="monthly" autocomplete="off" checked>
+            <label class="btn btn-outline-primary" for="monthly">
+                <i class="fas fa-calendar-alt me-2"></i>Monthly Billing
+            </label>
+            
+            <input type="radio" class="btn-check" name="billingPeriod" id="yearly" autocomplete="off">
+            <label class="btn btn-outline-primary" for="yearly">
+                <i class="fas fa-calendar-star me-2"></i>Yearly Billing
+                <span class="badge bg-success ms-2">Save 20%</span>
+            </label>
+            
+            <input type="radio" class="btn-check" name="billingPeriod" id="lifetime" autocomplete="off">
+            <label class="btn btn-outline-primary" for="lifetime">
+                <i class="fas fa-infinity me-2"></i>Lifetime Access
+                <span class="badge bg-warning text-dark ms-2">Best Value</span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Pricing Plans -->
+    <div class="row g-4 mb-5">
+        {% for plan in available_plans %}
+        <div class="col-lg-4">
+            <div class="card pricing-card h-100 border-{% if plan.is_popular %}primary border-2{% else %}1{% endif %} 
+                shadow-sm hover-shadow-lg transition-all duration-300 position-relative
+                {% if current_plan.id == plan.id %}current-plan{% endif %}">
+                
+                {% if plan.is_popular %}
+                <div class="position-absolute top-0 start-50 translate-middle">
+                    <span class="badge bg-primary rounded-pill py-2 px-3">
+                        <i class="fas fa-star me-1"></i>Most Popular
+                    </span>
+                </div>
+                {% endif %}
+                
+                <div class="card-body p-4">
+                    <!-- Plan Header -->
+                    <div class="text-center mb-4">
+                        <h3 class="fw-bold mb-2">{{ plan.name }}</h3>
+                        <div class="d-flex align-items-baseline justify-content-center mb-3">
+                            <span class="display-4 fw-bold text-primary">$</span>
+                            <span class="display-1 fw-bold text-primary plan-price" data-monthly="{{ plan.monthly_price }}" 
+                                  data-yearly="{{ plan.yearly_price }}" data-lifetime="{{ plan.lifetime_price }}">
+                                {{ plan.price }}
+                            </span>
+                            <span class="fs-4 text-muted plan-period" data-monthly="/month" 
+                                  data-yearly="/year" data-lifetime=" one-time">
+                                /{{ plan.duration }}
+                            </span>
+                        </div>
+                        {% if plan.yearly_discount %}
+                        <p class="text-success mb-0">
+                            <i class="fas fa-percentage me-1"></i>Save {{ plan.yearly_discount }}% with yearly billing
+                        </p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Plan Features -->
+                    <ul class="list-unstyled mb-4">
+                        {% for feature in plan.features.all %}
+                        <li class="mb-3">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3">
+                                    <i class="fas fa-{% if feature.included %}check-circle text-success{% else %}times-circle text-muted{% endif %}"></i>
+                                </div>
+                                <div>
+                                    <span class="{% if not feature.included %}text-muted{% endif %}">
+                                        {{ feature.description }}
+                                    </span>
+                                    {% if feature.limit %}
+                                    <small class="text-muted d-block">({{ feature.limit }})</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    
+                    <!-- Plan Selector -->
+                    <div class="text-center mt-auto">
+                        {% if current_plan.id == plan.id %}
+                        <div class="d-grid">
+                            <button class="btn btn-success disabled" disabled>
+                                <i class="fas fa-check-circle me-2"></i>Current Plan
+                            </button>
+                            <small class="text-muted mt-2">Your plan renews on {{ current_plan.renewal_date|date:"M d, Y" }}</small>
+                        </div>
+                        {% else %}
+                        <div class="form-check d-none">
+                            <input class="form-check-input" type="radio" name="plan" 
+                                   id="plan{{ plan.id }}" value="{{ plan.id }}" required>
+                        </div>
+                        <button class="btn btn-{% if plan.is_popular %}primary btn-lg{% else %}outline-primary{% endif %} w-100 select-plan-btn" 
+                                data-plan-id="{{ plan.id }}">
+                            {% if plan.price == 0 %}
+                                <i class="fas fa-check me-2"></i>Continue Free
+                            {% else %}
+                                <i class="fas fa-arrow-up me-2"></i>Upgrade to {{ plan.name }}
+                            {% endif %}
+                        </button>
+                        {% if plan.trial_available %}
+                        <p class="small text-muted mt-2 mb-0">
+                            <i class="fas fa-clock me-1"></i>
+                            {{ plan.trial_days }}-day free trial available
+                        </p>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-tools fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No upgrade plans available at the moment.</h4>
+                <p class="text-muted">Please check back later or contact support.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Feature Comparison Table -->
+    <div class="card shadow-lg mb-5">
+        <div class="card-header bg-white">
+            <h3 class="mb-0">
+                <i class="fas fa-chart-bar me-2 text-primary"></i>Plan Comparison
+            </h3>
+            <p class="text-muted mb-0">Detailed feature comparison across all plans</p>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 30%;">Feature</th>
+                            {% for plan in available_plans %}
+                            <th class="text-center {% if plan.is_popular %}bg-primary text-white{% endif %}">
+                                {{ plan.name }}
+                                <div class="small fw-normal">${{ plan.price }}/{{ plan.duration }}</div>
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><i class="fas fa-book me-2"></i>Course Access</td>
+                            {% for plan in available_plans %}
+                            <td class="text-center">
+                                {% if plan.features.courses == 'all' %}
+                                <span class="badge bg-success">All Courses</span>
+                                {% elif plan.features.courses == 'limited' %}
+                                <span class="badge bg-warning">Limited</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Basic Only</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-certificate me-2"></i>Certificates</td>
+                            {% for plan in available_plans %}
+                            <td class="text-center">
+                                {% if plan.features.certificates %}
+                                <i class="fas fa-check-circle text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times-circle text-muted"></i>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-download me-2"></i>Download Resources</td>
+                            {% for plan in available_plans %}
+                            <td class="text-center">
+                                {% if plan.features.downloads %}
+                                <i class="fas fa-check-circle text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times-circle text-muted"></i>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-headset me-2"></i>Priority Support</td>
+                            {% for plan in available_plans %}
+                            <td class="text-center">
+                                {% if plan.features.priority_support %}
+                                <i class="fas fa-check-circle text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times-circle text-muted"></i>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-project-diagram me-2"></i>Projects & Exercises</td>
+                            {% for plan in available_plans %}
+                            <td class="text-center">
+                                {% if plan.features.projects == 'unlimited' %}
+                                <span class="badge bg-success">Unlimited</span>
+                                {% elif plan.features.projects == 'limited' %}
+                                <span class="badge bg-warning">{{ plan.features.project_limit }}</span>
+                                {% else %}
+                                <i class="fas fa-times-circle text-muted"></i>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-users me-2"></i>Community Access</td>
+                            {% for plan in available_plans %}
+                            <td class="text-center">
+                                {% if plan.features.community == 'premium' %}
+                                <span class="badge bg-success">Premium</span>
+                                {% elif plan.features.community == 'basic' %}
+                                <span class="badge bg-info">Basic</span>
+                                {% else %}
+                                <i class="fas fa-times-circle text-muted"></i>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-mobile-alt me-2"></i>Mobile App</td>
+                            {% for plan in available_plans %}
+                            <td class="text-center">
+                                {% if plan.features.mobile_access %}
+                                <i class="fas fa-check-circle text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times-circle text-muted"></i>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-cloud-download-alt me-2"></i>Offline Access</td>
+                            {% for plan in available_plans %}
+                            <td class="text-center">
+                                {% if plan.features.offline_access %}
+                                <i class="fas fa-check-circle text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times-circle text-muted"></i>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Form (Hidden initially) -->
+    <div class="card shadow-lg mb-5" id="paymentForm" style="display: none;">
+        <div class="card-header bg-white">
+            <h3 class="mb-0">
+                <i class="fas fa-credit-card me-2 text-primary"></i>Complete Your Upgrade
+            </h3>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" id="upgradeForm">
+                {% csrf_token %}
+                <input type="hidden" name="plan" id="selectedPlan">
+                <input type="hidden" name="billing_period" id="selectedBillingPeriod" value="monthly">
+                
+                <!-- Selected Plan Summary -->
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="mb-2" id="selectedPlanName">Premium Plan</h5>
+                                <div class="d-flex align-items-baseline">
+                                    <span class="display-6 fw-bold text-primary" id="selectedPlanPrice">$29</span>
+                                    <span class="fs-4 text-muted" id="selectedPlanPeriod">/month</span>
+                                </div>
+                                <small class="text-muted" id="selectedPlanDescription">Complete access to all premium features</small>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button type="button" class="btn btn-outline-primary" id="changePlanBtn">
+                                    <i class="fas fa-edit me-2"></i>Change Plan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Method -->
+                <div class="mb-4">
+                    <h5 class="mb-3">Payment Method</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-check card">
+                                <input class="form-check-input d-none" type="radio" name="payment_method" id="creditCard" value="card" checked>
+                                <label class="form-check-label p-3" for="creditCard">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <i class="fas fa-credit-card fa-2x text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">Credit/Debit Card</h6>
+                                            <small class="text-muted">Visa, Mastercard, American Express</small>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check card">
+                                <input class="form-check-input d-none" type="radio" name="payment_method" id="paypal" value="paypal">
+                                <label class="form-check-label p-3" for="paypal">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <i class="fab fa-paypal fa-2x text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">PayPal</h6>
+                                            <small class="text-muted">Secure payment with PayPal</small>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card Details (Shown when credit card selected) -->
+                <div id="cardDetails">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-12">
+                            <label class="form-label">Card Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-credit-card"></i></span>
+                                <input type="text" class="form-control" placeholder="1234 5678 9012 3456">
+                                <span class="input-group-text">
+                                    <i class="fab fa-cc-visa me-1"></i>
+                                    <i class="fab fa-cc-mastercard me-1"></i>
+                                    <i class="fab fa-cc-amex"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Expiration Date</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="MM" maxlength="2">
+                                <span class="input-group-text">/</span>
+                                <input type="text" class="form-control" placeholder="YY" maxlength="2">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Security Code</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="CVC" maxlength="4">
+                                <span class="input-group-text" data-bs-toggle="tooltip" title="3 or 4 digit code on back of card">
+                                    <i class="fas fa-question-circle"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Billing Information -->
+                <div class="mb-4">
+                    <h5 class="mb-3">Billing Information</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" value="{{ user.get_full_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control" value="{{ user.email }}" readonly>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Billing Address</label>
+                            <input type="text" class="form-control" placeholder="Street address">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">City</label>
+                            <input type="text" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Country</label>
+                            <select class="form-select">
+                                <option>United States</option>
+                                <option>Canada</option>
+                                <option>United Kingdom</option>
+                                <option>Australia</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Terms and Conditions -->
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" id="terms" required>
+                    <label class="form-check-label" for="terms">
+                        I agree to the <a href="{% url 'accounts:terms' %}" target="_blank">Terms of Service</a> and authorize CodeLab to charge my payment method for the selected plan. I understand that I can cancel my subscription at any time.
+                    </label>
+                </div>
+                
+                <!-- Submit Buttons -->
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" id="cancelPaymentBtn">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Plans
+                    </button>
+                    <button type="submit" class="btn btn-success btn-lg px-5">
+                        <i class="fas fa-lock me-2"></i>Complete Purchase
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h3 class="mb-0">
+                <i class="fas fa-question-circle me-2 text-primary"></i>Frequently Asked Questions
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="accordion accordion-flush" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            Can I cancel my subscription at any time?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes, you can cancel your subscription at any time. Your premium features will remain active until the end of your current billing period.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            Is there a free trial available?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes! Most premium plans offer a 14-day free trial. You can cancel anytime during the trial period and won't be charged.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            What payment methods do you accept?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            We accept all major credit cards (Visa, Mastercard, American Express) and PayPal. All payments are processed securely.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                            Can I switch plans later?
+                        </button>
+                    </h2>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Absolutely! You can upgrade or downgrade your plan at any time. When upgrading, you'll get immediate access to new features. When downgrading, changes will take effect at the start of your next billing cycle.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Need Help Section -->
+    <div class="text-center mt-5">
+        <h4 class="mb-3">Need help choosing a plan?</h4>
+        <p class="text-muted mb-4">Our team is here to help you find the perfect plan for your learning goals.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'accounts:contact' %}?subject=Plan%20Selection%20Help" class="btn btn-outline-primary">
+                <i class="fas fa-headset me-2"></i>Contact Sales
+            </a>
+            <a href="{% url 'accounts:support' %}" class="btn btn-outline-success">
+                <i class="fas fa-question-circle me-2"></i>Visit Support Center
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle me-2"></i>Upgrade Successful!
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <i class="fas fa-trophy fa-4x text-success mb-4"></i>
+                <h4 class="mb-3">Welcome to Premium!</h4>
+                <p class="text-muted mb-4">Your account has been successfully upgraded. You now have access to all premium features.</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'courses:catalog' %}" class="btn btn-success">
+                        <i class="fas fa-book me-2"></i>Explore Premium Courses
+                    </a>
+                    <button class="btn btn-outline-success" data-bs-dismiss="modal">
+                        Continue to Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+    .pricing-card {
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .pricing-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
+    }
+    
+    .pricing-card.current-plan {
+        border-color: #198754 !important;
+        background-color: rgba(25, 135, 84, 0.05);
+    }
+    
+    .hover-shadow-lg:hover {
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+    
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+    
+    .form-check.card {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .form-check.card:hover {
+        border-color: #0d6efd;
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    .form-check-input:checked + .form-check-label {
+        border-color: #0d6efd;
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+    
+    .btn-check:checked + .btn-outline-primary {
+        background-color: #0d6efd;
+        color: white;
+    }
+    
+    .table th.bg-primary {
+        background-color: #0d6efd !important;
+    }
+    
+    .badge.bg-success, .badge.bg-warning, .badge.bg-info {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+</style>
+
+<!-- JavaScript -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Billing period toggle
+        const billingRadios = document.querySelectorAll('input[name="billingPeriod"]');
+        const planPrices = document.querySelectorAll('.plan-price');
+        const planPeriods = document.querySelectorAll('.plan-period');
+        const selectedBillingPeriod = document.getElementById('selectedBillingPeriod');
+        
+        billingRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    const period = this.id; // monthly, yearly, lifetime
+                    selectedBillingPeriod.value = period;
+                    
+                    // Update all plan prices and periods
+                    planPrices.forEach(priceElement => {
+                        const price = priceElement.getAttribute(`data-${period}`);
+                        priceElement.textContent = price;
+                    });
+                    
+                    planPeriods.forEach(periodElement => {
+                        const periodText = periodElement.getAttribute(`data-${period}`);
+                        periodElement.textContent = periodText;
+                    });
+                    
+                    // Update selected plan price if any
+                    updateSelectedPlanPrice();
+                }
+            });
+        });
+        
+        // Plan selection
+        const selectPlanBtns = document.querySelectorAll('.select-plan-btn');
+        const pricingCards = document.querySelectorAll('.pricing-card');
+        const paymentForm = document.getElementById('paymentForm');
+        const upgradeForm = document.getElementById('upgradeForm');
+        const selectedPlanInput = document.getElementById('selectedPlan');
+        const selectedPlanName = document.getElementById('selectedPlanName');
+        const selectedPlanPrice = document.getElementById('selectedPlanPrice');
+        const selectedPlanPeriod = document.getElementById('selectedPlanPeriod');
+        const selectedPlanDescription = document.getElementById('selectedPlanDescription');
+        const changePlanBtn = document.getElementById('changePlanBtn');
+        const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
+        
+        let selectedPlan = null;
+        
+        // Function to get plan details
+        function getPlanDetails(planId) {
+            const card = document.querySelector(`.pricing-card[data-plan-id="${planId}"]`);
+            if (!card) return null;
+            
+            return {
+                id: planId,
+                name: card.querySelector('h3').textContent.trim(),
+                price: card.querySelector('.plan-price').textContent,
+                period: card.querySelector('.plan-period').textContent,
+                description: card.querySelector('p.text-muted')?.textContent || 'Premium features included'
+            };
+        }
+        
+        // Plan selection handler
+        selectPlanBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const planId = this.getAttribute('data-plan-id');
+                const planDetails = getPlanDetails(planId);
+                
+                if (!planDetails) return;
+                
+                // Update UI
+                selectedPlan = planDetails;
+                selectedPlanInput.value = planId;
+                selectedPlanName.textContent = planDetails.name;
+                selectedPlanPrice.textContent = planDetails.price;
+                selectedPlanPeriod.textContent = planDetails.period;
+                selectedPlanDescription.textContent = planDetails.description;
+                
+                // Highlight selected plan card
+                pricingCards.forEach(card => {
+                    card.classList.remove('border-primary', 'border-2');
+                    if (card.getAttribute('data-plan-id') === planId) {
+                        card.classList.add('border-primary', 'border-2');
+                    }
+                });
+                
+                // Show payment form
+                document.querySelector('.row.g-4').style.display = 'none';
+                document.querySelector('.card.shadow-lg.mb-5').style.display = 'none';
+                paymentForm.style.display = 'block';
+                
+                // Scroll to payment form
+                paymentForm.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+        
+        // Change plan button
+        changePlanBtn.addEventListener('click', function() {
+            // Show plans again
+            document.querySelector('.row.g-4').style.display = 'flex';
+            document.querySelector('.card.shadow-lg.mb-5').style.display = 'block';
+            paymentForm.style.display = 'none';
+            
+            // Scroll to plans
+            document.querySelector('.row.g-4').scrollIntoView({ behavior: 'smooth' });
+        });
+        
+        // Cancel payment button
+        cancelPaymentBtn.addEventListener('click', function() {
+            changePlanBtn.click();
+        });
+        
+        // Update selected plan price based on billing period
+        function updateSelectedPlanPrice() {
+            if (!selectedPlan) return;
+            
+            const activeBillingRadio = document.querySelector('input[name="billingPeriod"]:checked');
+            if (!activeBillingRadio) return;
+            
+            const period = activeBillingRadio.id;
+            const card = document.querySelector(`.pricing-card[data-plan-id="${selectedPlan.id}"]`);
+            if (!card) return;
+            
+            const price = card.querySelector('.plan-price').getAttribute(`data-${period}`);
+            const periodText = card.querySelector('.plan-period').getAttribute(`data-${period}`);
+            
+            selectedPlanPrice.textContent = price;
+            selectedPlanPeriod.textContent = periodText;
+        }
+        
+        // Payment method toggle
+        const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
+        const cardDetails = document.getElementById('cardDetails');
+        
+        paymentMethods.forEach(method => {
+            method.addEventListener('change', function() {
+                if (this.value === 'card') {
+                    cardDetails.style.display = 'block';
+                } else {
+                    cardDetails.style.display = 'none';
+                }
+            });
+        });
+        
+        // Form submission
+        upgradeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate form
+            const termsChecked = document.getElementById('terms').checked;
+            if (!termsChecked) {
+                alert('Please accept the terms and conditions.');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+            submitBtn.disabled = true;
+            
+            // Simulate API call
+            setTimeout(() => {
+                // Show success modal
+                const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                successModal.show();
+                
+                // Reset form
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                
+                // In real implementation, this would redirect or refresh the page
+                // window.location.href = "{% url 'accounts:profile_settings' %}";
+            }, 2000);
+        });
+        
+        // Initialize tooltips
+        const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltips.forEach(tooltip => {
+            new bootstrap.Tooltip(tooltip);
+        });
+        
+        // Auto-select popular plan if no current plan
+        {% if not current_plan %}
+        setTimeout(() => {
+            const popularPlanBtn = document.querySelector('.pricing-card .badge.bg-primary')?.closest('.pricing-card')?.querySelector('.select-plan-btn');
+            if (popularPlanBtn) {
+                popularPlanBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Add animation to popular plan
+                const popularCard = popularPlanBtn.closest('.pricing-card');
+                popularCard.style.animation = 'pulse 2s infinite';
+                
+                setTimeout(() => {
+                    popularCard.style.animation = '';
+                }, 4000);
+            }
+        }, 1000);
+        {% endif %}
+        
+        // Add CSS animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7); }
+                70% { box-shadow: 0 0 0 20px rgba(13, 110, 253, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+            }
+        `;
+        document.head.appendChild(style);
+    });
+</script>
+{% endblock %}

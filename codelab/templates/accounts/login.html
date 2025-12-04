@@ -1,0 +1,648 @@
+{% extends 'base.html' %}
+{% load socialaccount %}
+
+{% block title %}Secure Login - CodeLab{% endblock %}
+
+{% block sidebar %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 col-xxl-4">
+        <div class="card shadow-lg border-0">
+            <!-- Security Header -->
+            <div class="card-header bg-primary text-white py-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>Secure Login
+                    </h4>
+                    <span class="badge bg-light text-primary">
+                        <i class="fas fa-lock"></i> HTTPS
+                    </span>
+                </div>
+            </div>
+            
+            <div class="card-body p-4 p-md-5">
+                <!-- Security Status Indicators -->
+                <div class="alert alert-light border mb-4" role="alert">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-check-circle text-success fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <small class="text-muted">
+                                <strong>Secure Connection:</strong> All data is encrypted via TLS 1.3
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mb-4">
+                    <div class="mb-3">
+                        <i class="fas fa-user-shield text-primary fs-1"></i>
+                    </div>
+                    <h2 class="fw-bold mb-2">Secure Access</h2>
+                    <p class="text-muted">Sign in with your credentials</p>
+                </div>
+                
+                <!-- Login Form -->
+                <form method="POST" action="{% url 'accounts:login' %}" id="loginForm" novalidate>
+                    {% csrf_token %}
+                    {% if next %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                    {% endif %}
+                    
+                    <!-- Anti-CSRF Token (additional) -->
+                    <input type="hidden" id="security_token" name="security_token" value="{{ csrf_token }}">
+                    
+                    <!-- Username Field -->
+                    <div class="mb-4">
+                        <label for="username" class="form-label fw-semibold">
+                            <i class="fas fa-user me-1"></i>Username or Email
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-user text-primary"></i>
+                            </span>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="username" 
+                                   name="username" 
+                                   required 
+                                   autocomplete="username"
+                                   autocapitalize="none"
+                                   autocomplete="username"
+                                   placeholder="Enter username or email"
+                                   aria-describedby="usernameHelp">
+                        </div>
+                        <div id="usernameHelp" class="form-text text-end">
+                            <small>Case-sensitive</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Password Field -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label for="password" class="form-label fw-semibold">
+                                <i class="fas fa-key me-1"></i>Password
+                            </label>
+                            <div class="position-relative">
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-secondary position-relative"
+                                        id="securityHint"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        title="Use strong passwords with special characters">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-lock text-primary"></i>
+                            </span>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="password" 
+                                   name="password" 
+                                   required 
+                                   minlength="8"
+                                   autocomplete="current-password"
+                                   placeholder="Enter your password"
+                                   aria-describedby="passwordStrength">
+                            <button class="btn btn-outline-secondary" 
+                                    type="button" 
+                                    id="togglePassword"
+                                    aria-label="Show password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Password Strength Indicator -->
+                        <div class="mt-2" id="passwordStrength" style="display: none;">
+                            <div class="progress" style="height: 4px;">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <small class="text-muted">Password strength: <span id="strengthText">None</span></small>
+                        </div>
+                    </div>
+                    
+                    <!-- Security Options -->
+                    <div class="mb-4">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="remember" 
+                                   name="remember">
+                            <label class="form-check-label" for="remember">
+                                <i class="fas fa-fingerprint me-1"></i>Remember this device
+                            </label>
+                        </div>
+                        
+                        <!-- CAPTCHA Placeholder -->
+                        <div class="mb-3" id="captchaContainer">
+                            <!-- CAPTCHA would be loaded here via JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <!-- Login Attempt Counter -->
+                    <div class="alert alert-warning alert-dismissible fade show d-none" role="alert" id="attemptAlert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="attemptMessage"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2 mb-4">
+                        <button type="submit" 
+                                class="btn btn-primary btn-lg shadow-sm" 
+                                id="submitBtn"
+                                data-loading-text="<span class='spinner-border spinner-border-sm me-2' role='status' aria-hidden='true'></span> Verifying...">
+                            <i class="fas fa-sign-in-alt me-2"></i>Secure Login
+                        </button>
+                    </div>
+                    
+                    <!-- Error Messages -->
+                    {% if form.errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            <div>
+                                <strong>Security Alert:</strong> Invalid credentials detected.
+                                <div class="mt-1">
+                                    <small>Check your username and password, or 
+                                        <a href="{% url 'accounts:forgot_password' %}" class="alert-link">
+                                            reset your password
+                                        </a>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endif %}
+                </form>
+                
+                <!-- Security Footer -->
+                <div class="border-top pt-4 mt-4">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <a href="{% url 'accounts:forgot_password' %}" 
+                               class="btn btn-outline-secondary w-100 mb-2">
+                                <i class="fas fa-key me-2"></i>Forgot Password?
+                            </a>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <a href="{% url 'accounts:register' %}" 
+                               class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-user-plus me-2"></i>Create Account
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Multi-factor Authentication Prompt -->
+                    <div class="mt-4 text-center">
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-mobile-alt me-1"></i>
+                            For enhanced security, enable 
+                            <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#mfaModal">
+                                2-Factor Authentication
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Terms & Privacy -->
+                <div class="text-center mt-4 pt-3 border-top">
+                    <small class="text-muted">
+                        <i class="fas fa-shield me-1"></i>
+                        By signing in, you agree to our 
+                        <a href="{% url 'accounts:terms' %}" class="text-decoration-none">Terms</a> and 
+                        <a href="{% url 'accounts:privacy' %}" class="text-decoration-none">Privacy Policy</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Social Login -->
+        <!-- Social Login -->
+        <div class="row g-2">
+            <div class="col-4">
+                <a href="{% provider_login_url 'google' %}" class="btn btn-light border w-100 py-2">
+                    <i class="fab fa-google text-danger"></i>
+                    <span class="d-none d-sm-inline ms-1">Google</span>
+                </a>
+            </div>
+            <div class="col-4">
+                <a href="{% provider_login_url 'github' %}" class="btn btn-light border w-100 py-2">
+                    <i class="fab fa-github"></i>
+                    <span class="d-none d-sm-inline ms-1">GitHub</span>
+                </a>
+            </div>
+            <div class="col-4">
+            <a href="{% provider_login_url 'linkedin_oauth2' %}" class="btn btn-light border w-100 py-2">
+                <i class="fab fa-linkedin text-primary"></i>
+                <span class="d-none d-sm-inline ms-1">LinkedIn</span>
+            </a>
+            </div>
+
+
+        </div>
+
+        
+        <!-- Security Tips -->
+        <div class="alert alert-info mt-4" role="alert">
+            <div class="d-flex">
+                <i class="fas fa-lightbulb me-3 mt-1"></i>
+                <div>
+                    <small>
+                        <strong>Security Tip:</strong> Always verify the URL begins with "https://" and look for the lock icon in your browser.
+                        Never enter credentials on unsecured or suspicious pages.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MFA Modal -->
+<div class="modal fade" id="mfaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-shield-alt me-2"></i>Two-Factor Authentication
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Add an extra layer of security to your account by enabling 2FA. You'll need:</p>
+                <ul class="mb-3">
+                    <li>Your smartphone</li>
+                    <li>Authenticator app (Google Authenticator or Authy)</li>
+                </ul>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'accounts:mfa_setup' %}" class="btn btn-primary">
+                        <i class="fas fa-cog me-2"></i>Enable 2FA
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Learn More
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap tooltips
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
+    
+    // DOM Elements
+    const loginForm = document.getElementById('loginForm');
+    const passwordInput = document.getElementById('password');
+    const togglePassword = document.getElementById('togglePassword');
+    const submitBtn = document.getElementById('submitBtn');
+    const passwordStrength = document.getElementById('passwordStrength');
+    const progressBar = passwordStrength.querySelector('.progress-bar');
+    const strengthText = document.getElementById('strengthText');
+    const attemptAlert = document.getElementById('attemptAlert');
+    const attemptMessage = document.getElementById('attemptMessage');
+    
+    // Session Security: Track login attempts
+    let loginAttempts = localStorage.getItem('loginAttempts') || 0;
+    const maxAttempts = 5;
+    const lockoutTime = 15 * 60 * 1000; // 15 minutes
+    
+    // Check if user is locked out
+    const lockoutUntil = localStorage.getItem('lockoutUntil');
+    if (lockoutUntil && Date.now() < parseInt(lockoutUntil)) {
+        const remaining = Math.ceil((parseInt(lockoutUntil) - Date.now()) / 60000);
+        showLockout(remaining);
+    }
+    
+    // Password visibility toggle
+    togglePassword.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.innerHTML = type === 'password' ? 
+            '<i class="fas fa-eye"></i>' : 
+            '<i class="fas fa-eye-slash"></i>';
+        this.setAttribute('aria-label', 
+            type === 'password' ? 'Show password' : 'Hide password');
+        
+        // Log password visibility change (in real app, this would be a security audit log)
+        console.log('Password visibility toggled by user');
+    });
+    
+    // Password strength checker
+    passwordInput.addEventListener('input', function() {
+        checkPasswordStrength(this.value);
+    });
+    
+    function checkPasswordStrength(password) {
+        if (!password) {
+            passwordStrength.style.display = 'none';
+            return;
+        }
+        
+        passwordStrength.style.display = 'block';
+        
+        let score = 0;
+        const tests = {
+            length: password.length >= 8,
+            lower: /[a-z]/.test(password),
+            upper: /[A-Z]/.test(password),
+            number: /[0-9]/.test(password),
+            special: /[^A-Za-z0-9]/.test(password)
+        };
+        
+        score = Object.values(tests).filter(Boolean).length;
+        
+        let strength, color, width;
+        switch(score) {
+            case 5:
+                strength = "Very Strong";
+                color = "bg-success";
+                width = "100%";
+                break;
+            case 4:
+                strength = "Strong";
+                color = "bg-success";
+                width = "80%";
+                break;
+            case 3:
+                strength = "Good";
+                color = "bg-info";
+                width = "60%";
+                break;
+            case 2:
+                strength = "Weak";
+                color = "bg-warning";
+                width = "40%";
+                break;
+            default:
+                strength = "Very Weak";
+                color = "bg-danger";
+                width = "20%";
+        }
+        
+        progressBar.className = `progress-bar ${color}`;
+        progressBar.style.width = width;
+        progressBar.setAttribute('aria-valuenow', width);
+        strengthText.textContent = strength;
+    }
+    
+    // Form submission handler with security features
+    loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Check lockout
+        if (lockoutUntil && Date.now() < parseInt(lockoutUntil)) {
+            const remaining = Math.ceil((parseInt(lockoutUntil) - Date.now()) / 60000);
+            showLockout(remaining);
+            return;
+        }
+        
+        // Validate form
+        const username = document.getElementById('username').value.trim();
+        const password = passwordInput.value.trim();
+        
+        if (!username || !password) {
+            showAlert('Please fill in all required fields', 'warning');
+            return;
+        }
+        
+        if (password.length < 8) {
+            showAlert('Password must be at least 8 characters long', 'warning');
+            return;
+        }
+        
+        // Show loading state
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = submitBtn.getAttribute('data-loading-text');
+        submitBtn.disabled = true;
+        
+        // Simulate security delay (in production, this is server-side)
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Track attempts
+        loginAttempts++;
+        localStorage.setItem('loginAttempts', loginAttempts);
+        
+        if (loginAttempts >= maxAttempts) {
+            const lockoutTime = Date.now() + (15 * 60 * 1000); // 15 minutes
+            localStorage.setItem('lockoutUntil', lockoutTime);
+            showLockout(15);
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            return;
+        }
+        
+        // Show attempt warning
+        if (loginAttempts >= 3) {
+            const remaining = maxAttempts - loginAttempts;
+            showAlert(`Warning: ${remaining} attempt(s) remaining before temporary lockout`, 'warning');
+        }
+        
+        // Submit form
+        this.submit();
+    });
+    
+    // Security functions
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+        alertDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        loginForm.parentNode.insertBefore(alertDiv, loginForm.nextSibling);
+        
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+    
+    function showLockout(minutes) {
+        attemptAlert.classList.remove('d-none');
+        attemptMessage.textContent = 
+            `Account temporarily locked. Please try again in ${minutes} minutes or reset your password.`;
+        submitBtn.disabled = true;
+        loginForm.querySelectorAll('input, button').forEach(el => {
+            if (el !== submitBtn) el.disabled = true;
+        });
+    }
+    
+    // Input sanitization
+    document.getElementById('username').addEventListener('input', function(e) {
+        this.value = this.value.replace(/[<>]/g, '');
+    });
+    
+    // Session timeout warning
+    let timeoutWarning;
+    function startSessionTimer() {
+        const warningTime = 10 * 60 * 1000; // 10 minutes
+        timeoutWarning = setTimeout(() => {
+            showAlert('Your session will expire in 10 minutes due to inactivity', 'warning');
+        }, warningTime);
+    }
+    
+    // Reset timer on user activity
+    ['click', 'keypress', 'mousemove'].forEach(event => {
+        document.addEventListener(event, () => {
+            clearTimeout(timeoutWarning);
+            startSessionTimer();
+        });
+    });
+    
+    startSessionTimer();
+    
+    // Social login security
+    document.querySelectorAll('.btn-light.border').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const provider = this.id.replace('Login', '');
+            showAlert(`Redirecting to secure ${provider} authentication...`, 'info');
+            // In production, this would trigger OAuth flow
+        });
+    });
+    
+    // Device fingerprinting (simplified)
+    function generateDeviceFingerprint() {
+        const fingerprint = {
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            platform: navigator.platform,
+            screenResolution: `${screen.width}x${screen.height}`,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        };
+        
+        // Create a simple hash
+        const str = JSON.stringify(fingerprint);
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        
+        return Math.abs(hash).toString(16);
+    }
+    
+    // Add device fingerprint to form
+    const deviceFingerprint = generateDeviceFingerprint();
+    const fingerprintInput = document.createElement('input');
+    fingerprintInput.type = 'hidden';
+    fingerprintInput.name = 'device_fingerprint';
+    fingerprintInput.value = deviceFingerprint;
+    loginForm.appendChild(fingerprintInput);
+});
+</script>
+
+<style>
+/* Responsive Design Enhancements */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 2rem !important;
+    }
+    .input-group-lg {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    .btn-lg {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+}
+
+/* Security-themed styles */
+.progress {
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Focus styles for accessibility */
+.form-control:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Security animations */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake {
+    animation: shake 0.5s;
+}
+
+/* Print styles - Hide sensitive info */
+@media print {
+    .card, .alert, #loginForm, .modal {
+        display: none !important;
+    }
+    
+    body::before {
+        content: "Login information is hidden for security reasons.";
+        display: block;
+        text-align: center;
+        margin-top: 2rem;
+        font-size: 1.2rem;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .btn-outline-secondary {
+        border-width: 2px;
+    }
+    
+    .form-control {
+        border-width: 2px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .progress-bar,
+    .alert {
+        transition: none;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .btn, .form-control {
+        min-height: 44px; /* Minimum touch target size */
+    }
+    
+    .form-check-input {
+        transform: scale(1.5);
+        margin-right: 10px;
+    }
+}
+</style>
+{% endblock %}

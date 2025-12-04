@@ -1,0 +1,35 @@
+<div class="comment mb-3 {% if comment.parent %}comment-reply ps-3{% endif %}" id="comment-{{ comment.id }}">
+    <div class="d-flex">
+        <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>{{ comment.author.username }}</strong>
+                    {% if comment.author.profile %}
+                    <small class="text-muted">({{ comment.author.profile.points }} points)</small>
+                    {% endif %}
+                    <small class="text-muted">• {{ comment.created_at|timesince }} ago</small>
+                </div>
+                <div>
+                    {% if user.is_authenticated %}
+                    <button class="btn btn-sm btn-outline-primary" onclick="toggleLike({{ comment.id }})" 
+                            id="like-btn-{{ comment.id }}">
+                        ❤️ <span id="like-count-{{ comment.id }}">{{ comment.like_count }}</span>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="setReply({{ comment.id }})">
+                        Reply
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="comment-content mt-2">
+                {{ comment.content|linebreaks }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Replies -->
+    {% for reply in comment.replies.all %}
+        {% include 'community/comment.html' with comment=reply %}
+    {% endfor %}
+</div>

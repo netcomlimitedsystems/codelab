@@ -1,0 +1,2577 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}{% if form and form.pk %}Edit Exam{% else %}Create New Exam{% endif %}{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+    :root {
+        --exam-primary: #4361ee;
+        --exam-secondary: #3a0ca3;
+        --exam-success: #4cc9f0;
+        --exam-warning: #f72585;
+        --exam-dark: #1a1a2e;
+        --exam-light: #f8f9fa;
+    }
+
+    .exam-form-container {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    .exam-form-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" opacity="0.05"><path fill="white" d="M100,100L900,900M900,100L100,900M500,100L500,900M100,500L900,500"/></svg>') repeat;
+        pointer-events: none;
+    }
+
+    .exam-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        z-index: 1;
+        backdrop-filter: blur(10px);
+    }
+
+    .exam-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Header with gradient animation */
+    .exam-header {
+        background: linear-gradient(135deg, var(--exam-primary) 0%, var(--exam-secondary) 100%);
+        padding: 2.5rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .exam-header::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><path d="M0,0 L100,100 M100,0 L0,100 M50,0 L50,100 M0,50 L100,50" stroke="white" stroke-width="1"/></svg>');
+        animation: movePattern 30s linear infinite;
+    }
+
+    @keyframes movePattern {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(50px, 50px); }
+    }
+
+    /* Developer Features Panel */
+    .dev-features {
+        background: linear-gradient(145deg, #f8fafc, #f1f5f9);
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .feature-btn {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .feature-btn:hover {
+        transform: translateY(-4px);
+        border-color: var(--exam-primary);
+        box-shadow: 0 10px 20px rgba(67, 97, 238, 0.1);
+    }
+
+    .feature-btn.active {
+        background: linear-gradient(135deg, var(--exam-primary) 0%, var(--exam-secondary) 100%);
+        color: white;
+        border-color: var(--exam-primary);
+    }
+
+    .feature-icon {
+        font-size: 1.5rem;
+        color: var(--exam-primary);
+    }
+
+    .feature-btn.active .feature-icon {
+        color: white;
+    }
+
+    /* Question Cards - Enhanced */
+    .question-card {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .question-card:hover {
+        border-color: var(--exam-primary);
+        box-shadow: 0 10px 25px rgba(67, 97, 238, 0.1);
+    }
+
+    .question-card.dragging {
+        opacity: 0.5;
+        transform: rotate(3deg);
+    }
+
+    .question-card .card-header {
+        background: linear-gradient(90deg, #f8fafc, #ffffff);
+        border-bottom: 2px solid #e2e8f0;
+        padding: 1rem 1.5rem;
+        cursor: move;
+        user-select: none;
+    }
+
+    .question-card .card-header:hover {
+        background: linear-gradient(90deg, #f1f5f9, #f8fafc);
+    }
+
+    .question-handle {
+        width: 30px;
+        height: 30px;
+        background: #e2e8f0;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: #64748b;
+    }
+
+    .choice-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .choice-card {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .choice-card.correct {
+        background: #dcfce7;
+        border-color: #22c55e;
+    }
+
+    .choice-card:hover {
+        border-color: #94a3b8;
+    }
+
+    .choice-letter {
+        position: absolute;
+        top: -12px;
+        left: 12px;
+        background: white;
+        border: 2px solid #e2e8f0;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #64748b;
+    }
+
+    .choice-card.correct .choice-letter {
+        background: #22c55e;
+        border-color: #16a34a;
+        color: white;
+    }
+
+    /* Question Types */
+    .question-type-selector {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+
+    .type-btn {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .type-btn:hover {
+        border-color: var(--exam-primary);
+    }
+
+    .type-btn.active {
+        background: linear-gradient(135deg, var(--exam-primary) 0%, var(--exam-secondary) 100%);
+        color: white;
+        border-color: var(--exam-primary);
+    }
+
+    /* Code Editor for Code Questions */
+    .code-editor-container {
+        background: #1e1e1e;
+        border-radius: 12px;
+        overflow: hidden;
+        margin: 1rem 0;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .code-editor-header {
+        background: #252525;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #333;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .code-language-selector {
+        background: #333;
+        border: 1px solid #444;
+        color: #ddd;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    /* Timer & Progress */
+    .timer-widget {
+        background: linear-gradient(135deg, var(--exam-primary) 0%, var(--exam-secondary) 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .progress-ring {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1rem;
+    }
+
+    .progress-ring-circle {
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+        stroke-dasharray: 251;
+        stroke-dashoffset: 251;
+        transition: stroke-dashoffset 0.3s ease;
+    }
+
+    /* AI Assistant */
+    .ai-assistant {
+        background: linear-gradient(135deg, #4361ee20 0%, #3a0ca320 100%);
+        border: 2px dashed var(--exam-primary);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ai-suggestions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .ai-suggestion-btn {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .ai-suggestion-btn:hover {
+        border-color: var(--exam-primary);
+        transform: translateX(4px);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .exam-form-container {
+            padding: 1rem 0;
+        }
+        
+        .exam-header {
+            padding: 1.5rem;
+        }
+        
+        .feature-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+        
+        .question-type-selector {
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+        
+        .type-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+        
+        .choice-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .code-editor-header {
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+        
+        .sticky-sidebar {
+            position: static !important;
+            margin-top: 1.5rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .exam-card {
+            border-radius: 16px;
+            margin: 0 -1rem;
+        }
+        
+        .feature-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .question-card .card-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        
+        .question-handle {
+            align-self: center;
+        }
+    }
+
+    /* Tablet Optimizations */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .feature-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .choice-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    /* Dark Mode */
+    [data-theme="dark"] .exam-card,
+    .dark-mode .exam-card {
+        background: #1a1a2e;
+        color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .dev-features,
+    .dark-mode .dev-features {
+        background: linear-gradient(145deg, #2a2d38, #242731);
+        border-color: #2d3748;
+    }
+
+    [data-theme="dark"] .question-card,
+    .dark-mode .question-card {
+        background: #242731;
+        border-color: #2d3748;
+    }
+
+    [data-theme="dark"] .choice-card,
+    .dark-mode .choice-card {
+        background: #2a2d38;
+        border-color: #2d3748;
+        color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .feature-btn,
+    .dark-mode .feature-btn {
+        background: #2a2d38;
+        border-color: #2d3748;
+        color: #e2e8f0;
+    }
+
+    /* Touch Device Optimizations */
+    @media (hover: none) and (pointer: coarse) {
+        .feature-btn,
+        .type-btn,
+        .ai-suggestion-btn,
+        .btn {
+            padding: 1rem;
+            min-height: 44px;
+            min-width: 44px;
+        }
+        
+        input, select, textarea {
+            font-size: 16px !important;
+        }
+    }
+
+    /* Loading States */
+    .loading-skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+        border-radius: 8px;
+    }
+
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* Keyboard Shortcuts */
+    .keyboard-shortcut {
+        background: #2d3748;
+        color: #e2e8f0;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 0.75rem;
+        margin: 0 0.25rem;
+        border: 1px solid #4a5568;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 5px;
+        transition: background 0.3s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    /* Animation Classes */
+    .fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+
+    .slide-up {
+        animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Status Indicators */
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+    }
+
+    .status-active { background: #10b981; }
+    .status-draft { background: #f59e0b; }
+    .status-scheduled { background: #3b82f6; }
+
+    /* Tooltip */
+    .custom-tooltip {
+        position: relative;
+        display: inline-block;
+    }
+
+    .custom-tooltip::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1f2937;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        z-index: 1000;
+        pointer-events: none;
+    }
+
+    .custom-tooltip:hover::after {
+        opacity: 1;
+        visibility: visible;
+        bottom: calc(100% + 8px);
+    }
+
+    /* Floating Action Buttons */
+    .fab-container {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+
+    .fab {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--exam-primary) 0%, var(--exam-secondary) 100%);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 20px rgba(67, 97, 238, 0.3);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .fab:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 25px rgba(67, 97, 238, 0.4);
+    }
+
+    /* Export Preview */
+    .export-preview {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    /* Question Statistics */
+    .question-stats {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        border-color: var(--exam-primary);
+        transform: translateY(-2px);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--exam-primary);
+        margin: 0.5rem 0;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Import/Export Panel */
+    .import-export-panel {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border: 2px dashed #cbd5e0;
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .import-export-panel:hover {
+        border-color: var(--exam-primary);
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="exam-form-container">
+    <div class="container">
+        <!-- Quick Actions Bar -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-light" id="toggleDarkMode">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="keyboard-shortcuts d-none d-md-flex gap-2">
+                    <span class="text-white"><kbd class="keyboard-shortcut">Ctrl</kbd> + <kbd class="keyboard-shortcut">S</kbd> Save</span>
+                    <span class="text-white"><kbd class="keyboard-shortcut">Ctrl</kbd> + <kbd class="keyboard-shortcut">Q</kbd> Add Question</span>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-light" id="exportExamBtn">
+                    <i class="fas fa-download me-2"></i>Export
+                </button>
+                <button class="btn btn-outline-light" id="importQuestionsBtn">
+                    <i class="fas fa-upload me-2"></i>Import
+                </button>
+                <button class="btn btn-outline-light" id="previewExamBtn">
+                    <i class="fas fa-eye me-2"></i>Preview
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <div class="exam-card fade-in">
+                    <!-- Header -->
+                    <div class="exam-header">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                            <div>
+                                <h1 class="h3 mb-2">
+                                    {% if form and form.pk %}
+                                        <i class="fas fa-edit"></i> Edit Exam: {{ form.title }}
+                                    {% else %}
+                                        <i class="fas fa-plus-circle"></i> Create New Exam
+                                    {% endif %}
+                                </h1>
+                                <p class="mb-0 opacity-75">Advanced exam builder with AI assistance</p>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge bg-white text-primary fs-6 px-3 py-2">
+                                    <i class="fas fa-graduation-cap me-2"></i>Exam Builder v2.0
+                                </span>
+                                <div class="timer-widget d-none" id="timerWidget">
+                                    <div class="progress-ring">
+                                        <svg width="80" height="80">
+                                            <circle class="progress-ring-circle" stroke="white" stroke-width="4" 
+                                                    fill="transparent" r="38" cx="40" cy="40"/>
+                                        </svg>
+                                        <span class="position-absolute top-50 start-50 translate-middle fw-bold" id="timerText">60:00</span>
+                                    </div>
+                                    <small>Exam Duration</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Developer Features -->
+                    <div class="dev-features">
+                        <h6 class="mb-3">
+                            <i class="fas fa-code me-2"></i>Developer Tools
+                        </h6>
+                        <div class="feature-grid">
+                            <div class="feature-btn" data-feature="ai">
+                                <i class="feature-icon fas fa-robot"></i>
+                                <span>AI Assistant</span>
+                            </div>
+                            <div class="feature-btn" data-feature="import">
+                                <i class="feature-icon fas fa-file-import"></i>
+                                <span>Import Questions</span>
+                            </div>
+                            <div class="feature-btn" data-feature="randomize">
+                                <i class="feature-icon fas fa-random"></i>
+                                <span>Randomize</span>
+                            </div>
+                            <div class="feature-btn" data-feature="code">
+                                <i class="feature-icon fas fa-code"></i>
+                                <span>Code Questions</span>
+                            </div>
+                            <div class="feature-btn" data-feature="analytics">
+                                <i class="feature-icon fas fa-chart-bar"></i>
+                                <span>Analytics</span>
+                            </div>
+                            <div class="feature-btn" data-feature="version">
+                                <i class="feature-icon fas fa-history"></i>
+                                <span>Version Control</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Form -->
+                    <div class="card-body p-4">
+                        {% if messages %}
+                        <div class="alert-container mb-4">
+                            {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <form method="post" id="advancedExamForm">
+                            {% csrf_token %}
+                            
+                            <!-- Exam Information -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Exam Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="id_title" class="form-label">Exam Title *</label>
+                                            <input type="text" name="title" id="id_title" class="form-control"
+                                                   value="{{ form.title|default_if_none:'' }}" maxlength="255" required
+                                                   placeholder="e.g., Python Basics Final Exam">
+                                            <div class="form-text mt-1">
+                                                <span id="titleCount">0/255</span> characters
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="id_course" class="form-label">Course *</label>
+                                            <select name="course" id="id_course" class="form-select select2-enhanced" required>
+                                                <option value="">Select a Course</option>
+                                                {% for course in courses %}
+                                                    <option value="{{ course.id }}"
+                                                        {% if course.id == selected_course %}selected{% endif %}>
+                                                        {{ course.title }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label for="id_duration_minutes" class="form-label">Duration (minutes)</label>
+                                            <div class="input-group">
+                                                <input type="number" name="duration_minutes" id="id_duration_minutes"
+                                                       class="form-control" value="{{ form.duration_minutes|default:'60' }}" min="1">
+                                                <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label for="id_pass_mark" class="form-label">Pass Mark (%)</label>
+                                            <div class="input-group">
+                                                <input type="number" name="pass_mark" id="id_pass_mark"
+                                                       class="form-control" value="{{ form.pass_mark|default:'50' }}" min="0" max="100">
+                                                <span class="input-group-text">%</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label for="id_max_attempts" class="form-label">Max Attempts</label>
+                                            <input type="number" name="max_attempts" id="id_max_attempts"
+                                                   class="form-control" value="{{ form.max_attempts|default:'1' }}" min="1">
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="id_scheduled_date" class="form-label">Scheduled Date</label>
+                                            <input type="datetime-local" name="scheduled_date" id="id_scheduled_date"
+                                                   class="form-control"
+                                                   value="{{ form.scheduled_date|date:'Y-m-d\TH:i' }}">
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="id_tags" class="form-label">Tags</label>
+                                            <input type="text" name="tags" id="id_tags" class="form-control"
+                                                   placeholder="e.g., python, basics, final">
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" name="is_active"
+                                                       id="id_is_active" {% if form.is_active %}checked{% endif %}>
+                                                <label class="form-check-label" for="id_is_active">
+                                                    <span class="status-indicator status-active"></span>
+                                                    Active Exam
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-switch mt-2">
+                                                <input class="form-check-input" type="checkbox" name="randomize_questions"
+                                                       id="id_randomize_questions">
+                                                <label class="form-check-label" for="id_randomize_questions">
+                                                    Randomize Question Order
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-switch mt-2">
+                                                <input class="form-check-input" type="checkbox" name="show_answers"
+                                                       id="id_show_answers">
+                                                <label class="form-check-label" for="id_show_answers">
+                                                    Show Answers After Submission
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- AI Assistant (Hidden by default) -->
+                            <div class="ai-assistant d-none" id="aiAssistant">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-robot me-2"></i>AI Question Assistant
+                                    </h6>
+                                    <button class="btn btn-sm btn-outline-primary" id="refreshAI">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
+                                <div class="ai-suggestions">
+                                    <button class="ai-suggestion-btn" data-suggestion="multiple-choice">
+                                        <i class="fas fa-list-ul"></i>
+                                        Generate MC Questions
+                                    </button>
+                                    <button class="ai-suggestion-btn" data-suggestion="true-false">
+                                        <i class="fas fa-check-double"></i>
+                                        True/False Questions
+                                    </button>
+                                    <button class="ai-suggestion-btn" data-suggestion="code">
+                                        <i class="fas fa-code"></i>
+                                        Code Questions
+                                    </button>
+                                    <button class="ai-suggestion-btn" data-suggestion="theory">
+                                        <i class="fas fa-book"></i>
+                                        Theory Questions
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Question Statistics -->
+                            <div class="question-stats d-none" id="questionStats">
+                                <h6 class="mb-3">
+                                    <i class="fas fa-chart-bar me-2"></i>Question Statistics
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-6 col-md-3">
+                                        <div class="stat-card">
+                                            <div class="stat-value" id="totalQuestions">0</div>
+                                            <div class="stat-label">Total Questions</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="stat-card">
+                                            <div class="stat-value" id="totalPoints">0</div>
+                                            <div class="stat-label">Total Points</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="stat-card">
+                                            <div class="stat-value" id="avgDifficulty">-</div>
+                                            <div class="stat-label">Avg Difficulty</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="stat-card">
+                                            <div class="stat-value" id="estTime">0 min</div>
+                                            <div class="stat-label">Est. Time</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Questions Section -->
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-question-circle me-2"></i>Exam Questions
+                                        <small class="text-muted ms-2" id="questionCount">(0 questions)</small>
+                                    </h5>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" id="questionBankBtn">
+                                            <i class="fas fa-database me-1"></i> Question Bank
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-primary" id="addQuestionBtn">
+                                            <i class="fas fa-plus me-1"></i> Add Question
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Question Type Selector -->
+                                    <div class="question-type-selector mb-4">
+                                        <button type="button" class="type-btn active" data-type="multiple-choice">
+                                            <i class="fas fa-list-ul"></i> Multiple Choice
+                                        </button>
+                                        <button type="button" class="type-btn" data-type="true-false">
+                                            <i class="fas fa-check-double"></i> True/False
+                                        </button>
+                                        <button type="button" class="type-btn" data-type="short-answer">
+                                            <i class="fas fa-align-left"></i> Short Answer
+                                        </button>
+                                        <button type="button" class="type-btn" data-type="code">
+                                            <i class="fas fa-code"></i> Code
+                                        </button>
+                                        <button type="button" class="type-btn" data-type="essay">
+                                            <i class="fas fa-file-alt"></i> Essay
+                                        </button>
+                                    </div>
+
+                                    <!-- Questions Container -->
+                                    <div id="questionsContainer" class="questions-list">
+                                        {% if questions %}
+                                            {% for question in questions %}
+                                                {% include "admin/question_card.html" with question=question index=forloop.counter0 %}
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="empty-state text-center py-5">
+                                                <i class="fas fa-question-circle fa-4x text-muted mb-3"></i>
+                                                <h5>No Questions Added</h5>
+                                                <p class="text-muted">Start by adding your first question</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Add Question Button -->
+                                    <div class="text-center mt-4">
+                                        <button type="button" class="btn btn-outline-primary btn-lg" id="addAnotherQuestionBtn">
+                                            <i class="fas fa-plus-circle me-2"></i> Add Another Question
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top flex-wrap gap-3">
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a href="{% url 'accounts:admin_exam_list_all' %}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left me-2"></i>Back to Exams
+                                    </a>
+                                    <button type="button" class="btn btn-outline-info" id="saveDraftBtn">
+                                        <i class="fas fa-save me-2"></i>Save Draft
+                                    </button>
+                                    <button type="button" class="btn btn-outline-dark" id="versionHistoryBtn">
+                                        <i class="fas fa-history me-2"></i>History
+                                    </button>
+                                </div>
+                                
+                                <div class="d-flex gap-3 align-items-center flex-wrap">
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-save me-2"></i>
+                                            {% if form and form.pk %}Update Exam{% else %}Create Exam{% endif %}
+                                        </button>
+                                        <small class="text-muted mt-1">Auto-saves every 30 seconds</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <div class="sticky-sidebar" style="top: 20px;">
+                    <!-- Instructions -->
+                    <div class="exam-card mb-4">
+                        <div class="exam-header">
+                            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Instructions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="accordion" id="instructionsAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBasic">
+                                            Basic Settings
+                                        </button>
+                                    </h2>
+                                    <div id="collapseBasic" class="accordion-collapse collapse show">
+                                        <div class="accordion-body">
+                                            <ul class="small mb-0">
+                                                <li>Title should be clear and descriptive</li>
+                                                <li>Duration is in minutes</li>
+                                                <li>Pass mark is percentage-based</li>
+                                                <li>Scheduled date is optional</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvanced">
+                                            Advanced Features
+                                        </button>
+                                    </h2>
+                                    <div id="collapseAdvanced" class="accordion-collapse collapse">
+                                        <div class="accordion-body">
+                                            <ul class="small mb-0">
+                                                <li><strong>AI Assistant:</strong> Generate questions automatically</li>
+                                                <li><strong>Import/Export:</strong> Bulk operations</li>
+                                                <li><strong>Randomization:</strong> Shuffle questions</li>
+                                                <li><strong>Version Control:</strong> Track changes</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-warning mt-3 small">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>Note:</strong> Once students start taking the exam, some settings cannot be changed.
+                            </div>
+                            
+                            <div class="progress mt-3" style="height: 8px;">
+                                <div class="progress-bar bg-success" id="completionProgress" style="width: 0%"></div>
+                            </div>
+                            <small class="text-muted d-block mt-2 text-center">Form completion: <span id="completionPercent">0%</span></small>
+                        </div>
+                    </div>
+
+                    <!-- Import/Export Panel -->
+                    <div class="import-export-panel">
+                        <i class="fas fa-exchange-alt fa-3x mb-3 text-primary"></i>
+                        <h6>Import/Export Questions</h6>
+                        <p class="small text-muted mb-3">Bulk operations for efficiency</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary" id="importCSVBtn">
+                                <i class="fas fa-file-csv me-2"></i>Import CSV
+                            </button>
+                            <button class="btn btn-outline-success" id="exportJSONBtn">
+                                <i class="fas fa-file-code me-2"></i>Export JSON
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Live Preview -->
+                    <div class="exam-card">
+                        <div class="exam-header">
+                            <h5 class="mb-0"><i class="fas fa-eye"></i> Live Preview</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="preview-section mb-3">
+                                <h6>Exam Summary</h6>
+                                <div class="preview-content">
+                                    <p><strong>Title:</strong> <span id="previewTitle">{{ form.title|default:"Untitled Exam" }}</span></p>
+                                    <p><strong>Duration:</strong> <span id="previewDuration">{{ form.duration_minutes|default:"60" }} minutes</span></p>
+                                    <p><strong>Questions:</strong> <span id="previewQuestionCount">0</span></p>
+                                    <p><strong>Total Points:</strong> <span id="previewTotalPoints">0</span></p>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-primary w-100" id="fullPreviewBtn">
+                                <i class="fas fa-desktop me-2"></i>Full Preview
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Action Buttons -->
+<div class="fab-container d-print-none">
+    <button class="fab" id="quickAddFab" data-bs-toggle="tooltip" title="Quick Add Question">
+        <i class="fas fa-plus"></i>
+    </button>
+    <button class="fab" id="saveFab" data-bs-toggle="tooltip" title="Save Draft (Ctrl+S)">
+        <i class="fas fa-save"></i>
+    </button>
+    <button class="fab" id="previewFab" data-bs-toggle="tooltip" title="Preview Exam">
+        <i class="fas fa-eye"></i>
+    </button>
+</div>
+
+<!-- Question Templates -->
+<div id="questionTemplates" class="d-none">
+    <!-- Multiple Choice Template -->
+    <div class="question-card" data-type="multiple-choice" data-index="__INDEX__">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <div class="question-handle">
+                    <i class="fas fa-grip-vertical"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0">Question #<span class="question-number">__NUMBER__</span></h6>
+                    <small class="text-muted">Multiple Choice</small>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary clone-question">
+                    <i class="fas fa-clone"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-question">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Question Text *</label>
+                <textarea name="questions[__INDEX__][question_text]" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Difficulty</label>
+                <select name="questions[__INDEX__][difficulty]" class="form-select">
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+            <div class="choice-grid mb-3">
+                {% for choice in "ABCD" %}
+                <div class="choice-card" data-choice="{{ choice|lower }}">
+                    <div class="choice-letter">{{ choice }}</div>
+                    <input type="text" 
+                           name="questions[__INDEX__][choice_{{ choice|lower }}]" 
+                           class="form-control border-0 bg-transparent" 
+                           placeholder="Enter choice {{ choice }}" 
+                           required>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input correct-choice" 
+                               type="radio" 
+                               name="questions[__INDEX__][correct_choice]" 
+                               value="{{ choice }}">
+                        <label class="form-check-label small">Correct Answer</label>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Points</label>
+                    <input type="number" 
+                           name="questions[__INDEX__][points]" 
+                           class="form-control" 
+                           value="1" 
+                           min="1">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Time Limit (sec)</label>
+                    <input type="number" 
+                           name="questions[__INDEX__][time_limit]" 
+                           class="form-control" 
+                           value="60" 
+                           min="10">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Explanation</label>
+                    <input type="text" 
+                           name="questions[__INDEX__][explanation]" 
+                           class="form-control" 
+                           placeholder="Optional explanation">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- True/False Template -->
+    <div class="question-card" data-type="true-false" data-index="__INDEX__">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <div class="question-handle">
+                    <i class="fas fa-grip-vertical"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0">Question #<span class="question-number">__NUMBER__</span></h6>
+                    <small class="text-muted">True/False</small>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary clone-question">
+                    <i class="fas fa-clone"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-question">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Statement *</label>
+                <textarea name="questions[__INDEX__][question_text]" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="choice-card correct-false">
+                        <div class="choice-letter">F</div>
+                        <div class="form-check">
+                            <input class="form-check-input" 
+                                   type="radio" 
+                                   name="questions[__INDEX__][correct_choice]" 
+                                   value="F">
+                            <label class="form-check-label">
+                                <strong>False</strong>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="choice-card correct-true">
+                        <div class="choice-letter">T</div>
+                        <div class="form-check">
+                            <input class="form-check-input" 
+                                   type="radio" 
+                                   name="questions[__INDEX__][correct_choice]" 
+                                   value="T">
+                            <label class="form-check-label">
+                                <strong>True</strong>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <label class="form-label">Points</label>
+                    <input type="number" 
+                           name="questions[__INDEX__][points]" 
+                           class="form-control" 
+                           value="1" 
+                           min="1">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Explanation</label>
+                    <input type="text" 
+                           name="questions[__INDEX__][explanation]" 
+                           class="form-control" 
+                           placeholder="Why this is true/false">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+{% include "admin/modals/question_bank_modal.html" %}
+{% include "admin/modals/import_modal.html" %}
+{% include "admin/modals/preview_modal.html" %}
+{% include "admin/modals/ai_assistant_modal.html" %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.min.js"></script>
+<script>
+// Main Exam Editor Class
+class AdvancedExamEditor {
+    constructor() {
+        this.initElements();
+        this.initEventListeners();
+        this.initEditor();
+        this.initAutoSave();
+        this.initDragDrop();
+        this.setupKeyboardShortcuts();
+        this.setupResponsiveListeners();
+        this.updateStats();
+    }
+
+    initElements() {
+        this.form = document.getElementById('advancedExamForm');
+        this.titleInput = document.getElementById('id_title');
+        this.courseSelect = document.getElementById('id_course');
+        this.durationInput = document.getElementById('id_duration_minutes');
+        this.questionsContainer = document.getElementById('questionsContainer');
+        this.questionTemplates = document.getElementById('questionTemplates');
+        this.aiAssistant = document.getElementById('aiAssistant');
+        this.timerWidget = document.getElementById('timerWidget');
+        this.questionStats = document.getElementById('questionStats');
+        this.tagsInput = document.getElementById('id_tags');
+        
+        // Initialize Select2 for course selection
+        $(this.courseSelect).select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Select a course'
+        });
+
+        // Initialize Tagify for tags
+        this.tagify = new Tagify(this.tagsInput, {
+            whitelist: [],
+            dropdown: {
+                maxItems: 20,
+                classname: "tags-look",
+                enabled: 0,
+                closeOnSelect: false
+            }
+        });
+
+        // Initialize question counter
+        this.questionCount = {{ questions|length|default:"0" }};
+    }
+
+    initEventListeners() {
+        // Title character counter
+        this.titleInput.addEventListener('input', () => {
+            const count = this.titleInput.value.length;
+            document.getElementById('titleCount').textContent = `${count}/255`;
+            this.updatePreview();
+            this.updateCompletion();
+        });
+
+        // Duration timer
+        this.durationInput.addEventListener('input', () => {
+            this.updateTimerWidget();
+            this.updatePreview();
+            this.updateCompletion();
+        });
+
+        // Developer features
+        document.querySelectorAll('.feature-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.toggleFeature(e));
+        });
+
+        // Question type selector
+        document.querySelectorAll('.type-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.changeQuestionType(e));
+        });
+
+        // Add question buttons
+        document.getElementById('addQuestionBtn').addEventListener('click', () => this.addQuestion());
+        document.getElementById('addAnotherQuestionBtn').addEventListener('click', () => this.addQuestion());
+        document.getElementById('quickAddFab').addEventListener('click', () => this.addQuestion());
+
+        // Form submission
+        this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+        
+        // Save draft
+        document.getElementById('saveDraftBtn').addEventListener('click', () => this.saveDraft());
+        document.getElementById('saveFab').addEventListener('click', () => this.saveDraft());
+        
+        // Preview buttons
+        document.getElementById('previewExamBtn').addEventListener('click', () => this.showPreview());
+        document.getElementById('fullPreviewBtn').addEventListener('click', () => this.showFullPreview());
+        document.getElementById('previewFab').addEventListener('click', () => this.showPreview());
+        
+        // Dark mode toggle
+        document.getElementById('toggleDarkMode').addEventListener('click', () => this.toggleDarkMode());
+        
+        // Import/Export buttons
+        document.getElementById('importCSVBtn').addEventListener('click', () => this.importCSV());
+        document.getElementById('exportJSONBtn').addEventListener('click', () => this.exportJSON());
+        document.getElementById('exportExamBtn').addEventListener('click', () => this.exportExam());
+        document.getElementById('importQuestionsBtn').addEventListener('click', () => this.showImportModal());
+        
+        // AI suggestions
+        document.querySelectorAll('.ai-suggestion-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.handleAISuggestion(e));
+        });
+        
+        // Question bank
+        document.getElementById('questionBankBtn').addEventListener('click', () => this.showQuestionBank());
+        
+        // Version history
+        document.getElementById('versionHistoryBtn').addEventListener('click', () => this.showVersionHistory());
+    }
+
+    initEditor() {
+        // Initialize CodeMirror for code questions
+        this.codeEditors = new Map();
+        
+        // Initialize tooltips
+        const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltips.forEach(tooltip => {
+            new bootstrap.Tooltip(tooltip);
+        });
+    }
+
+    initAutoSave() {
+        let saveTimeout;
+        const elements = [this.titleInput, this.courseSelect, this.durationInput];
+        
+        elements.forEach(element => {
+            element.addEventListener('input', () => {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => this.saveDraft(true), 2000);
+            });
+        });
+
+        // Auto-save questions container changes
+        const observer = new MutationObserver(() => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                this.saveDraft(true);
+                this.updateStats();
+                this.updatePreview();
+            }, 2000);
+        });
+
+        observer.observe(this.questionsContainer, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+
+        // Load auto-saved draft
+        this.loadAutoSavedDraft();
+
+        // Periodic auto-save
+        setInterval(() => {
+            if (this.hasChanges()) {
+                this.saveDraft(true);
+            }
+        }, 30000); // Every 30 seconds
+    }
+
+    initDragDrop() {
+        // Initialize Sortable for questions
+        this.sortable = Sortable.create(this.questionsContainer, {
+            animation: 150,
+            handle: '.question-handle',
+            ghostClass: 'dragging',
+            onEnd: () => {
+                this.updateQuestionNumbers();
+                this.saveDraft(true);
+            }
+        });
+    }
+
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + S to save draft
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                this.saveDraft();
+            }
+            
+            // Ctrl/Cmd + Q to add question
+            if ((e.ctrlKey || e.metaKey) && e.key === 'q') {
+                e.preventDefault();
+                this.addQuestion();
+            }
+            
+            // Ctrl/Cmd + P to preview
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                this.showPreview();
+            }
+            
+            // Ctrl/Cmd + D to toggle dark mode
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                this.toggleDarkMode();
+            }
+        });
+    }
+
+    setupResponsiveListeners() {
+        // Handle window resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                this.handleResponsiveLayout();
+            }, 250);
+        });
+        
+        // Initial call
+        this.handleResponsiveLayout();
+    }
+
+    addQuestion(type = 'multiple-choice') {
+        const template = this.questionTemplates.querySelector(`[data-type="${type}"]`);
+        if (!template) return;
+
+        const newQuestion = template.cloneNode(true);
+        const index = this.questionCount;
+        
+        // Update index placeholders
+        this.updateQuestionTemplate(newQuestion, index);
+        
+        // Add to container
+        this.questionsContainer.appendChild(newQuestion);
+        
+        // Remove empty state if exists
+        const emptyState = this.questionsContainer.querySelector('.empty-state');
+        if (emptyState) {
+            emptyState.remove();
+        }
+        
+        // Update counter
+        this.questionCount++;
+        this.updateQuestionNumbers();
+        this.updateStats();
+        this.updatePreview();
+        
+        // Add event listeners to new question
+        this.addQuestionEventListeners(newQuestion);
+        
+        // Show question stats
+        this.questionStats.classList.remove('d-none');
+        
+        // Scroll to new question
+        newQuestion.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+        // Show notification
+        this.showNotification('Question added successfully!', 'success');
+    }
+
+    updateQuestionTemplate(element, index) {
+        // Replace all __INDEX__ placeholders
+        const html = element.innerHTML.replace(/__INDEX__/g, index);
+        const number = this.questionCount + 1;
+        element.innerHTML = html.replace(/__NUMBER__/g, number);
+        
+        // Update data-index attribute
+        element.dataset.index = index;
+        
+        // Update question number span
+        const numberSpan = element.querySelector('.question-number');
+        if (numberSpan) {
+            numberSpan.textContent = number;
+        }
+    }
+
+    addQuestionEventListeners(questionElement) {
+        // Remove button
+        const removeBtn = questionElement.querySelector('.remove-question');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => this.removeQuestion(questionElement));
+        }
+        
+        // Clone button
+        const cloneBtn = questionElement.querySelector('.clone-question');
+        if (cloneBtn) {
+            cloneBtn.addEventListener('click', () => this.cloneQuestion(questionElement));
+        }
+        
+        // Correct choice selection
+        const correctChoices = questionElement.querySelectorAll('.correct-choice');
+        correctChoices.forEach(choice => {
+            choice.addEventListener('change', (e) => {
+                this.updateChoiceStyle(questionElement, e.target.value);
+            });
+        });
+        
+        // Input validation
+        const inputs = questionElement.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                this.updateStats();
+                this.updateCompletion();
+            });
+        });
+    }
+
+    removeQuestion(questionElement) {
+        if (confirm('Are you sure you want to remove this question?')) {
+            questionElement.remove();
+            this.questionCount--;
+            this.updateQuestionNumbers();
+            this.updateStats();
+            this.updatePreview();
+            this.saveDraft(true);
+            
+            // Show empty state if no questions
+            if (this.questionCount === 0) {
+                this.showEmptyState();
+                this.questionStats.classList.add('d-none');
+            }
+        }
+    }
+
+    cloneQuestion(questionElement) {
+        const clone = questionElement.cloneNode(true);
+        const index = this.questionCount;
+        
+        // Update index
+        this.updateQuestionTemplate(clone, index);
+        
+        // Insert after original
+        questionElement.after(clone);
+        
+        // Update counter
+        this.questionCount++;
+        this.updateQuestionNumbers();
+        this.updateStats();
+        this.updatePreview();
+        
+        // Add event listeners to clone
+        this.addQuestionEventListeners(clone);
+        
+        this.showNotification('Question cloned successfully!', 'success');
+    }
+
+    updateQuestionNumbers() {
+        const questions = this.questionsContainer.querySelectorAll('.question-card');
+        questions.forEach((question, index) => {
+            const numberSpan = question.querySelector('.question-number');
+            if (numberSpan) {
+                numberSpan.textContent = index + 1;
+            }
+            
+            // Update data-index
+            question.dataset.index = index;
+            
+            // Update input names
+            this.updateQuestionInputNames(question, index);
+        });
+    }
+
+    updateQuestionInputNames(questionElement, index) {
+        const inputs = questionElement.querySelectorAll('[name^="questions["]');
+        inputs.forEach(input => {
+            const oldName = input.name;
+            const match = oldName.match(/questions\[(\d+)\](.+)/);
+            if (match) {
+                input.name = `questions[${index}]${match[2]}`;
+            }
+        });
+    }
+
+    updateChoiceStyle(questionElement, correctChoice) {
+        const choices = questionElement.querySelectorAll('.choice-card');
+        choices.forEach(choice => {
+            choice.classList.remove('correct');
+            const choiceLetter = choice.dataset.choice?.toUpperCase();
+            if (choiceLetter === correctChoice) {
+                choice.classList.add('correct');
+            }
+        });
+    }
+
+    updateStats() {
+        const questions = this.questionsContainer.querySelectorAll('.question-card');
+        const totalQuestions = questions.length;
+        let totalPoints = 0;
+        let totalTime = 0;
+        
+        questions.forEach(question => {
+            const pointsInput = question.querySelector('[name$="[points]"]');
+            const timeInput = question.querySelector('[name$="[time_limit]"]');
+            
+            if (pointsInput && pointsInput.value) {
+                totalPoints += parseInt(pointsInput.value) || 1;
+            }
+            
+            if (timeInput && timeInput.value) {
+                totalTime += parseInt(timeInput.value) || 60;
+            }
+        });
+        
+        // Update display
+        document.getElementById('totalQuestions').textContent = totalQuestions;
+        document.getElementById('totalPoints').textContent = totalPoints;
+        document.getElementById('estTime').textContent = Math.ceil(totalTime / 60) + ' min';
+        
+        // Update question count
+        document.getElementById('questionCount').textContent = `(${totalQuestions} questions)`;
+        
+        // Update preview
+        document.getElementById('previewQuestionCount').textContent = totalQuestions;
+        document.getElementById('previewTotalPoints').textContent = totalPoints;
+    }
+
+    updatePreview() {
+        // Update preview title
+        document.getElementById('previewTitle').textContent = 
+            this.titleInput.value || 'Untitled Exam';
+        
+        // Update preview duration
+        const duration = this.durationInput.value || '60';
+        document.getElementById('previewDuration').textContent = `${duration} minutes`;
+    }
+
+    updateCompletion() {
+        let completion = 0;
+        
+        // Title (25%)
+        if (this.titleInput.value.length >= 10) completion += 25;
+        
+        // Course (25%)
+        if (this.courseSelect.value) completion += 25;
+        
+        // Questions (50%)
+        const questions = this.questionsContainer.querySelectorAll('.question-card');
+        if (questions.length >= 5) completion += 50;
+        else if (questions.length > 0) completion += (questions.length / 5) * 50;
+        
+        // Update progress bar
+        const progressBar = document.getElementById('completionProgress');
+        const percentSpan = document.getElementById('completionPercent');
+        
+        progressBar.style.width = `${completion}%`;
+        percentSpan.textContent = `${Math.round(completion)}%`;
+        
+        // Update progress bar color
+        if (completion < 30) {
+            progressBar.classList.remove('bg-warning', 'bg-success');
+            progressBar.classList.add('bg-danger');
+        } else if (completion < 70) {
+            progressBar.classList.remove('bg-danger', 'bg-success');
+            progressBar.classList.add('bg-warning');
+        } else {
+            progressBar.classList.remove('bg-danger', 'bg-warning');
+            progressBar.classList.add('bg-success');
+        }
+    }
+
+    updateTimerWidget() {
+        const duration = parseInt(this.durationInput.value) || 60;
+        if (duration > 0) {
+            this.timerWidget.classList.remove('d-none');
+            
+            // Update timer text
+            const hours = Math.floor(duration / 60);
+            const minutes = duration % 60;
+            let timerText = '';
+            
+            if (hours > 0) {
+                timerText += `${hours}:`;
+            }
+            timerText += minutes.toString().padStart(2, '0');
+            
+            document.getElementById('timerText').textContent = timerText;
+            
+            // Update progress ring
+            const maxDuration = 180; // 3 hours
+            const progress = Math.min((duration / maxDuration) * 100, 100);
+            const circumference = 239; // 2πr where r=38
+            const offset = circumference - (progress / 100) * circumference;
+            
+            const circle = document.querySelector('.progress-ring-circle');
+            circle.style.strokeDashoffset = offset;
+        } else {
+            this.timerWidget.classList.add('d-none');
+        }
+    }
+
+    toggleFeature(event) {
+        const btn = event.currentTarget;
+        const feature = btn.dataset.feature;
+        
+        // Toggle active state
+        btn.classList.toggle('active');
+        
+        // Handle feature activation
+        switch(feature) {
+            case 'ai':
+                this.aiAssistant.classList.toggle('d-none');
+                break;
+            case 'import':
+                this.showImportModal();
+                break;
+            case 'randomize':
+                this.randomizeQuestions();
+                break;
+            case 'code':
+                this.enableCodeQuestions();
+                break;
+            case 'analytics':
+                this.showAnalytics();
+                break;
+            case 'version':
+                this.showVersionHistory();
+                break;
+        }
+    }
+
+    changeQuestionType(event) {
+        const btn = event.currentTarget;
+        const type = btn.dataset.type;
+        
+        // Update active button
+        document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Store selected type for new questions
+        this.selectedQuestionType = type;
+        
+        // Show notification
+        this.showNotification(`Question type changed to ${type.replace('-', ' ')}`, 'info');
+    }
+
+    handleAISuggestion(event) {
+        const suggestion = event.currentTarget.dataset.suggestion;
+        
+        // Simulate AI response
+        const questions = {
+            'multiple-choice': [
+                {
+                    question: "What is the output of `print(2 + 3 * 2)` in Python?",
+                    choices: {
+                        a: "10",
+                        b: "8", // Correct
+                        c: "12",
+                        d: "14"
+                    },
+                    correct: "b",
+                    explanation: "Multiplication has higher precedence than addition."
+                }
+            ],
+            'true-false': [
+                {
+                    question: "Python is an interpreted language.",
+                    correct: "T",
+                    explanation: "Python code is executed line by line by the interpreter."
+                }
+            ],
+            'code': [
+                {
+                    question: "Write a function to calculate factorial of a number.",
+                    language: "python",
+                    points: 5
+                }
+            ]
+        };
+        
+        if (questions[suggestion]) {
+            questions[suggestion].forEach(q => {
+                // Add AI-generated question
+                this.addQuestionFromAI(q, suggestion);
+            });
+            
+            this.showNotification('AI questions added!', 'success');
+        }
+    }
+
+    addQuestionFromAI(questionData, type) {
+        // Implementation for adding AI-generated questions
+        // This would involve creating a question card with the AI data
+        console.log('Adding AI question:', questionData, type);
+    }
+
+    saveDraft(auto = false) {
+        const draft = {
+            title: this.titleInput.value,
+            course: this.courseSelect.value,
+            duration: this.durationInput.value,
+            pass_mark: document.getElementById('id_pass_mark').value,
+            scheduled_date: document.getElementById('id_scheduled_date').value,
+            is_active: document.getElementById('id_is_active').checked,
+            tags: this.tagify.value,
+            questions: this.getQuestionsData(),
+            timestamp: new Date().toISOString()
+        };
+
+        localStorage.setItem('examDraft', JSON.stringify(draft));
+        
+        if (!auto) {
+            this.showNotification('Draft saved successfully!', 'success');
+            const saveBtn = document.getElementById('saveDraftBtn');
+            const originalHTML = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-check me-2"></i>Saved!';
+            setTimeout(() => {
+                saveBtn.innerHTML = originalHTML;
+            }, 2000);
+        }
+    }
+
+    getQuestionsData() {
+        const questions = [];
+        const questionCards = this.questionsContainer.querySelectorAll('.question-card');
+        
+        questionCards.forEach((card, index) => {
+            const question = {
+                type: card.dataset.type,
+                question_text: card.querySelector('[name$="[question_text]"]')?.value || '',
+                points: card.querySelector('[name$="[points]"]')?.value || '1',
+                correct_choice: card.querySelector('[name$="[correct_choice]"]:checked')?.value || '',
+                choices: {}
+            };
+            
+            // Get choices for multiple choice questions
+            if (question.type === 'multiple-choice') {
+                ['a', 'b', 'c', 'd'].forEach(choice => {
+                    const input = card.querySelector(`[name$="[choice_${choice}]"]`);
+                    if (input) {
+                        question.choices[choice] = input.value;
+                    }
+                });
+            }
+            
+            questions.push(question);
+        });
+        
+        return questions;
+    }
+
+    loadAutoSavedDraft() {
+        const saved = localStorage.getItem('examDraft');
+        if (saved && confirm('Load saved draft?')) {
+            const draft = JSON.parse(saved);
+            
+            // Load basic data
+            this.titleInput.value = draft.title || '';
+            this.courseSelect.value = draft.course || '';
+            $(this.courseSelect).trigger('change');
+            this.durationInput.value = draft.duration || '60';
+            document.getElementById('id_pass_mark').value = draft.pass_mark || '50';
+            document.getElementById('id_scheduled_date').value = draft.scheduled_date || '';
+            document.getElementById('id_is_active').checked = draft.is_active || false;
+            
+            // Load tags
+            if (draft.tags) {
+                this.tagify.removeAllTags();
+                this.tagify.addTags(draft.tags);
+            }
+            
+            // Load questions
+            if (draft.questions && draft.questions.length > 0) {
+                this.questionsContainer.innerHTML = '';
+                draft.questions.forEach((q, index) => {
+                    this.addQuestion(q.type || 'multiple-choice');
+                    // TODO: Populate question data
+                });
+            }
+            
+            this.updateTimerWidget();
+            this.updateStats();
+            this.updateCompletion();
+            this.updatePreview();
+            
+            this.showNotification('Draft loaded successfully!', 'success');
+        }
+    }
+
+    showPreview() {
+        // Create preview modal content
+        const modalContent = `
+            <div class="modal fade" id="previewModal" tabindex="-1">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Exam Preview</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="exam-preview">
+                                <h4>${this.titleInput.value || 'Untitled Exam'}</h4>
+                                <div class="row mb-4">
+                                    <div class="col-md-3">
+                                        <strong>Duration:</strong> ${this.durationInput.value || '60'} minutes
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Pass Mark:</strong> ${document.getElementById('id_pass_mark').value || '50'}%
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Questions:</strong> ${this.questionCount}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Total Points:</strong> <span id="previewTotalPointsModal">0</span>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div id="questionsPreview"></div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary">Print Preview</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add modal to DOM
+        document.body.insertAdjacentHTML('beforeend', modalContent);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+        modal.show();
+        
+        // Clean up after modal closes
+        document.getElementById('previewModal').addEventListener('hidden.bs.modal', () => {
+            document.getElementById('previewModal').remove();
+        });
+    }
+
+    showFullPreview() {
+        // Open in new tab with full preview
+        const previewWindow = window.open('', '_blank');
+        previewWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Preview: ${this.titleInput.value || 'Untitled Exam'}</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>
+                    body { padding: 2rem; max-width: 800px; margin: 0 auto; }
+                    .question { margin-bottom: 2rem; padding: 1rem; border: 1px solid #dee2e6; border-radius: 8px; }
+                    .choice { padding: 0.5rem 1rem; margin-bottom: 0.5rem; border-radius: 4px; }
+                    .choice.correct { background: #d1fae5; border: 1px solid #10b981; }
+                </style>
+            </head>
+            <body>
+                <h1 class="mb-4">${this.titleInput.value || 'Untitled Exam'}</h1>
+                <div class="alert alert-info">
+                    <strong>Duration:</strong> ${this.durationInput.value || '60'} minutes<br>
+                    <strong>Pass Mark:</strong> ${document.getElementById('id_pass_mark').value || '50'}%<br>
+                    <strong>Instructions:</strong> Answer all questions. Each question has only one correct answer.
+                </div>
+                <div id="questions"></div>
+            </body>
+            </html>
+        `);
+        previewWindow.document.close();
+    }
+
+    toggleDarkMode() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+
+    importCSV() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.csv';
+        
+        input.onchange = e => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = e => {
+                try {
+                    const csv = e.target.result;
+                    const rows = csv.split('\n').filter(row => row.trim());
+                    const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
+                    
+                    // Process each row (skip header)
+                    for (let i = 1; i < rows.length; i++) {
+                        const values = rows[i].split(',').map(v => v.trim());
+                        const questionData = {};
+                        
+                        headers.forEach((header, index) => {
+                            questionData[header] = values[index] || '';
+                        });
+                        
+                        // Add question based on CSV data
+                        this.addQuestionFromCSV(questionData);
+                    }
+                    
+                    this.showNotification(`${rows.length - 1} questions imported from CSV!`, 'success');
+                } catch (error) {
+                    alert('Error parsing CSV file: ' + error.message);
+                }
+            };
+            
+            reader.readAsText(file);
+        };
+        
+        input.click();
+    }
+
+    exportJSON() {
+        const examData = {
+            title: this.titleInput.value,
+            course: this.courseSelect.options[this.courseSelect.selectedIndex]?.text,
+            duration: this.durationInput.value,
+            pass_mark: document.getElementById('id_pass_mark').value,
+            questions: this.getQuestionsData(),
+            export_date: new Date().toISOString(),
+            version: '1.0'
+        };
+        
+        const dataStr = JSON.stringify(examData, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = `exam-${new Date().getTime()}.json`;
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    }
+
+    exportExam() {
+        // Export exam in multiple formats
+        const exportModal = `
+            <div class="modal fade" id="exportModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Export Exam</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-outline-primary" onclick="editor.exportJSON()">
+                                    <i class="fas fa-file-code me-2"></i>Export as JSON
+                                </button>
+                                <button class="btn btn-outline-success" onclick="editor.exportCSV()">
+                                    <i class="fas fa-file-csv me-2"></i>Export as CSV
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editor.exportPDF()">
+                                    <i class="fas fa-file-pdf me-2"></i>Export as PDF
+                                </button>
+                                <button class="btn btn-outline-info" onclick="editor.exportQuiz()">
+                                    <i class="fas fa-graduation-cap me-2"></i>Export for LMS
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', exportModal);
+        new bootstrap.Modal(document.getElementById('exportModal')).show();
+        
+        // Clean up
+        document.getElementById('exportModal').addEventListener('hidden.bs.modal', () => {
+            document.getElementById('exportModal').remove();
+        });
+    }
+
+    showImportModal() {
+        // Similar to export modal but for import
+        console.log('Show import modal');
+    }
+
+    showQuestionBank() {
+        // Show question bank modal
+        console.log('Show question bank');
+    }
+
+    showVersionHistory() {
+        const versions = JSON.parse(localStorage.getItem('examVersions') || '[]');
+        
+        if (versions.length === 0) {
+            this.showNotification('No version history found', 'info');
+            return;
+        }
+        
+        // Show version history modal
+        const modalHtml = `
+            <div class="modal fade" id="versionModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Version History</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${versions.map((version, index) => `
+                                <div class="card mb-2">
+                                    <div class="card-body">
+                                        <h6>Version ${versions.length - index}</h6>
+                                        <small class="text-muted">${new Date(version.timestamp).toLocaleString()}</small>
+                                        <p class="mt-2 small">${version.title || 'Untitled'}</p>
+                                        <p class="small text-muted">${version.questions?.length || 0} questions</p>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="editor.restoreVersion(${index})">
+                                            Restore
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        new bootstrap.Modal(document.getElementById('versionModal')).show();
+    }
+
+    restoreVersion(index) {
+        const versions = JSON.parse(localStorage.getItem('examVersions') || '[]');
+        const version = versions[index];
+        
+        if (version) {
+            if (confirm('Restore this version? Current data will be replaced.')) {
+                // Restore version data
+                this.titleInput.value = version.title || '';
+                this.courseSelect.value = version.course || '';
+                this.durationInput.value = version.duration || '60';
+                // ... restore other fields
+                
+                this.updateStats();
+                this.updatePreview();
+                this.updateCompletion();
+                
+                this.showNotification('Version restored!', 'success');
+            }
+        }
+    }
+
+    randomizeQuestions() {
+        const questions = Array.from(this.questionsContainer.children);
+        
+        // Fisher-Yates shuffle
+        for (let i = questions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [questions[i], questions[j]] = [questions[j], questions[i]];
+        }
+        
+        // Re-append questions in new order
+        questions.forEach(question => this.questionsContainer.appendChild(question));
+        
+        this.updateQuestionNumbers();
+        this.showNotification('Questions randomized!', 'success');
+    }
+
+    enableCodeQuestions() {
+        // Initialize CodeMirror for code questions
+        const codeQuestions = this.questionsContainer.querySelectorAll('.code-question');
+        codeQuestions.forEach(question => {
+            const textarea = question.querySelector('textarea');
+            if (textarea && !this.codeEditors.has(textarea.id)) {
+                const editor = CodeMirror.fromTextArea(textarea, {
+                    mode: 'python',
+                    theme: 'default',
+                    lineNumbers: true,
+                    indentUnit: 4,
+                    matchBrackets: true
+                });
+                this.codeEditors.set(textarea.id, editor);
+            }
+        });
+    }
+
+    showAnalytics() {
+        // Show analytics modal with statistics
+        const stats = this.calculateAnalytics();
+        
+        const modalHtml = `
+            <div class="modal fade" id="analyticsModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Exam Analytics</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="display-4">${stats.totalQuestions}</div>
+                                    <small>Total Questions</small>
+                                </div>
+                                <div class="col-6">
+                                    <div class="display-4">${stats.totalPoints}</div>
+                                    <small>Total Points</small>
+                                </div>
+                            </div>
+                            <hr>
+                            <h6>Question Types</h6>
+                            <div class="mb-3">
+                                <small>Multiple Choice: ${stats.typeCount.multiple || 0}</small>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar" style="width: ${(stats.typeCount.multiple || 0) / stats.totalQuestions * 100}%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <small>True/False: ${stats.typeCount.truefalse || 0}</small>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" style="width: ${(stats.typeCount.truefalse || 0) / stats.totalQuestions * 100}%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <small>Code: ${stats.typeCount.code || 0}</small>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-warning" style="width: ${(stats.typeCount.code || 0) / stats.totalQuestions * 100}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        new bootstrap.Modal(document.getElementById('analyticsModal')).show();
+        
+        // Clean up
+        document.getElementById('analyticsModal').addEventListener('hidden.bs.modal', () => {
+            document.getElementById('analyticsModal').remove();
+        });
+    }
+
+    calculateAnalytics() {
+        const questions = this.questionsContainer.querySelectorAll('.question-card');
+        const typeCount = {};
+        
+        questions.forEach(question => {
+            const type = question.dataset.type;
+            typeCount[type] = (typeCount[type] || 0) + 1;
+        });
+        
+        return {
+            totalQuestions: questions.length,
+            totalPoints: this.calculateTotalPoints(),
+            typeCount: typeCount
+        };
+    }
+
+    calculateTotalPoints() {
+        let total = 0;
+        const pointsInputs = this.questionsContainer.querySelectorAll('[name$="[points]"]');
+        pointsInputs.forEach(input => {
+            total += parseInt(input.value) || 0;
+        });
+        return total;
+    }
+
+    handleSubmit(event) {
+        event.preventDefault();
+        
+        if (!this.validateForm()) return;
+        
+        // Show loading state
+        const submitBtn = this.form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+        submitBtn.disabled = true;
+        
+        // Save to version history
+        this.saveToVersionHistory();
+        
+        // Clear drafts
+        localStorage.removeItem('examDraft');
+        
+        // Submit form
+        setTimeout(() => {
+            this.form.submit();
+        }, 1000);
+    }
+
+    validateForm() {
+        let isValid = true;
+        
+        // Validate title
+        if (!this.titleInput.value.trim()) {
+            this.showError(this.titleInput, 'Exam title is required');
+            isValid = false;
+        }
+        
+        // Validate course
+        if (!this.courseSelect.value) {
+            this.showError(this.courseSelect, 'Course selection is required');
+            isValid = false;
+        }
+        
+        // Validate questions
+        const questions = this.questionsContainer.querySelectorAll('.question-card');
+        if (questions.length === 0) {
+            this.showNotification('Please add at least one question', 'warning');
+            isValid = false;
+        }
+        
+        // Validate each question
+        questions.forEach((question, index) => {
+            const textarea = question.querySelector('textarea[name$="[question_text]"]');
+            if (!textarea.value.trim()) {
+                this.showError(textarea, `Question ${index + 1} text is required`);
+                isValid = false;
+            }
+            
+            // Validate multiple choice questions
+            if (question.dataset.type === 'multiple-choice') {
+                const correctChoice = question.querySelector('[name$="[correct_choice]"]:checked');
+                if (!correctChoice) {
+                    this.showError(question, `Question ${index + 1} must have a correct answer selected`);
+                    isValid = false;
+                }
+            }
+        });
+        
+        return isValid;
+    }
+
+    showError(element, message) {
+        const feedback = document.createElement('div');
+        feedback.className = 'invalid-feedback d-block';
+        feedback.textContent = message;
+        
+        const parent = element.closest('.mb-3') || element.parentElement;
+        parent.appendChild(feedback);
+        element.classList.add('is-invalid');
+        
+        setTimeout(() => {
+            feedback.remove();
+            element.classList.remove('is-invalid');
+        }, 5000);
+    }
+
+    showNotification(message, type = 'info') {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(alert);
+        
+        setTimeout(() => {
+            alert.remove();
+        }, 5000);
+    }
+
+    saveToVersionHistory() {
+        const version = {
+            title: this.titleInput.value,
+            course: this.courseSelect.value,
+            duration: this.durationInput.value,
+            questions: this.getQuestionsData(),
+            timestamp: new Date().toISOString()
+        };
+        
+        let versions = JSON.parse(localStorage.getItem('examVersions') || '[]');
+        versions.push(version);
+        
+        // Keep only last 10 versions
+        if (versions.length > 10) {
+            versions = versions.slice(-10);
+        }
+        
+        localStorage.setItem('examVersions', JSON.stringify(versions));
+    }
+
+    hasChanges() {
+        const draft = localStorage.getItem('examDraft');
+        if (!draft) return true;
+        
+        const current = {
+            title: this.titleInput.value,
+            course: this.courseSelect.value,
+            questions: this.getQuestionsData()
+        };
+        
+        const saved = JSON.parse(draft);
+        return JSON.stringify(current) !== JSON.stringify(saved);
+    }
+
+    handleResponsiveLayout() {
+        const width = window.innerWidth;
+        
+        if (width < 768) {
+            // Mobile optimizations
+            const fabContainer = document.querySelector('.fab-container');
+            if (fabContainer) {
+                fabContainer.style.bottom = '1rem';
+                fabContainer.style.right = '1rem';
+            }
+        }
+    }
+
+    showEmptyState() {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-state text-center py-5';
+        emptyState.innerHTML = `
+            <i class="fas fa-question-circle fa-4x text-muted mb-3"></i>
+            <h5>No Questions Added</h5>
+            <p class="text-muted">Start by adding your first question</p>
+        `;
+        this.questionsContainer.appendChild(emptyState);
+    }
+}
+
+// Initialize editor when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.editor = new AdvancedExamEditor();
+    
+    // Set theme from localStorage
+    const theme = localStorage.getItem('theme') || 'light';
+    if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+    
+    // Initialize timer widget
+    editor.updateTimerWidget();
+});
+
+// Service worker for offline support
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(error => {
+            console.log('Service Worker registration failed:', error);
+        });
+    });
+}
+
+// Network status detection
+window.addEventListener('online', () => {
+    editor.showNotification('Back online! Changes will sync automatically.', 'success');
+});
+
+window.addEventListener('offline', () => {
+    editor.showNotification('You are offline. Changes will be saved locally.', 'warning');
+});
+
+// Print functionality
+window.addEventListener('beforeprint', () => {
+    document.querySelector('.fab-container').style.display = 'none';
+});
+
+window.addEventListener('afterprint', () => {
+    document.querySelector('.fab-container').style.display = 'flex';
+});
+</script>
+{% endblock %}

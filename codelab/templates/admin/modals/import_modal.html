@@ -1,0 +1,324 @@
+<!-- templates/admin/modals/import_modal.html -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="importModalLabel">
+                    <i class="fas fa-file-import me-2"></i>
+                    Import Questions
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="nav flex-column nav-pills" id="importTab" role="tablist" aria-orientation="vertical">
+                            <button class="nav-link active" id="json-tab" data-bs-toggle="pill" data-bs-target="#json" type="button" role="tab">
+                                <i class="fas fa-file-code me-2"></i>JSON Import
+                            </button>
+                            <button class="nav-link" id="csv-tab" data-bs-toggle="pill" data-bs-target="#csv" type="button" role="tab">
+                                <i class="fas fa-file-csv me-2"></i>CSV Import
+                            </button>
+                            <button class="nav-link" id="text-tab" data-bs-toggle="pill" data-bs-target="#text" type="button" role="tab">
+                                <i class="fas fa-file-alt me-2"></i>Text Import
+                            </button>
+                            <button class="nav-link" id="ai-tab" data-bs-toggle="pill" data-bs-target="#ai" type="button" role="tab">
+                                <i class="fas fa-robot me-2"></i>AI Generation
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="tab-content" id="importTabContent">
+                            <!-- JSON Import -->
+                            <div class="tab-pane fade show active" id="json" role="tabpanel">
+                                <h6>JSON Format</h6>
+                                <div class="mb-3">
+                                    <label for="jsonFile" class="form-label">Upload JSON File</label>
+                                    <input class="form-control" type="file" id="jsonFile" accept=".json">
+                                    <div class="form-text">Upload a JSON file with questions</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="jsonText" class="form-label">Or Paste JSON</label>
+                                    <textarea class="form-control" id="jsonText" rows="8" placeholder='[
+  {
+    "question_text": "What is 2+2?",
+    "question_type": "multiple_choice",
+    "choices": ["3", "4", "5", "6"],
+    "correct_answer": "4",
+    "points": 1,
+    "explanation": "Basic arithmetic"
+  }
+]'></textarea>
+                                </div>
+                                <button class="btn btn-primary" onclick="previewJSON()">
+                                    <i class="fas fa-eye me-2"></i>Preview
+                                </button>
+                            </div>
+
+                            <!-- CSV Import -->
+                            <div class="tab-pane fade" id="csv" role="tabpanel">
+                                <h6>CSV Format</h6>
+                                <div class="mb-3">
+                                    <label for="csvFile" class="form-label">Upload CSV File</label>
+                                    <input class="form-control" type="file" id="csvFile" accept=".csv">
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    CSV format: question_text,type,choice_a,choice_b,choice_c,choice_d,correct_answer,points
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="csvHeader">
+                                    <label class="form-check-label" for="csvHeader">
+                                        File contains header row
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Text Import -->
+                            <div class="tab-pane fade" id="text" role="tabpanel">
+                                <h6>Text Format</h6>
+                                <div class="mb-3">
+                                    <label for="textInput" class="form-label">Paste Questions</label>
+                                    <textarea class="form-control" id="textInput" rows="10" placeholder="Q1. What is the capital of France?
+A) London
+B) Berlin
+C) Paris
+D) Madrid
+Correct: C
+
+Q2. Python is...
+A) Compiled language
+B) Interpreted language
+C) Both
+D) Neither
+Correct: B"></textarea>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="autoDetect">
+                                    <label class="form-check-label" for="autoDetect">
+                                        Auto-detect question format
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- AI Generation -->
+                            <div class="tab-pane fade" id="ai" role="tabpanel">
+                                <h6>AI Question Generator</h6>
+                                <div class="mb-3">
+                                    <label for="aiTopic" class="form-label">Topic</label>
+                                    <input type="text" class="form-control" id="aiTopic" placeholder="e.g., Python programming, Calculus, Biology">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="aiCount" class="form-label">Number of Questions</label>
+                                    <select class="form-select" id="aiCount">
+                                        <option value="5">5 questions</option>
+                                        <option value="10" selected>10 questions</option>
+                                        <option value="15">15 questions</option>
+                                        <option value="20">20 questions</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="aiType" class="form-label">Question Type</label>
+                                    <select class="form-select" id="aiType">
+                                        <option value="multiple_choice">Multiple Choice</option>
+                                        <option value="true_false">True/False</option>
+                                        <option value="short_answer">Short Answer</option>
+                                        <option value="mixed">Mixed Types</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="generateAIQuestions()">
+                                    <i class="fas fa-magic me-2"></i>Generate Questions
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Section -->
+                <div id="importPreview" class="mt-4" style="display: none;">
+                    <h6>Preview (3 of <span id="previewCount">0</span> questions)</h6>
+                    <div class="border rounded p-3 mb-3" style="max-height: 300px; overflow-y: auto;" id="previewList"></div>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="previewMessage">Previewing questions...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmImport" disabled onclick="importQuestions()">
+                    <i class="fas fa-file-import me-2"></i>
+                    Import Questions
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function previewJSON() {
+    const jsonText = document.getElementById('jsonText').value;
+    try {
+        const questions = JSON.parse(jsonText);
+        showPreview(questions);
+    } catch (e) {
+        alert('Invalid JSON format: ' + e.message);
+    }
+}
+
+function showPreview(questions) {
+    const previewList = document.getElementById('previewList');
+    const previewCount = document.getElementById('previewCount');
+    const previewMessage = document.getElementById('previewMessage');
+    
+    previewList.innerHTML = '';
+    previewCount.textContent = questions.length;
+    
+    // Show first 3 questions
+    questions.slice(0, 3).forEach((q, i) => {
+        const div = document.createElement('div');
+        div.className = 'mb-3 pb-3 border-bottom';
+        div.innerHTML = `
+            <strong>Q${i + 1}:</strong> ${q.question_text || 'No question text'}
+            <br>
+            <small class="text-muted">
+                Type: ${q.question_type || 'multiple_choice'} | 
+                Points: ${q.points || 1} |
+                Correct: ${q.correct_answer || 'Not specified'}
+            </small>
+        `;
+        previewList.appendChild(div);
+    });
+    
+    if (questions.length > 3) {
+        const more = document.createElement('div');
+        more.className = 'text-center text-muted';
+        more.textContent = `... and ${questions.length - 3} more questions`;
+        previewList.appendChild(more);
+    }
+    
+    previewMessage.textContent = `Found ${questions.length} questions. Click "Import Questions" to add them to your exam.`;
+    document.getElementById('importPreview').style.display = 'block';
+    document.getElementById('confirmImport').disabled = false;
+}
+
+function importQuestions() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('importModal'));
+    const questions = JSON.parse(document.getElementById('jsonText').value);
+    
+    // Add questions to the form
+    questions.forEach(question => {
+        window.examEditor.addQuestion(question.question_type || 'multiple-choice');
+        
+        // Get the last added question
+        const questionsContainer = document.getElementById('questionsContainer');
+        const lastQuestion = questionsContainer.lastElementChild;
+        
+        if (lastQuestion) {
+            // Populate with imported data
+            const questionText = lastQuestion.querySelector('.question-text');
+            if (questionText) questionText.value = question.question_text;
+            
+            if (question.choices) {
+                ['a', 'b', 'c', 'd'].forEach((choice, index) => {
+                    const input = lastQuestion.querySelector(`.choice-${choice}`);
+                    if (input && question.choices[index]) {
+                        input.value = question.choices[index];
+                    }
+                });
+            }
+            
+            const correctChoice = lastQuestion.querySelector('.correct-choice-select');
+            if (correctChoice && question.correct_answer) {
+                correctChoice.value = question.correct_answer;
+                window.examEditor.updateSelectedChoice(lastQuestion, question.correct_answer);
+            }
+            
+            const pointsInput = lastQuestion.querySelector('.points-input');
+            if (pointsInput && question.points) {
+                pointsInput.value = question.points;
+            }
+            
+            const explanation = lastQuestion.querySelector('.explanation-text');
+            if (explanation && question.explanation) {
+                explanation.value = question.explanation;
+            }
+        }
+    });
+    
+    window.examEditor.updateStats();
+    window.examEditor.updatePreview();
+    window.examEditor.showNotification(`${questions.length} questions imported successfully!`, 'success');
+    
+    modal.hide();
+}
+
+function generateAIQuestions() {
+    const topic = document.getElementById('aiTopic').value;
+    const count = document.getElementById('aiCount').value;
+    const type = document.getElementById('aiType').value;
+    
+    if (!topic.trim()) {
+        alert('Please enter a topic');
+        return;
+    }
+    
+    // Show loading
+    const btn = event.target;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+    btn.disabled = true;
+    
+    // Simulate AI generation (in real app, this would be an API call)
+    setTimeout(() => {
+        const sampleQuestions = [
+            {
+                question_text: `In ${topic}, what is a common best practice?`,
+                question_type: "multiple_choice",
+                choices: ["Write unreadable code", "Use meaningful variable names", "Never comment code", "Use global variables everywhere"],
+                correct_answer: "B",
+                points: 1,
+                explanation: "Using meaningful variable names improves code readability and maintainability."
+            },
+            {
+                question_text: `Which of these is NOT typically associated with ${topic}?`,
+                question_type: "multiple_choice",
+                choices: ["Fundamental concepts", "Advanced techniques", "Common pitfalls", "Unrelated topic"],
+                correct_answer: "D",
+                points: 1,
+                explanation: "This option is completely unrelated to the topic."
+            }
+        ];
+        
+        // Add more sample questions based on count
+        for (let i = 3; i <= count; i++) {
+            sampleQuestions.push({
+                question_text: `Question ${i} about ${topic}: What is an important consideration?`,
+                question_type: type === "true_false" ? "true_false" : "multiple_choice",
+                choices: ["Performance optimization", "Code simplicity", "Both A and B", "Neither"],
+                correct_answer: type === "true_false" ? "A" : "C",
+                points: 1,
+                explanation: "Both performance and simplicity are important considerations."
+            });
+        }
+        
+        document.getElementById('jsonText').value = JSON.stringify(sampleQuestions.slice(0, count), null, 2);
+        previewJSON();
+        
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+    }, 2000);
+}
+
+// Initialize tabs
+document.addEventListener('DOMContentLoaded', function() {
+    const importModal = document.getElementById('importModal');
+    if (importModal) {
+        importModal.addEventListener('shown.bs.modal', function() {
+            // Reset form
+            document.getElementById('importPreview').style.display = 'none';
+            document.getElementById('confirmImport').disabled = true;
+        });
+    }
+});
+</script>

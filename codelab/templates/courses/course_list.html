@@ -1,0 +1,1252 @@
+{% extends 'base.html' %}
+
+{% block title %}Course Catalog - CodeLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Enhanced Responsive Design System */
+    :root {
+        --primary-color: #2563eb;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #06b6d4;
+        --dark-bg: #0f172a;
+        --card-bg: #1e293b;
+        --border-color: #334155;
+        --text-light: #e2e8f0;
+        --text-muted: #94a3b8;
+        --sidebar-width: 280px;
+    }
+
+    /* Responsive Grid System */
+    .courses-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    @media (max-width: 1024px) {
+        .courses-grid {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .courses-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .courses-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Level Badges with responsive adjustments */
+    .level-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .level-beginner {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .level-intermediate {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1));
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .level-advanced {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .level-expert {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1));
+        color: #8b5cf6;
+        border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    /* Responsive Course Cards */
+    .course-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100%;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .course-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        border-color: var(--primary-color);
+    }
+
+    .course-card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+
+    .course-card img {
+        height: 180px;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+        width: 100%;
+    }
+
+    @media (max-width: 768px) {
+        .course-card img {
+            height: 160px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .course-card img {
+            height: 140px;
+        }
+    }
+
+    .card-img-placeholder {
+        height: 180px;
+        background: linear-gradient(135deg, var(--border-color), var(--card-bg));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+
+    /* Responsive Card Body */
+    .card-body {
+        padding: 1.25rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    @media (max-width: 768px) {
+        .card-body {
+            padding: 1rem;
+        }
+    }
+
+    /* Enhanced Progress Bar */
+    .progress {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+
+    .progress-bar {
+        border-radius: 4px;
+        background: linear-gradient(90deg, var(--success-color), #22c55e);
+        transition: width 1s ease-in-out;
+    }
+
+    /* Responsive Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 640px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+    }
+
+    .stats-card {
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+        border: none;
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-3px);
+    }
+
+    /* Responsive Search and Filters */
+    .search-filters-container {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .search-filters-container {
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    .search-box {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .search-box {
+            padding: 1rem;
+        }
+    }
+
+    .search-input {
+        background: var(--dark-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-light);
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        flex: 1;
+        font-size: 1rem;
+    }
+
+    @media (max-width: 480px) {
+        .search-input {
+            font-size: 0.9375rem;
+            padding: 0.625rem 0.875rem;
+        }
+    }
+
+    /* Mobile Filter Sidebar */
+    .filter-sidebar {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 100%;
+        max-width: 320px;
+        height: 100vh;
+        background: var(--card-bg);
+        z-index: 1050;
+        transition: right 0.3s ease-in-out;
+        overflow-y: auto;
+        padding: 1.5rem;
+        border-left: 1px solid var(--border-color);
+    }
+
+    .filter-sidebar.active {
+        right: 0;
+    }
+
+    .filter-sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1049;
+    }
+
+    .filter-sidebar-overlay.active {
+        display: block;
+    }
+
+    /* Filter Chips */
+    .filter-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .filter-chip {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .filter-chip:hover {
+        border-color: var(--primary-color);
+        background: rgba(37, 99, 235, 0.1);
+    }
+
+    .filter-chip.active {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    /* Responsive Dropdowns */
+    .dropdown-menu {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    @media (max-width: 768px) {
+        .dropdown-menu {
+            max-height: 300px;
+        }
+    }
+
+    /* Mobile Actions Bar */
+    .mobile-actions-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--card-bg);
+        border-top: 1px solid var(--border-color);
+        padding: 0.75rem 1rem;
+        display: none;
+        z-index: 1000;
+    }
+
+    @media (max-width: 768px) {
+        .mobile-actions-bar {
+            display: flex;
+            justify-content: space-around;
+            gap: 0.5rem;
+        }
+    }
+
+    .mobile-action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.5rem;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        flex: 1;
+        max-width: 120px;
+    }
+
+    .mobile-action-btn:hover,
+    .mobile-action-btn.active {
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--primary-color);
+    }
+
+    /* Pagination */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 3rem;
+        padding: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .pagination-container {
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+    }
+
+    /* Course Actions */
+    .course-actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 2;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .course-card:hover .course-actions {
+        opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+        .course-actions {
+            opacity: 1;
+        }
+    }
+
+    /* Quick View Modal */
+    .quick-view-modal .modal-content {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        max-height: 90vh;
+        overflow: hidden;
+    }
+
+    .quick-view-modal .modal-body {
+        max-height: calc(90vh - 140px);
+        overflow-y: auto;
+    }
+
+    /* Loading States */
+    .skeleton-loader {
+        background: linear-gradient(90deg, var(--border-color) 25%, var(--card-bg) 50%, var(--border-color) 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* Dark/Light Mode Support */
+    @media (prefers-color-scheme: light) {
+        .course-card {
+            background: white;
+            border-color: #e5e7eb;
+        }
+        
+        .search-box {
+            background: white;
+            border-color: #e5e7eb;
+        }
+        
+        .search-input {
+            background: #f9fafb;
+            color: #111827;
+        }
+    }
+
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+        .course-card,
+        .stats-card,
+        .dropdown-toggle,
+        .action-btn,
+        .page-link {
+            transition: none;
+        }
+        
+        .course-card:hover {
+            transform: none;
+        }
+    }
+
+    /* Touch Device Optimizations */
+    @media (hover: none) and (pointer: coarse) {
+        .course-card:hover {
+            transform: none;
+        }
+        
+        .course-actions {
+            opacity: 1;
+        }
+    }
+
+    /* High Contrast Mode */
+    @media (prefers-contrast: high) {
+        .course-card {
+            border-width: 2px;
+        }
+        
+        .level-badge {
+            border-width: 2px;
+        }
+    }
+
+    /* Orientation Specific Styles */
+    @media screen and (orientation: landscape) and (max-height: 500px) {
+        .search-box {
+            padding: 0.75rem;
+        }
+        
+        .course-card img {
+            height: 120px;
+        }
+    }
+
+    /* Print Styles */
+    @media print {
+        .filter-sidebar,
+        .mobile-actions-bar,
+        .course-actions,
+        .dropdown,
+        .search-box {
+            display: none !important;
+        }
+        
+        .course-card {
+            break-inside: avoid;
+            border: 1px solid #000;
+            box-shadow: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}Course Catalog{% endblock %}
+{% block page_subtitle %}Browse our collection of coding courses{% endblock %}
+
+{% block page_actions %}
+<div class="d-none d-md-flex gap-2">
+    <div class="dropdown">
+        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-filter me-2"></i>Filter
+        </button>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="?filter=free">Free Courses</a></li>
+            <li><a class="dropdown-item" href="?filter=paid">Paid Courses</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="?level=beginner">Beginner Level</a></li>
+            <li><a class="dropdown-item" href="?level=intermediate">Intermediate Level</a></li>
+            <li><a class="dropdown-item" href="?level=advanced">Advanced Level</a></li>
+        </ul>
+    </div>
+    <button class="btn btn-outline-primary d-md-none" id="mobileFilterBtn">
+        <i class="fas fa-filter me-2"></i>Filters
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Mobile Filter Button -->
+<div class="d-md-none mb-3">
+    <button class="btn btn-outline-primary w-100" id="mobileFilterToggle">
+        <i class="fas fa-sliders-h me-2"></i>Filters & Options
+    </button>
+</div>
+
+<!-- Search and Filters -->
+<div class="search-filters-container">
+    <div class="search-box">
+        <div class="row g-3">
+            <div class="col-lg-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" 
+                           class="form-control search-input border-start-0" 
+                           id="searchInput" 
+                           placeholder="Search courses..." 
+                           value="{{ search_query }}"
+                           aria-label="Search courses">
+                    <button class="btn btn-primary d-flex align-items-center" id="searchBtn">
+                        <i class="fas fa-search me-2 d-none d-sm-inline"></i>
+                        <span>Search</span>
+                    </button>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="d-flex gap-2 justify-content-lg-end">
+                    <button class="btn btn-outline-primary d-flex align-items-center" 
+                            onclick="toggleViewMode()">
+                        <i class="fas fa-th me-2"></i>
+                        <span class="d-none d-sm-inline">Grid</span>
+                    </button>
+                    <button class="btn btn-outline-primary d-md-none" 
+                            id="filterToggleBtn">
+                        <i class="fas fa-filter me-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Filters -->
+    <div class="filter-chips" id="activeFilters">
+        {% if level_filter %}
+        <span class="filter-chip active" onclick="removeFilter('level')">
+            Level: {{ level_filter|title }}
+            <i class="fas fa-times"></i>
+        </span>
+        {% endif %}
+        {% if category_filter %}
+        <span class="filter-chip active" onclick="removeFilter('category')">
+            Category: {{ category_filter|title }}
+            <i class="fas fa-times"></i>
+        </span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Stats Overview -->
+<div class="stats-grid mb-4">
+    <div class="stats-card bg-primary text-white">
+        <div class="card-body text-center p-3">
+            <div class="d-flex align-items-center justify-content-center mb-2">
+                <i class="fas fa-book fa-2x opacity-75"></i>
+            </div>
+            <h4 class="mb-1 fw-bold">{{ total_courses }}</h4>
+            <small class="opacity-75">Total Courses</small>
+        </div>
+    </div>
+    <div class="stats-card bg-success text-white">
+        <div class="card-body text-center p-3">
+            <div class="d-flex align-items-center justify-content-center mb-2">
+                <i class="fas fa-play-circle fa-2x opacity-75"></i>
+            </div>
+            <h4 class="mb-1 fw-bold">{{ active_courses }}</h4>
+            <small class="opacity-75">Active Courses</small>
+        </div>
+    </div>
+    <div class="stats-card bg-info text-white">
+        <div class="card-body text-center p-3">
+            <div class="d-flex align-items-center justify-content-center mb-2">
+                <i class="fas fa-users fa-2x opacity-75"></i>
+            </div>
+            <h4 class="mb-1 fw-bold">{{ total_enrollments|default:"0" }}</h4>
+            <small class="opacity-75">Total Enrollments</small>
+        </div>
+    </div>
+    <div class="stats-card bg-warning text-white">
+        <div class="card-body text-center p-3">
+            <div class="d-flex align-items-center justify-content-center mb-2">
+                <i class="fas fa-certificate fa-2x opacity-75"></i>
+            </div>
+            <h4 class="mb-1 fw-bold">{{ total_certificates|default:"0" }}</h4>
+            <small class="opacity-75">Certificates Issued</small>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Filter Sidebar -->
+<div class="filter-sidebar" id="filterSidebar">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="mb-0">Filters</h5>
+        <button class="btn btn-close btn-close-white" onclick="closeFilterSidebar()"></button>
+    </div>
+    
+    <div class="mb-4">
+        <h6 class="mb-3">Level</h6>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="filter-chip {% if level_filter == 'beginner' %}active{% endif %}" 
+                    onclick="setFilter('level', 'beginner')">
+                Beginner
+            </button>
+            <button class="filter-chip {% if level_filter == 'intermediate' %}active{% endif %}" 
+                    onclick="setFilter('level', 'intermediate')">
+                Intermediate
+            </button>
+            <button class="filter-chip {% if level_filter == 'advanced' %}active{% endif %}" 
+                    onclick="setFilter('level', 'advanced')">
+                Advanced
+            </button>
+        </div>
+    </div>
+    
+    <div class="mb-4">
+        <h6 class="mb-3">Price</h6>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="filter-chip" onclick="setFilter('price', 'free')">
+                Free
+            </button>
+            <button class="filter-chip" onclick="setFilter('price', 'paid')">
+                Paid
+            </button>
+        </div>
+    </div>
+    
+    <div class="mb-4">
+        <h6 class="mb-3">Category</h6>
+        <div class="d-flex flex-column gap-2">
+            {% for cat in categories %}
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" 
+                       id="cat-{{ cat.id }}" 
+                       onchange="toggleCategory('{{ cat.slug }}')"
+                       {% if cat.slug == category_filter %}checked{% endif %}>
+                <label class="form-check-label" for="cat-{{ cat.id }}">
+                    {{ cat.name }}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="mt-4 pt-4 border-top">
+        <button class="btn btn-outline-danger w-100 mb-2" onclick="clearAllFilters()">
+            Clear All Filters
+        </button>
+        <button class="btn btn-primary w-100" onclick="applyFilters()">
+            Apply Filters
+        </button>
+    </div>
+</div>
+<div class="filter-sidebar-overlay" id="filterOverlay" onclick="closeFilterSidebar()"></div>
+
+<!-- Course Grid -->
+<div class="courses-grid" id="courseGrid">
+    {% if courses %}
+        {% for course in courses %}
+        <div class="course-card" data-course-id="{{ course.id }}">
+            <div class="course-actions">
+                <button class="action-btn mb-2" title="Quick View" onclick="showQuickView('{{ course.id }}')">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="action-btn" title="Add to Wishlist" onclick="toggleWishlist('{{ course.id }}')">
+                    <i class="fas fa-heart"></i>
+                </button>
+            </div>
+            
+            {% if course.thumbnail %}
+            <img src="{{ course.thumbnail.url }}" 
+                 class="card-img-top" 
+                 alt="{{ course.title }}"
+                 loading="lazy"
+                 onerror="this.src='/static/images/default-course.jpg'">
+            {% else %}
+            <div class="card-img-placeholder">
+                <i class="fas fa-book fa-3x text-muted"></i>
+            </div>
+            {% endif %}
+            
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <span class="level-badge level-{{ course.level }}">
+                        <i class="fas fa-signal"></i>
+                        {{ course.level|title }}
+                    </span>
+                    {% if course.featured %}
+                    <span class="featured-badge">
+                        <i class="fas fa-star me-1"></i>Featured
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <h5 class="card-title text-white mb-2">{{ course.title }}</h5>
+                <p class="card-text text-muted small mb-3">{{ course.short_description|truncatechars:120 }}</p>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center text-muted small mb-2">
+                        <span><i class="fas fa-book me-1"></i> {{ course.lesson_count|default:"0" }} Lessons</span>
+                        <span><i class="fas fa-clock me-1"></i> {{ course.duration|default:"N/A" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center text-muted small">
+                        <span><i class="fas fa-users me-1"></i> {{ course.enrollment_count|default:"0" }} Enrolled</span>
+                        <span><i class="fas fa-chart-line me-1"></i> {{ course.completion_rate|default:"0" }}% Complete</span>
+                    </div>
+                </div>
+                
+                {% if user.is_authenticated and course.id in enrolled_course_ids %}
+                <div class="mb-3 mt-auto">
+                    <div class="d-flex justify-content-between small mb-1 text-white">
+                        <span>Your Progress</span>
+                        <span>{{ course.user_progress|default:"0" }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" style="width: {{ course.user_progress|default:'0' }}%"></div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="d-flex align-items-center justify-content-between mt-3">
+                    <div class="instructor-info d-flex align-items-center">
+                        {% if course.instructor.avatar %}
+                        <img src="{{ course.instructor.avatar.url }}" 
+                             class="rounded-circle me-2" 
+                             width="24" 
+                             height="24" 
+                             alt="{{ course.instructor.get_full_name }}"
+                             loading="lazy">
+                        {% else %}
+                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-2" 
+                             style="width: 24px; height: 24px;">
+                            <i class="fas fa-user text-white" style="font-size: 0.75rem;"></i>
+                        </div>
+                        {% endif %}
+                        <small class="text-muted">{{ course.instructor.get_full_name|default:"Unknown Instructor" }}</small>
+                    </div>
+                    <div class="rating d-flex align-items-center">
+                        <i class="fas fa-star text-warning"></i>
+                        <small class="text-muted ms-1">{{ course.average_rating|default:"0.0" }}</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-transparent border-top border-secondary pt-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        {% if course.is_paid and course.price %}
+                        <h5 class="price-tag mb-0">${{ course.price }}</h5>
+                        {% if course.discounted_price %}
+                        <div class="d-flex align-items-center">
+                            <del class="text-muted small me-2">${{ course.price }}</del>
+                            <span class="badge bg-danger">Save {{ course.discount_percentage }}%</span>
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <span class="free-badge">FREE</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if course.id in enrolled_course_ids %}
+                        <a href="{{ course.get_absolute_url }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-play me-1"></i>
+                            <span class="d-none d-sm-inline">Continue</span>
+                        </a>
+                        {% else %}
+                        <a href="{% url 'courses:enroll_course' course.slug %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>
+                            <span class="d-none d-sm-inline">Enroll</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-search fa-3x"></i>
+            </div>
+            <h4 class="text-muted mb-3">No courses found</h4>
+            <p class="text-muted mb-4">Try adjusting your search criteria</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Pagination -->
+{% if courses.has_other_pages %}
+<div class="pagination-container">
+    <div class="d-flex flex-wrap gap-2 justify-content-center align-items-center">
+        {% if courses.has_previous %}
+        <a href="?page=1{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+           class="btn btn-outline-primary">
+            <i class="fas fa-angle-double-left"></i>
+        </a>
+        <a href="?page={{ courses.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+           class="btn btn-outline-primary">
+            <i class="fas fa-angle-left"></i>
+        </a>
+        {% endif %}
+        
+        <div class="d-flex gap-1">
+            {% for num in courses.paginator.page_range %}
+                {% if courses.number == num %}
+                <span class="btn btn-primary">{{ num }}</span>
+                {% elif num > courses.number|add:'-3' and num < courses.number|add:'3' %}
+                <a href="?page={{ num }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="btn btn-outline-primary">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+        </div>
+        
+        {% if courses.has_next %}
+        <a href="?page={{ courses.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+           class="btn btn-outline-primary">
+            <i class="fas fa-angle-right"></i>
+        </a>
+        <a href="?page={{ courses.paginator.num_pages }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+           class="btn btn-outline-primary">
+            <i class="fas fa-angle-double-right"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Mobile Actions Bar -->
+<div class="mobile-actions-bar">
+    <button class="mobile-action-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        <i class="fas fa-home"></i>
+        <span class="small">Home</span>
+    </button>
+    <button class="mobile-action-btn" onclick="openFilterSidebar()">
+        <i class="fas fa-filter"></i>
+        <span class="small">Filter</span>
+    </button>
+    <button class="mobile-action-btn" onclick="performSearch()">
+        <i class="fas fa-search"></i>
+        <span class="small">Search</span>
+    </button>
+    <button class="mobile-action-btn" onclick="window.location.href='{% url 'courses:my_courses' %}'">
+        <i class="fas fa-book"></i>
+        <span class="small">My Courses</span>
+    </button>
+</div>
+
+<!-- Quick View Modal -->
+<div class="modal fade quick-view-modal" id="quickViewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Course Preview</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="quickViewContent">
+                <!-- AJAX content -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary" id="quickViewEnrollBtn">Enroll Now</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize responsive features
+        initResponsiveFeatures();
+        initTouchEvents();
+        initKeyboardShortcuts();
+        
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        
+        function performSearch() {
+            const query = searchInput.value.trim();
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            urlParams.delete('page');
+            
+            if (query) {
+                urlParams.set('q', query);
+            } else {
+                urlParams.delete('q');
+            }
+            
+            window.location.href = '?' + urlParams.toString();
+        }
+        
+        searchBtn?.addEventListener('click', performSearch);
+        searchInput?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+        
+        // Debounced search
+        let searchTimeout;
+        searchInput?.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            if (searchInput.value.length >= 3 || searchInput.value.length === 0) {
+                searchTimeout = setTimeout(performSearch, 800);
+            }
+        });
+    });
+    
+    function initResponsiveFeatures() {
+        // Filter sidebar
+        window.openFilterSidebar = function() {
+            document.getElementById('filterSidebar').classList.add('active');
+            document.getElementById('filterOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+        
+        window.closeFilterSidebar = function() {
+            document.getElementById('filterSidebar').classList.remove('active');
+            document.getElementById('filterOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        };
+        
+        // Filter management
+        window.setFilter = function(type, value) {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set(type, value);
+            urlParams.delete('page');
+            window.location.href = '?' + urlParams.toString();
+        };
+        
+        window.removeFilter = function(type) {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.delete(type);
+            urlParams.delete('page');
+            window.location.href = '?' + urlParams.toString();
+        };
+        
+        window.clearAllFilters = function() {
+            window.location.href = window.location.pathname;
+        };
+        
+        window.applyFilters = function() {
+            closeFilterSidebar();
+            // Filters are already applied via URL parameters
+        };
+        
+        // View mode toggle
+        window.toggleViewMode = function() {
+            const grid = document.getElementById('courseGrid');
+            grid.classList.toggle('list-view');
+            const btn = event.target.closest('button');
+            const icon = btn.querySelector('i');
+            
+            if (grid.classList.contains('list-view')) {
+                grid.classList.remove('courses-grid');
+                grid.classList.add('courses-list');
+                icon.className = 'fas fa-list me-2';
+                btn.querySelector('span').textContent = 'List';
+            } else {
+                grid.classList.remove('courses-list');
+                grid.classList.add('courses-grid');
+                icon.className = 'fas fa-th me-2';
+                btn.querySelector('span').textContent = 'Grid';
+            }
+        };
+        
+        // Initialize list view CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            .courses-list {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .courses-list .course-card {
+                flex-direction: row;
+                min-height: 200px;
+            }
+            .courses-list .course-card img,
+            .courses-list .card-img-placeholder {
+                width: 200px;
+                height: auto;
+                border-radius: 12px 0 0 12px;
+            }
+            @media (max-width: 768px) {
+                .courses-list .course-card {
+                    flex-direction: column;
+                }
+                .courses-list .course-card img {
+                    width: 100%;
+                    height: 160px;
+                    border-radius: 12px 12px 0 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    function initTouchEvents() {
+        // Touch-optimized course cards
+        const courseCards = document.querySelectorAll('.course-card');
+        let touchStartX = 0;
+        let touchStartY = 0;
+        
+        courseCards.forEach(card => {
+            card.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+            
+            card.addEventListener('touchend', (e) => {
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+                const diffX = Math.abs(touchEndX - touchStartX);
+                const diffY = Math.abs(touchEndY - touchStartY);
+                
+                // If it's a tap (not swipe)
+                if (diffX < 10 && diffY < 10) {
+                    card.classList.add('tapped');
+                    setTimeout(() => card.classList.remove('tapped'), 200);
+                    
+                    // Navigate to course on tap
+                    const link = card.querySelector('a.btn-primary, a.btn-outline-primary');
+                    if (link) {
+                        window.location.href = link.href;
+                    }
+                }
+            }, { passive: true });
+        });
+        
+        // Prevent zoom on double tap
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+    }
+    
+    function initKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + F to focus search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.focus();
+                    searchInput.select();
+                }
+            }
+            
+            // Escape to close sidebar or clear search
+            if (e.key === 'Escape') {
+                if (document.getElementById('filterSidebar').classList.contains('active')) {
+                    closeFilterSidebar();
+                } else if (document.getElementById('searchInput').value) {
+                    document.getElementById('searchInput').value = '';
+                    performSearch();
+                }
+            }
+            
+            // '/' to focus search
+            if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault();
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput && document.activeElement !== searchInput) {
+                    searchInput.focus();
+                }
+            }
+        });
+    }
+    
+    // Quick View Modal
+    window.showQuickView = function(courseId) {
+        const modal = new bootstrap.Modal(document.getElementById('quickViewModal'));
+        fetch(`/api/courses/${courseId}/preview/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('quickViewContent').innerHTML = `
+                    <div class="row g-4">
+                        <div class="col-md-5">
+                            <img src="${data.thumbnail || '/static/images/default-course.jpg'}" 
+                                 class="img-fluid rounded" 
+                                 alt="${data.title}">
+                        </div>
+                        <div class="col-md-7">
+                            <h4>${data.title}</h4>
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <span class="badge level-${data.level}">${data.level}</span>
+                                <span class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>${data.duration}
+                                </span>
+                            </div>
+                            <p class="mb-3">${data.description}</p>
+                            
+                            <div class="row mb-3">
+                                <div class="col-6 col-md-3">
+                                    <div class="text-muted small">Lessons</div>
+                                    <div class="fw-bold">${data.lesson_count}</div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="text-muted small">Students</div>
+                                    <div class="fw-bold">${data.enrollment_count}</div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="text-muted small">Rating</div>
+                                    <div class="fw-bold">${data.rating}/5</div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="text-muted small">Level</div>
+                                    <div class="fw-bold">${data.level}</div>
+                                </div>
+                            </div>
+                            
+                            <h6>What You'll Learn:</h6>
+                            <ul class="list-unstyled">
+                                ${data.learning_objectives ? data.learning_objectives.map(obj => 
+                                    `<li class="mb-2"><i class="fas fa-check text-success me-2"></i>${obj}</li>`
+                                ).join('') : '<li class="text-muted">No learning objectives available</li>'}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('quickViewEnrollBtn').href = `/courses/${data.slug}/enroll/`;
+                modal.show();
+            })
+            .catch(() => {
+                document.getElementById('quickViewContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        Failed to load course details.
+                    </div>
+                `;
+                modal.show();
+            });
+        
+        if (event) event.stopPropagation();
+    };
+    
+    // Wishlist functionality
+    window.toggleWishlist = function(courseId) {
+        const btn = event.target.closest('.action-btn');
+        const icon = btn.querySelector('i');
+        
+        icon.classList.toggle('fas');
+        icon.classList.toggle('far');
+        
+        btn.style.transform = 'scale(1.2)';
+        setTimeout(() => btn.style.transform = '', 300);
+        
+        // AJAX request
+        {% if user.is_authenticated %}
+        fetch(`/api/courses/${courseId}/wishlist/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        });
+        {% endif %}
+        
+        if (event) event.stopPropagation();
+    };
+    
+    // Lazy loading images
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                        imageObserver.unobserve(img);
+                    }
+                }
+            });
+        }, {
+            rootMargin: '100px',
+            threshold: 0.1
+        });
+        
+        document.querySelectorAll('img[data-src]').forEach(img => {
+            imageObserver.observe(img);
+        });
+    }
+    
+    // Performance optimization: Debounce scroll events
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            // Handle scroll-based actions
+        }, 100);
+    }, { passive: true });
+</script>
+{% endblock %}

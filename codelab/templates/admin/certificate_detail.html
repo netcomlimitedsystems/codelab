@@ -1,0 +1,62 @@
+{% extends 'admin/base_admin_dashboard.html' %}
+
+{% block title %}Certificate Details - CodeLab{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Certificate Details</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'accounts:admin_certificate_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="certificate-container border p-5 bg-light">
+                    <h1 class="text-primary mb-4">Certificate of Completion</h1>
+                    <p class="lead">This certifies that</p>
+                    <h2 class="text-dark mb-3">{{ certificate.user.get_full_name|default:certificate.user.username }}</h2>
+                    <p class="lead">has successfully completed the course</p>
+                    <h3 class="text-info mb-4">{{ certificate.course.title }}</h3>
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <p><strong>Score:</strong> {{ certificate.score }}%</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Issued:</strong> {{ certificate.issued_at|date:"F d, Y" }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-muted">Certificate ID: <code>{{ certificate.certificate_id|default:"N/A" }}</code></p>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button class="btn btn-primary" onclick="window.print()">
+                        <i class="fas fa-print"></i> Print Certificate
+                    </button>
+                    <a href="{% url 'accounts:admin_certificate_list' %}" class="btn btn-secondary">
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn-toolbar, .btn {
+        display: none !important;
+    }
+    .certificate-container {
+        border: 2px solid #000 !important;
+        background: white !important;
+    }
+}
+</style>
+{% endblock %}

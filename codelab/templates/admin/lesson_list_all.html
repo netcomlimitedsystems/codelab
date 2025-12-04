@@ -1,0 +1,397 @@
+{% extends 'admin/base_admin_dashboard.html' %}
+
+{% block title %}All Lessons - CodeLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .action-btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+    
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-book-open me-2"></i>
+        All Lessons
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'accounts:admin_lesson_add_quick' %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-1"></i> Quick Add Lesson
+        </a>
+        <a href="{% url 'accounts:course_list' %}" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-arrow-left me-1"></i> Back to Courses
+        </a>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="filter-section">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" placeholder="Search lessons..." id="lessonSearch">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="statusFilter">
+                <option value="">All Status</option>
+                <option value="published">Published</option>
+                <option value="draft">Draft</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="courseFilter">
+                <option value="">All Courses</option>
+                {% for course in courses %}
+                <option value="{{ course.id }}">{{ course.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                <i class="fas fa-redo me-1"></i> Reset
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-muted">Total Lessons</h6>
+                        <h3 class="mb-0">{{ lessons|length }}</h3>
+                    </div>
+                    <div class="bg-primary text-white rounded-circle p-3">
+                        <i class="fas fa-book-open fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-muted">Published</h6>
+                        <h3 class="mb-0">{{ published_count|default:0 }}</h3>
+                    </div>
+                    <div class="bg-success text-white rounded-circle p-3">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-muted">Drafts</h6>
+                        <h3 class="mb-0">{{ draft_count|default:0 }}</h3>
+                    </div>
+                    <div class="bg-warning text-white rounded-circle p-3">
+                        <i class="fas fa-pen fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-muted">Courses</h6>
+                        <h3 class="mb-0">{{ courses|length }}</h3>
+                    </div>
+                    <div class="bg-info text-white rounded-circle p-3">
+                        <i class="fas fa-graduation-cap fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lessons Table -->
+<div class="card">
+    <div class="card-header bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Lessons List</h5>
+            <span class="badge bg-primary">{{ lessons|length }} lessons</span>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0" id="lessonsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th width="30">#</th>
+                        <th>Title</th>
+                        <th>Course</th>
+                        <th>Order</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lesson in lessons %}
+                    <tr data-status="{% if lesson.is_published %}published{% else %}draft{% endif %}" 
+                        data-course="{{ lesson.course.id }}">
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0 me-2">
+                                    <i class="fas fa-file-alt text-primary"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <strong>{{ lesson.title }}</strong>
+                                    {% if lesson.description %}
+                                    <br>
+                                    <small class="text-muted">{{ lesson.description|truncatechars:60 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ lesson.course.title }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">#{{ lesson.order }}</span>
+                        </td>
+                        <td>
+                            {% if lesson.is_published %}
+                                <span class="badge bg-success status-badge">
+                                    <i class="fas fa-check-circle me-1"></i> Published
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning status-badge">
+                                    <i class="fas fa-pen me-1"></i> Draft
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small>{{ lesson.created_at|date:"M d, Y" }}</small>
+                            <br>
+                            <small class="text-muted">{{ lesson.created_at|date:"h:i A" }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'accounts:lesson_edit' lesson.id %}" 
+                                   class="btn btn-sm btn-outline-primary action-btn" 
+                                   title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'accounts:lesson_view' lesson.id %}" 
+                                   class="btn btn-sm btn-outline-info action-btn" 
+                                   title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'accounts:lesson_delete' lesson.id %}" 
+                                   class="btn btn-sm btn-outline-danger action-btn" 
+                                   title="Delete"
+                                   onclick="return confirm('Are you sure you want to delete this lesson?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="empty-state">
+                                <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No Lessons Found</h5>
+                                <p class="text-muted mb-4">Get started by creating your first lesson</p>
+                                <a href="{% url 'accounts:admin_lesson_add_quick' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus-circle me-2"></i> Create Lesson
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                Showing {{ lessons|length }} of {{ lessons|length }} lessons
+            </small>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-secondary" disabled>
+                    <i class="fas fa-download me-1"></i> Export
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="printTable()">
+                    <i class="fas fa-print me-1"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="mt-4">
+    <div class="card">
+        <div class="card-header bg-light">
+            <h6 class="mb-0">Quick Actions</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <a href="{% url 'accounts:admin_lesson_add_quick' %}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-plus me-2"></i> Add Lesson
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'accounts:course_list' %}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-book me-2"></i> Manage Courses
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-info w-100" onclick="bulkPublish()">
+                        <i class="fas fa-check-circle me-2"></i> Bulk Publish
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-warning w-100" onclick="showStats()">
+                        <i class="fas fa-chart-bar me-2"></i> View Stats
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Table filtering and search
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('lessonSearch');
+    const statusFilter = document.getElementById('statusFilter');
+    const courseFilter = document.getElementById('courseFilter');
+    const tableRows = document.querySelectorAll('#lessonsTable tbody tr');
+    
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const statusValue = statusFilter.value;
+        const courseValue = courseFilter.value;
+        
+        tableRows.forEach(row => {
+            const title = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            const status = row.getAttribute('data-status');
+            const course = row.getAttribute('data-course');
+            
+            const matchesSearch = searchTerm === '' || title.includes(searchTerm);
+            const matchesStatus = statusValue === '' || status === statusValue;
+            const matchesCourse = courseValue === '' || course === courseValue;
+            
+            row.style.display = matchesSearch && matchesStatus && matchesCourse ? '' : 'none';
+        });
+    }
+    
+    searchInput.addEventListener('input', filterTable);
+    statusFilter.addEventListener('change', filterTable);
+    courseFilter.addEventListener('change', filterTable);
+});
+
+function resetFilters() {
+    document.getElementById('lessonSearch').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('courseFilter').value = '';
+    
+    document.querySelectorAll('#lessonsTable tbody tr').forEach(row => {
+        row.style.display = '';
+    });
+}
+
+function printTable() {
+    const printWindow = window.open('', '_blank');
+    const table = document.getElementById('lessonsTable');
+    
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Lessons List - CodeLab</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                table { width: 100%; border-collapse: collapse; }
+                th { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 8px; text-align: left; }
+                td { border: 1px solid #dee2e6; padding: 8px; }
+                @media print {
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <h1>Lessons List</h1>
+            <p>Generated on: ${new Date().toLocaleDateString()}</p>
+            ${table.outerHTML}
+            <div class="no-print" style="margin-top: 20px;">
+                <button onclick="window.print()">Print</button>
+                <button onclick="window.close()">Close</button>
+            </div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+
+function bulkPublish() {
+    if (confirm('Publish all draft lessons?')) {
+        // This would typically be an AJAX call to your backend
+        alert('Bulk publish feature would be implemented here.');
+    }
+}
+
+function showStats() {
+    // This would show statistics in a modal
+    alert('Statistics modal would be shown here.');
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + F to focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        document.getElementById('lessonSearch').focus();
+    }
+    
+    // Ctrl/Cmd + N to create new lesson
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        window.location.href = "{% url 'accounts:admin_lesson_add_quick' %}";
+    }
+});
+</script>
+{% endblock %}

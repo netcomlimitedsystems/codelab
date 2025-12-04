@@ -1,0 +1,1223 @@
+{% extends "base.html" %}
+{% load string_filters %}
+
+{% block title %}Two-Factor Authentication Setup - CodeLab{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-8">
+        <!-- Security Header -->
+        <div class="security-header mb-4">
+            <div class="d-flex align-items-center justify-content-between flex-wrap">
+                <div>
+                    <h1 class="display-6 fw-bold text-primary mb-2">
+                        <i class="fas fa-shield-alt me-2"></i>Two-Factor Authentication Setup
+                    </h1>
+                    <p class="lead text-muted">Add an extra layer of security to your account</p>
+                </div>
+                <div class="security-badge mt-3 mt-lg-0">
+                    <span class="badge bg-success fs-6 py-2 px-3">
+                        <i class="fas fa-lock me-1"></i>Recommended
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Security Progress Bar -->
+            <div class="mt-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <small class="text-muted">Account Security Level</small>
+                    <small class="text-muted">75%</small>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-warning" role="progressbar" style="width: 75%"></div>
+                </div>
+                <small class="text-muted">Enable MFA to reach 100% security</small>
+            </div>
+        </div>
+
+        <!-- Setup Steps -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-12">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h4 class="mb-0">
+                            <i class="fas fa-list-ol text-primary me-2"></i>
+                            Setup Instructions
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <!-- Step 1 -->
+                            <div class="col-md-4">
+                                <div class="step-card p-3 h-100 border rounded">
+                                    <div class="step-number mb-3">
+                                        <span class="badge bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">1</span>
+                                    </div>
+                                    <h5 class="fw-bold">Install Authenticator App</h5>
+                                    <p class="text-muted small mb-3">Download one of these recommended apps:</p>
+                                    <div class="d-flex flex-column gap-2">
+                                        <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" 
+                                           target="_blank" 
+                                           class="btn btn-outline-dark btn-sm d-flex align-items-center">
+                                            <i class="fab fa-google me-2"></i>Google Authenticator
+                                        </a>
+                                        <a href="https://authy.com/download/" 
+                                           target="_blank" 
+                                           class="btn btn-outline-dark btn-sm d-flex align-items-center">
+                                            <i class="fas fa-mobile-alt me-2"></i>Authy
+                                        </a>
+                                        <a href="https://www.microsoft.com/en-us/security/mobile-authenticator-app" 
+                                           target="_blank" 
+                                           class="btn btn-outline-dark btn-sm d-flex align-items-center">
+                                            <i class="fab fa-microsoft me-2"></i>Microsoft Authenticator
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 2 -->
+                            <div class="col-md-4">
+                                <div class="step-card p-3 h-100 border rounded">
+                                    <div class="step-number mb-3">
+                                        <span class="badge bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">2</span>
+                                    </div>
+                                    <h5 class="fw-bold">Scan QR Code</h5>
+                                    <p class="text-muted small">Use your app to scan the QR code below. This securely links your account.</p>
+                                    <div class="alert alert-light border mt-3">
+                                        <small>
+                                            <i class="fas fa-info-circle text-info me-1"></i>
+                                            <strong>Security Tip:</strong> Scan in a private location to prevent shoulder surfing
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 3 -->
+                            <div class="col-md-4">
+                                <div class="step-card p-3 h-100 border rounded">
+                                    <div class="step-number mb-3">
+                                        <span class="badge bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">3</span>
+                                    </div>
+                                    <h5 class="fw-bold">Verify & Complete</h5>
+                                    <p class="text-muted small">Enter the 6-digit code from your app to verify setup and save backup codes.</p>
+                                    <div class="alert alert-light border mt-3">
+                                        <small>
+                                            <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                                            <strong>Important:</strong> Save backup codes in a secure location
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Code & Setup Section -->
+        <div class="row g-4">
+            <!-- Left Column: QR Code -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h4 class="mb-0">
+                            <i class="fas fa-qrcode text-primary me-2"></i>
+                            Scan QR Code
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- QR Code Container -->
+                        <div class="text-center mb-4">
+                            <div class="qr-code-container p-3 border rounded bg-light d-inline-block position-relative">
+                                <!-- Security Overlay -->
+                                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" id="qrOverlay">
+                                    <button class="btn btn-primary" id="revealQR">
+                                        <i class="fas fa-eye me-2"></i>Reveal QR Code
+                                    </button>
+                                </div>
+                                
+                                <!-- QR Code (initially hidden for security) -->
+                                <div id="qrCodeDisplay" style="display: none;">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ mfa_secret_url|default:'2FASetupSecretHere' }}" 
+                                         alt="MFA QR Code" 
+                                         class="img-fluid mb-3 border p-2 bg-white"
+                                         id="qrCodeImage">
+                                    <div class="mt-2">
+                                        <small class="text-muted">Scan with your authenticator app</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Manual Setup Option -->
+                        <div class="accordion mb-4" id="manualSetupAccordion">
+                            <div class="accordion-item border-0">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#manualSetup">
+                                        <i class="fas fa-keyboard me-2"></i>
+                                        Can't scan? Enter manually
+                                    </button>
+                                </h2>
+                                <div id="manualSetup" class="accordion-collapse collapse">
+                                    <div class="accordion-body pt-3">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Secret Key</label>
+                                            <div class="input-group">
+                                                <input type="text" 
+                                                       class="form-control font-monospace" 
+                                                       id="secretKey" 
+                                                       value="{{ mfa_secret|default:'JBSWY3DPEHPK3PXP' }}" 
+                                                       readonly>
+                                                <button class="btn btn-outline-secondary" type="button" id="copySecret">
+                                                    <i class="fas fa-copy"></i>
+                                                </button>
+                                                <button class="btn btn-outline-secondary" type="button" id="toggleSecret">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                Enter this code in your authenticator app
+                                            </small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Setup Details</label>
+                                            <div class="alert alert-light border">
+                                                <div class="row small">
+                                                    <div class="col-6">
+                                                        <strong>Type:</strong> TOTP<br>
+                                                        <strong>Digits:</strong> 6
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <strong>Algorithm:</strong> SHA-1<br>
+                                                        <strong>Interval:</strong> 30s
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Security Information -->
+                        <div class="alert alert-info border">
+                            <div class="d-flex">
+                                <i class="fas fa-shield-check text-info fs-5 me-3"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-2">Enhanced Security Activated</h6>
+                                    <small class="mb-0">
+                                        Once enabled, you'll need both your password and authenticator code to log in. 
+                                        This prevents unauthorized access even if your password is compromised.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column: Verification -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h4 class="mb-0">
+                            <i class="fas fa-check-circle text-primary me-2"></i>
+                            Verify & Complete Setup
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Verification Form -->
+                        <form method="POST" action="{% url 'accounts:mfa_verify' %}" id="mfaVerifyForm">
+                            {% csrf_token %}
+                            
+                            <!-- Timer Display -->
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label fw-semibold">
+                                        <i class="fas fa-clock me-1"></i>Verification Code
+                                    </label>
+                                    <div id="codeTimer" class="text-danger">
+                                        <i class="fas fa-hourglass-half me-1"></i>
+                                        <span id="timer">30</span>s remaining
+                                    </div>
+                                </div>
+                                
+                                <!-- Code Input -->
+                                <div class="mb-3">
+                                    <input type="text" 
+                                           class="form-control form-control-lg text-center font-monospace fs-3" 
+                                           id="verificationCode" 
+                                           name="verification_code" 
+                                           maxlength="6" 
+                                           placeholder="000000"
+                                           autocomplete="one-time-code"
+                                           required
+                                           pattern="\d{6}"
+                                           inputmode="numeric">
+                                    <div class="form-text text-center">
+                                        Enter the 6-digit code from your authenticator app
+                                    </div>
+                                </div>
+                                
+                                <!-- Auto-submit notification -->
+                                <div class="alert alert-light border d-none" id="autoSubmitAlert">
+                                    <small>
+                                        <i class="fas fa-robot me-1"></i>
+                                        Form will submit automatically when all digits are entered
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <!-- Verification Options -->
+                            <div class="mb-4">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           id="trustDevice" 
+                                           name="trust_device">
+                                    <label class="form-check-label" for="trustDevice">
+                                        <i class="fas fa-laptop-house me-1"></i>
+                                        Trust this device for 30 days
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           id="requireMFA" 
+                                           name="require_mfa" 
+                                           checked>
+                                    <label class="form-check-label" for="requireMFA">
+                                        <i class="fas fa-shield-alt me-1"></i>
+                                        Require MFA for all logins
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <div class="d-grid gap-2 mb-4">
+                                <button type="submit" 
+                                        class="btn btn-primary btn-lg shadow-sm" 
+                                        id="verifyBtn">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    Verify & Enable MFA
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-outline-secondary" 
+                                        id="resendCode">
+                                    <i class="fas fa-redo me-2"></i>
+                                    Refresh Code in App
+                                </button>
+                            </div>
+                            
+                            <!-- Verification Status -->
+                            <div class="alert alert-success border d-none" id="successAlert" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>Success!</strong> MFA has been enabled for your account.
+                            </div>
+                            
+                            <div class="alert alert-danger border d-none" id="errorAlert" role="alert">
+                                <i class="fas fa-times-circle me-2"></i>
+                                <strong>Error:</strong> <span id="errorMessage"></span>
+                            </div>
+                        </form>
+                        
+                        <!-- Backup Codes Section -->
+                        <div class="mt-4 pt-3 border-top">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-download text-primary me-2"></i>
+                                    Backup Codes
+                                </h6>
+                                <button class="btn btn-sm btn-outline-primary" id="generateBackupCodes">
+                                    <i class="fas fa-redo me-1"></i>Generate New
+                                </button>
+                            </div>
+                            
+                            <div class="alert alert-warning border">
+                                <div class="d-flex">
+                                    <i class="fas fa-exclamation-triangle text-warning fs-5 me-3"></i>
+                                    <div>
+                                        <h6 class="alert-heading mb-2">Important Security Notice</h6>
+                                        <small class="mb-0">
+                                            Backup codes allow you to access your account if you lose your authenticator device. 
+                                            <strong>Save them securely and never share them.</strong> Each code can only be used once.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Backup Codes Display -->
+                            <div class="backup-codes-container p-3 border rounded bg-light" id="backupCodesSection">
+                                <div class="text-center mb-3">
+                                    <button class="btn btn-sm btn-outline-dark" id="revealBackupCodes">
+                                        <i class="fas fa-eye me-1"></i>Reveal Backup Codes
+                                    </button>
+                                </div>
+                                
+                                <div id="backupCodesDisplay" style="display: none;">
+                                    <div class="row row-cols-2 g-2 mb-3">
+                                        {% for code in backup_codes|default:"9X7Y3Z 5A8B2C 7D4E1F 3G6H9J 1K2L3M 4N5P6Q 7R8S9T 2U3V4W"|split %}
+                                        <div class="col">
+                                            <div class="border bg-white p-2 text-center font-monospace small">
+                                                {{ code }}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-outline-dark" id="copyBackupCodes">
+                                            <i class="fas fa-copy me-1"></i>Copy All Codes
+                                        </button>
+                                        <button class="btn btn-outline-dark" id="printBackupCodes">
+                                            <i class="fas fa-print me-1"></i>Print Codes
+                                        </button>
+                                        <button class="btn btn-outline-dark" id="downloadBackupCodes">
+                                            <i class="fas fa-file-download me-1"></i>Download as Text
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Security Settings -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cog text-primary me-2"></i>
+                            Additional Security Settings
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="smsBackup" checked>
+                                    <label class="form-check-label" for="smsBackup">
+                                        <i class="fas fa-sms me-2"></i>
+                                        SMS Backup Codes
+                                        <small class="d-block text-muted">Send backup codes to your phone via SMS</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="emailBackup" checked>
+                                    <label class="form-check-label" for="emailBackup">
+                                        <i class="fas fa-envelope me-2"></i>
+                                        Email Notifications
+                                        <small class="d-block text-muted">Get alerts for MFA logins</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="deviceManagement">
+                                    <label class="form-check-label" for="deviceManagement">
+                                        <i class="fas fa-laptop me-2"></i>
+                                        Device Management
+                                        <small class="d-block text-muted">Review and remove trusted devices</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="emergencyAccess">
+                                    <label class="form-check-label" for="emergencyAccess">
+                                        <i class="fas fa-user-shield me-2"></i>
+                                        Emergency Access
+                                        <small class="d-block text-muted">Set up trusted contacts for account recovery</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Security Tips -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm bg-light">
+                    <div class="card-body">
+                        <h5 class="mb-3">
+                            <i class="fas fa-lightbulb text-warning me-2"></i>
+                            MFA Security Best Practices
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-mobile-alt text-primary fs-4 me-3"></i>
+                                    </div>
+                                    <div>
+                                        <h6>Use Authenticator Apps</h6>
+                                        <small class="text-muted">They're more secure than SMS-based 2FA and work offline.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-download text-primary fs-4 me-3"></i>
+                                    </div>
+                                    <div>
+                                        <h6>Save Backup Codes</h6>
+                                        <small class="text-muted">Store them in a password manager or secure physical location.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-sync-alt text-primary fs-4 me-3"></i>
+                                    </div>
+                                    <div>
+                                        <h6>Regularly Update</h6>
+                                        <small class="text-muted">Regenerate backup codes periodically and review trusted devices.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+            <a href="{% url 'accounts:security_settings' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Security Settings
+            </a>
+            <div>
+                <button class="btn btn-outline-danger me-2" id="skipMFA" data-bs-toggle="modal" data-bs-target="#skipWarningModal">
+                    <i class="fas fa-times me-2"></i>Skip for Now
+                </button>
+                <button class="btn btn-primary" id="completeSetup">
+                    <i class="fas fa-check me-2"></i>Complete MFA Setup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Skip Warning Modal -->
+<div class="modal fade" id="skipWarningModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Security Warning
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning border">
+                    <div class="d-flex">
+                        <i class="fas fa-shield-alt fs-3 me-3"></i>
+                        <div>
+                            <h6>Reduced Account Security</h6>
+                            <p class="mb-0">Without MFA, your account is vulnerable to unauthorized access if your password is compromised.</p>
+                        </div>
+                    </div>
+                </div>
+                <p><strong>Are you sure you want to skip MFA setup?</strong></p>
+                <p class="text-muted small">You can enable MFA anytime in your security settings.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <a href="{% url 'accounts:profile_settings' %}" class="btn btn-warning">
+                    Skip MFA Anyway
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle me-2"></i>
+                    MFA Successfully Enabled
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-shield-alt text-success fs-1 mb-3"></i>
+                    <h4>Your Account is Now Protected</h4>
+                    <p class="text-muted">Two-factor authentication has been successfully enabled for your account.</p>
+                </div>
+                <div class="alert alert-light border">
+                    <small>
+                        <strong>Next time you log in:</strong><br>
+                        1. Enter your username and password<br>
+                        2. Open your authenticator app<br>
+                        3. Enter the 6-digit code
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Review Settings
+                </button>
+                <a href="{% url 'accounts:update_profile' %}" class="btn btn-success">
+                    Go to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap components
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
+    
+    // DOM Elements
+    const qrOverlay = document.getElementById('qrOverlay');
+    const revealQR = document.getElementById('revealQR');
+    const qrCodeDisplay = document.getElementById('qrCodeDisplay');
+    const secretKey = document.getElementById('secretKey');
+    const copySecret = document.getElementById('copySecret');
+    const toggleSecret = document.getElementById('toggleSecret');
+    const verificationCode = document.getElementById('verificationCode');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const mfaVerifyForm = document.getElementById('mfaVerifyForm');
+    const successAlert = document.getElementById('successAlert');
+    const errorAlert = document.getElementById('errorAlert');
+    const errorMessage = document.getElementById('errorMessage');
+    const backupCodesDisplay = document.getElementById('backupCodesDisplay');
+    const revealBackupCodes = document.getElementById('revealBackupCodes');
+    const copyBackupCodes = document.getElementById('copyBackupCodes');
+    const printBackupCodes = document.getElementById('printBackupCodes');
+    const downloadBackupCodes = document.getElementById('downloadBackupCodes');
+    const generateBackupCodes = document.getElementById('generateBackupCodes');
+    const resendCode = document.getElementById('resendCode');
+    const timer = document.getElementById('timer');
+    const codeTimer = document.getElementById('codeTimer');
+    const skipMFA = document.getElementById('skipMFA');
+    const completeSetup = document.getElementById('completeSetup');
+    const autoSubmitAlert = document.getElementById('autoSubmitAlert');
+    
+    // Security variables
+    let isQRRevealed = false;
+    let areBackupCodesRevealed = false;
+    let timerInterval;
+    let timeLeft = 30;
+    
+    // QR Code Security
+    revealQR.addEventListener('click', function() {
+        isQRRevealed = !isQRRevealed;
+        if (isQRRevealed) {
+            qrOverlay.style.display = 'none';
+            qrCodeDisplay.style.display = 'block';
+            this.innerHTML = '<i class="fas fa-eye-slash me-2"></i>Hide QR Code';
+            
+            // Log QR code reveal (in real app, this would be a security audit log)
+            console.log('QR code revealed by user');
+            
+            // Auto-hide after 30 seconds for security
+            setTimeout(() => {
+                if (isQRRevealed) {
+                    hideQRCode();
+                }
+            }, 30000);
+        } else {
+            hideQRCode();
+        }
+    });
+    
+    function hideQRCode() {
+        qrOverlay.style.display = 'flex';
+        qrCodeDisplay.style.display = 'none';
+        revealQR.innerHTML = '<i class="fas fa-eye me-2"></i>Reveal QR Code';
+        isQRRevealed = false;
+    }
+    
+    // Secret Key Security
+    copySecret.addEventListener('click', function() {
+        secretKey.select();
+        secretKey.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(secretKey.value).then(() => {
+            showToast('Secret key copied to clipboard!', 'success');
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+            showToast('Failed to copy. Please copy manually.', 'error');
+        });
+    });
+    
+    toggleSecret.addEventListener('click', function() {
+        const type = secretKey.getAttribute('type') === 'password' ? 'text' : 'password';
+        secretKey.setAttribute('type', type);
+        this.innerHTML = type === 'password' ? 
+            '<i class="fas fa-eye"></i>' : 
+            '<i class="fas fa-eye-slash"></i>';
+    });
+    
+    // TOTP Timer
+    function startTimer() {
+        clearInterval(timerInterval);
+        timeLeft = 30;
+        updateTimerDisplay();
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                showToast('Code expired. Please refresh in your app.', 'warning');
+                verificationCode.value = '';
+                verificationCode.focus();
+            }
+        }, 1000);
+    }
+    
+    function updateTimerDisplay() {
+        timer.textContent = timeLeft;
+        if (timeLeft <= 10) {
+            codeTimer.className = 'text-danger';
+            if (timeLeft <= 5) {
+                timer.style.fontWeight = 'bold';
+            }
+        } else {
+            codeTimer.className = 'text-muted';
+            timer.style.fontWeight = 'normal';
+        }
+    }
+    
+    // Auto-start timer
+    startTimer();
+    
+    // Auto-refresh timer every 30 seconds
+    setInterval(() => {
+        startTimer();
+    }, 30000);
+    
+    // Verification Code Input
+    verificationCode.addEventListener('input', function() {
+        // Auto-format and validate
+        let value = this.value.replace(/\D/g, '').substring(0, 6);
+        this.value = value;
+        
+        // Show auto-submit alert when 6 digits entered
+        if (value.length === 6) {
+            autoSubmitAlert.classList.remove('d-none');
+            
+            // Auto-submit after 1 second
+            setTimeout(() => {
+                if (this.value.length === 6 && !verifyBtn.disabled) {
+                    verifyMFA();
+                }
+            }, 1000);
+        } else {
+            autoSubmitAlert.classList.add('d-none');
+        }
+        
+        // Validate each digit as it's entered
+        if (value.length > 0) {
+            const isValid = /^\d+$/.test(value);
+            if (!isValid) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        }
+    });
+    
+    // Paste event for verification code
+    verificationCode.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const pastedText = e.clipboardData.getData('text').replace(/\D/g, '').substring(0, 6);
+        this.value = pastedText;
+        
+        if (pastedText.length === 6) {
+            autoSubmitAlert.classList.remove('d-none');
+            setTimeout(() => verifyMFA(), 500);
+        }
+    });
+    
+    // Backup Codes Security
+    revealBackupCodes.addEventListener('click', function() {
+        areBackupCodesRevealed = !areBackupCodesRevealed;
+        if (areBackupCodesRevealed) {
+            backupCodesDisplay.style.display = 'block';
+            this.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide Backup Codes';
+            this.classList.remove('btn-outline-dark');
+            this.classList.add('btn-danger');
+            
+            // Log backup codes reveal
+            console.log('Backup codes revealed by user');
+            
+            // Auto-hide after 60 seconds
+            setTimeout(() => {
+                if (areBackupCodesRevealed) {
+                    hideBackupCodes();
+                }
+            }, 60000);
+        } else {
+            hideBackupCodes();
+        }
+    });
+    
+    function hideBackupCodes() {
+        backupCodesDisplay.style.display = 'none';
+        revealBackupCodes.innerHTML = '<i class="fas fa-eye me-1"></i>Reveal Backup Codes';
+        revealBackupCodes.classList.remove('btn-danger');
+        revealBackupCodes.classList.add('btn-outline-dark');
+        areBackupCodesRevealed = false;
+    }
+    
+    // Copy Backup Codes
+    copyBackupCodes.addEventListener('click', function() {
+        const codes = Array.from(document.querySelectorAll('#backupCodesDisplay .font-monospace'))
+            .map(el => el.textContent.trim())
+            .join('\n');
+        
+        navigator.clipboard.writeText(codes).then(() => {
+            showToast('Backup codes copied to clipboard!', 'success');
+            // Auto-clear clipboard after 60 seconds for security
+            setTimeout(() => {
+                navigator.clipboard.writeText('').catch(() => {});
+            }, 60000);
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+            showToast('Failed to copy. Please copy manually.', 'error');
+        });
+    });
+    
+    // Print Backup Codes
+    printBackupCodes.addEventListener('click', function() {
+        const printWindow = window.open('', '_blank');
+        const codes = Array.from(document.querySelectorAll('#backupCodesDisplay .font-monospace'))
+            .map(el => el.textContent.trim());
+        
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>CodeLab Backup Codes</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    h1 { color: #333; }
+                    .codes { font-family: monospace; font-size: 16px; line-height: 2; }
+                    .warning { color: #dc3545; font-weight: bold; }
+                    @media print {
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>CodeLab Backup Codes</h1>
+                <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+                <p class="warning">⚠️ Store this document securely. These codes allow access to your account.</p>
+                <div class="codes">
+                    ${codes.map(code => `<div>${code}</div>`).join('')}
+                </div>
+                <p><small>Each code can be used only once. Generate new codes after use.</small></p>
+                <button class="no-print" onclick="window.print();">Print</button>
+                <button class="no-print" onclick="window.close();">Close</button>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    });
+    
+    // Download Backup Codes
+    downloadBackupCodes.addEventListener('click', function() {
+        const codes = Array.from(document.querySelectorAll('#backupCodesDisplay .font-monospace'))
+            .map(el => el.textContent.trim());
+        
+        const content = `CodeLab Backup Codes\nGenerated: ${new Date().toLocaleString()}\n\n` +
+                       `IMPORTANT: Store this file securely. These codes allow access to your account.\n\n` +
+                       `${codes.join('\n')}\n\n` +
+                       `Instructions:\n` +
+                       `1. Each code can be used only once\n` +
+                       `2. Generate new codes after using all of these\n` +
+                       `3. Keep this file in a secure location\n` +
+                       `4. Delete this file if you suspect it has been compromised`;
+        
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `codelab-backup-codes-${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+    
+    // Generate New Backup Codes
+    generateBackupCodes.addEventListener('click', function() {
+        if (confirm('Generating new backup codes will invalidate all existing codes. Continue?')) {
+            showToast('Generating new backup codes...', 'info');
+            // In production, this would make an API call
+            setTimeout(() => {
+                hideBackupCodes();
+                showToast('New backup codes generated!', 'success');
+            }, 1500);
+        }
+    });
+    
+    // Resend Code
+    resendCode.addEventListener('click', function() {
+        showToast('Refreshing code in your authenticator app...', 'info');
+        startTimer();
+    });
+    
+    // Complete Setup
+    completeSetup.addEventListener('click', function() {
+        if (verificationCode.value.length === 6) {
+            verifyMFA();
+        } else {
+            verificationCode.focus();
+            showToast('Please enter the 6-digit verification code first.', 'warning');
+        }
+    });
+    
+    // MFA Verification Function
+    function verifyMFA() {
+        const code = verificationCode.value.trim();
+        
+        if (code.length !== 6 || !/^\d+$/.test(code)) {
+            showError('Please enter a valid 6-digit code');
+            return;
+        }
+        
+        // Disable form and show loading
+        verifyBtn.disabled = true;
+        verifyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Verifying...';
+        
+        // Simulate API call (replace with actual AJAX call)
+        setTimeout(() => {
+            // Simulate successful verification
+            const success = Math.random() > 0.1; // 90% success rate for demo
+            
+            if (success) {
+                showSuccess();
+                setTimeout(() => {
+                    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                    successModal.show();
+                }, 1000);
+            } else {
+                showError('Invalid verification code. Please try again.');
+                verificationCode.value = '';
+                verificationCode.focus();
+                verifyBtn.disabled = false;
+                verifyBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Verify & Enable MFA';
+            }
+        }, 1500);
+    }
+    
+    // Form submission
+    mfaVerifyForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        verifyMFA();
+    });
+    
+    // Helper functions
+    function showSuccess() {
+        successAlert.classList.remove('d-none');
+        errorAlert.classList.add('d-none');
+        mfaVerifyForm.classList.add('was-validated');
+    }
+    
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorAlert.classList.remove('d-none');
+        successAlert.classList.add('d-none');
+        verificationCode.classList.add('is-invalid');
+    }
+    
+    function showToast(message, type = 'info') {
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-bg-${type} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        
+        // Add to container
+        const container = document.getElementById('toastContainer') || (() => {
+            const div = document.createElement('div');
+            div.id = 'toastContainer';
+            div.className = 'toast-container position-fixed top-0 end-0 p-3';
+            document.body.appendChild(div);
+            return div;
+        })();
+        
+        container.appendChild(toast);
+        
+        // Initialize and show
+        const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+        bsToast.show();
+        
+        // Remove after hidden
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+    }
+    
+    // Security: Prevent screenshots (CSS-based, not foolproof but deterrent)
+    const style = document.createElement('style');
+    style.textContent = `
+        @media (max-width: 768px) {
+            .backup-codes-container, .qr-code-container {
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }
+        }
+        
+        /* Print prevention */
+        @media print {
+            #backupCodesDisplay, #qrCodeDisplay, .security-header {
+                display: none !important;
+            }
+            
+            body::before {
+                content: "Security Notice: Sensitive information has been hidden for your protection.";
+                display: block;
+                text-align: center;
+                margin-top: 2rem;
+                font-size: 1.2rem;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Device fingerprinting for audit logging
+    function getDeviceFingerprint() {
+        const fingerprint = {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            screenResolution: `${screen.width}x${screen.height}`,
+            colorDepth: screen.colorDepth,
+            hardwareConcurrency: navigator.hardwareConcurrency || 'unknown'
+        };
+        
+        // Create hash
+        const str = JSON.stringify(fingerprint);
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        
+        return Math.abs(hash).toString(16);
+    }
+    
+    // Add device fingerprint to form
+    const deviceFingerprint = getDeviceFingerprint();
+    const fingerprintInput = document.createElement('input');
+    fingerprintInput.type = 'hidden';
+    fingerprintInput.name = 'device_fingerprint';
+    fingerprintInput.value = deviceFingerprint;
+    mfaVerifyForm.appendChild(fingerprintInput);
+    
+    // Log security events
+    console.log('MFA setup page loaded from device:', deviceFingerprint);
+});
+</script>
+
+<style>
+/* Responsive Design */
+@media (max-width: 768px) {
+    .display-6 {
+        font-size: 1.75rem;
+    }
+    
+    .card-body {
+        padding: 1.25rem !important;
+    }
+    
+    .step-card {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .btn-lg {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+    
+    .qr-code-container, .backup-codes-container {
+        padding: 1rem !important;
+    }
+}
+
+/* Security-focused styles */
+.qr-code-container, .backup-codes-container {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.qr-code-container:hover, .backup-codes-container:hover {
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+}
+
+/* Blur effect for hidden content */
+#qrOverlay, #backupCodesDisplay[style*="display: none"] + div {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(5px);
+    z-index: 10;
+}
+
+/* Security badge animations */
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(25, 135, 84, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+}
+
+.security-badge .badge {
+    animation: pulse 2s infinite;
+}
+
+/* Timer animation */
+#codeTimer {
+    transition: all 0.5s ease;
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .btn, .form-control {
+        min-height: 44px;
+    }
+    
+    .form-check-input {
+        transform: scale(1.3);
+        margin-right: 10px;
+    }
+    
+    .toast-container {
+        bottom: 20px;
+        top: auto;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .card {
+        background-color: #2d3748;
+        border-color: #4a5568;
+    }
+    
+    .alert-light {
+        background-color: #4a5568;
+        border-color: #718096;
+    }
+    
+    .text-muted {
+        color: #a0aec0 !important;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .progress-bar, .btn, .toast {
+        transition: none;
+    }
+    
+    .security-badge .badge {
+        animation: none;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .border {
+        border-width: 2px !important;
+    }
+    
+    .btn-outline-secondary {
+        border-width: 2px;
+    }
+}
+
+/* Accessibility focus styles */
+.form-control:focus, .btn:focus {
+    outline: 3px solid rgba(13, 110, 253, 0.5);
+    outline-offset: 2px;
+}
+
+/* Step cards hover effects */
+.step-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.step-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* QR code styling */
+#qrCodeImage {
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px;
+    background: white;
+}
+
+/* Verification code input styling */
+#verificationCode {
+    letter-spacing: 10px;
+    font-weight: bold;
+}
+
+#verificationCode::placeholder {
+    letter-spacing: 10px;
+    opacity: 0.5;
+}
+
+/* Backup codes grid */
+#backupCodesDisplay .col {
+    margin-bottom: 0.5rem;
+}
+
+#backupCodesDisplay .font-monospace {
+    font-size: 0.875rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+    background: white;
+    border: 1px solid #dee2e6;
+}
+</style>
+{% endblock %}

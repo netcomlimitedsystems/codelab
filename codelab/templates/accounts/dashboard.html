@@ -1,0 +1,1018 @@
+{% extends 'base.html' %}
+{% load account_tags %}
+{% load static %}
+
+{% block title %}Developer Dashboard - CodeLab{% endblock %}
+
+{% block page_title %}<i class="fas fa-code me-2"></i>Welcome back, {{ user.username }}!{% endblock %}
+{% block page_subtitle %}Your development metrics & learning progress{% endblock %}
+
+{% block page_actions %}
+<div class="dropdown">
+    <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        <i class="fas fa-terminal me-2"></i>Quick Actions
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="{% url 'courses:course_list' %}"><i class="fas fa-code-branch me-2"></i>Browse Courses</a></li>
+        <li><a class="dropdown-item" href="{% url 'community:create_discussion' 'general' %}"><i class="fas fa-comment-code me-2"></i>Start Discussion</a></li>
+        <li><a class="dropdown-item" href="{% url 'accounts:profile_settings' %}"><i class="fas fa-user-cog me-2"></i>Edit Profile</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="#"><i class="fas fa-bug me-2"></i>Report Issue</a></li>
+        <li><a class="dropdown-item" href="#"><i class="fas fa-file-code me-2"></i>View API Docs</a></li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --dev-bg: #0d1117;
+        --dev-card-bg: #161b22;
+        --dev-border: #30363d;
+        --dev-text: #c9d1d9;
+        --dev-text-secondary: #8b949e;
+        --dev-primary: #58a6ff;
+        --dev-success: #3fb950;
+        --dev-warning: #d29922;
+        --dev-danger: #f85149;
+        --dev-info: #79c0ff;
+        --dev-accent: #bc8cff;
+    }
+    
+    .dev-theme {
+        background: var(--dev-bg);
+        color: var(--dev-text);
+        min-height: 100vh;
+    }
+    
+    .dev-card {
+        background: var(--dev-card-bg);
+        border: 1px solid var(--dev-border);
+        border-radius: 8px;
+        color: var(--dev-text);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .dev-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--dev-primary);
+    }
+    
+    .dev-card:hover {
+        border-color: var(--dev-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(88, 166, 255, 0.1);
+    }
+    
+    .dev-card-header {
+        background: rgba(22, 27, 34, 0.8);
+        border-bottom: 1px solid var(--dev-border);
+        padding: 1rem 1.25rem;
+        backdrop-filter: blur(10px);
+    }
+    
+    .dev-badge {
+        background: rgba(88, 166, 255, 0.1);
+        color: var(--dev-primary);
+        border: 1px solid rgba(88, 166, 255, 0.3);
+        border-radius: 20px;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        font-family: 'Courier New', monospace;
+    }
+    
+    .dev-badge-success {
+        background: rgba(63, 185, 80, 0.1);
+        color: var(--dev-success);
+        border-color: rgba(63, 185, 80, 0.3);
+    }
+    
+    .dev-badge-warning {
+        background: rgba(210, 153, 34, 0.1);
+        color: var(--dev-warning);
+        border-color: rgba(210, 153, 34, 0.3);
+    }
+    
+    .dev-badge-danger {
+        background: rgba(248, 81, 73, 0.1);
+        color: var(--dev-danger);
+        border-color: rgba(248, 81, 73, 0.3);
+    }
+    
+    .dev-btn {
+        background: rgba(88, 166, 255, 0.1);
+        color: var(--dev-primary);
+        border: 1px solid var(--dev-primary);
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    
+    .dev-btn:hover {
+        background: var(--dev-primary);
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .dev-btn-outline {
+        background: transparent;
+        border: 1px solid var(--dev-border);
+        color: var(--dev-text);
+    }
+    
+    .dev-btn-outline:hover {
+        background: var(--dev-border);
+        border-color: var(--dev-text);
+    }
+    
+    .dev-progress {
+        background: var(--dev-border);
+        border-radius: 4px;
+        height: 8px;
+        overflow: hidden;
+    }
+    
+    .dev-progress-bar {
+        background: linear-gradient(90deg, var(--dev-success), var(--dev-primary));
+        border-radius: 4px;
+        height: 100%;
+    }
+    
+    .dev-level-indicator {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        background: linear-gradient(135deg, var(--dev-primary), var(--dev-accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .dev-stats-number {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        color: var(--dev-primary);
+        line-height: 1;
+    }
+    
+    .dev-table {
+        background: transparent;
+        color: var(--dev-text);
+    }
+    
+    .dev-table th {
+        background: rgba(22, 27, 34, 0.8);
+        color: var(--dev-text-secondary);
+        border-bottom: 2px solid var(--dev-border);
+        font-weight: 600;
+        padding: 1rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .dev-table td {
+        border-bottom: 1px solid var(--dev-border);
+        padding: 1rem;
+        vertical-align: middle;
+    }
+    
+    .dev-table tbody tr {
+        transition: background 0.2s ease;
+    }
+    
+    .dev-table tbody tr:hover {
+        background: rgba(88, 166, 255, 0.05);
+    }
+    
+    .dev-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, var(--dev-primary), var(--dev-accent));
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1.125rem;
+    }
+    
+    .dev-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(88, 166, 255, 0.1);
+        color: var(--dev-primary);
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        border: 1px solid rgba(88, 166, 255, 0.2);
+    }
+    
+    .dev-chip-success {
+        background: rgba(63, 185, 80, 0.1);
+        color: var(--dev-success);
+        border-color: rgba(63, 185, 80, 0.2);
+    }
+    
+    .dev-chip-warning {
+        background: rgba(210, 153, 34, 0.1);
+        color: var(--dev-warning);
+        border-color: rgba(210, 153, 34, 0.2);
+    }
+    
+    .dev-chip-danger {
+        background: rgba(248, 81, 73, 0.1);
+        color: var(--dev-danger);
+        border-color: rgba(248, 81, 73, 0.2);
+    }
+    
+    .dev-terminal {
+        background: var(--dev-bg);
+        border: 1px solid var(--dev-border);
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        overflow: hidden;
+    }
+    
+    .terminal-header {
+        background: var(--dev-card-bg);
+        border-bottom: 1px solid var(--dev-border);
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .terminal-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    
+    .terminal-dot-red { background: var(--dev-danger); }
+    .terminal-dot-yellow { background: var(--dev-warning); }
+    .terminal-dot-green { background: var(--dev-success); }
+    
+    .terminal-content {
+        padding: 1.5rem;
+        font-size: 0.875rem;
+        line-height: 1.6;
+    }
+    
+    .terminal-line {
+        margin-bottom: 0.5rem;
+    }
+    
+    .terminal-prompt {
+        color: var(--dev-success);
+    }
+    
+    .terminal-command {
+        color: var(--dev-primary);
+    }
+    
+    .terminal-output {
+        color: var(--dev-text);
+        opacity: 0.8;
+    }
+    
+    .dev-metric {
+        text-align: center;
+        padding: 1.5rem;
+    }
+    
+    .dev-metric-value {
+        font-family: 'Courier New', monospace;
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--dev-primary), var(--dev-accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+    
+    .dev-metric-label {
+        color: var(--dev-text-secondary);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .dev-activity-log {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .activity-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--dev-border);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        background: rgba(88, 166, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--dev-primary);
+        flex-shrink: 0;
+    }
+    
+    .activity-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .activity-title {
+        color: var(--dev-text);
+        font-weight: 500;
+        margin-bottom: 0.125rem;
+    }
+    
+    .activity-time {
+        color: var(--dev-text-secondary);
+        font-size: 0.75rem;
+        font-family: 'Courier New', monospace;
+    }
+    
+    .dev-skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .skill-tag {
+        background: rgba(88, 166, 255, 0.1);
+        color: var(--dev-primary);
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        border: 1px solid rgba(88, 166, 255, 0.2);
+        font-family: 'Courier New', monospace;
+    }
+    
+    .skill-tag:hover {
+        background: rgba(88, 166, 255, 0.2);
+        transform: translateY(-1px);
+    }
+    
+    .dev-empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--dev-text-secondary);
+    }
+    
+    .dev-empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    /* Code editor style tabs */
+    .dev-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--dev-border);
+        overflow-x: auto;
+    }
+    
+    .dev-tab {
+        padding: 0.75rem 1.5rem;
+        background: transparent;
+        border: none;
+        color: var(--dev-text-secondary);
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+    }
+    
+    .dev-tab:hover {
+        color: var(--dev-text);
+        background: rgba(88, 166, 255, 0.05);
+    }
+    
+    .dev-tab.active {
+        color: var(--dev-primary);
+        border-bottom-color: var(--dev-primary);
+        background: rgba(88, 166, 255, 0.1);
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .dev-metric {
+            padding: 1rem;
+        }
+        
+        .dev-metric-value {
+            font-size: 2rem;
+        }
+        
+        .dev-table {
+            font-size: 0.875rem;
+        }
+        
+        .dev-table th,
+        .dev-table td {
+            padding: 0.75rem 0.5rem;
+        }
+        
+        .dev-card-header {
+            padding: 0.875rem 1rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .dev-tabs {
+            padding: 0.5rem;
+        }
+        
+        .dev-tab {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+        }
+        
+        .dev-metric-value {
+            font-size: 1.75rem;
+        }
+    }
+    
+    /* Animations */
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    .blink {
+        animation: blink 1s infinite;
+    }
+    
+    @keyframes typewriter {
+        from { width: 0; }
+        to { width: 100%; }
+    }
+    
+    .typewriter {
+        overflow: hidden;
+        white-space: nowrap;
+        animation: typewriter 2s steps(40, end);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dev-theme">
+    <div class="container-fluid py-4">
+        <!-- Header with Terminal-style Welcome -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="dev-terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot terminal-dot-red"></div>
+                        <div class="terminal-dot terminal-dot-yellow"></div>
+                        <div class="terminal-dot terminal-dot-green"></div>
+                        <span class="ms-2" style="color: var(--dev-text-secondary); font-size: 0.875rem;">terminal</span>
+                    </div>
+                    <div class="terminal-content">
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span> 
+                            <span class="terminal-command">welcome_dev --user {{ user.username }}</span>
+                        </div>
+                        <div class="terminal-line terminal-output">
+                            > Initializing developer dashboard...
+                        </div>
+                        <div class="terminal-line terminal-output">
+                            > Loading metrics: <span class="text-success">✓</span> 
+                            {% if user.profile.consecutive_login_days > 0 %}
+                            > Streak detected: <span class="dev-badge-success">{{ user.profile.consecutive_login_days }} days</span>
+                            {% endif %}
+                        </div>
+                        <div class="terminal-line terminal-output typewriter">
+                            > System ready. Happy coding, {{ user.username }}!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Developer Stats Grid -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="dev-card h-100">
+                    <div class="dev-metric">
+                        <div class="dev-metric-value">{{ user.enrollments.count }}</div>
+                        <div class="dev-metric-label">Active Projects</div>
+                        <div class="mt-2">
+                            <span class="dev-badge">
+                                <i class="fas fa-code-branch me-1"></i> {{ courses_progress|length }} in progress
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="dev-card h-100">
+                    <div class="dev-metric">
+                        <div class="dev-metric-value">{{ user.certificates.count }}</div>
+                        <div class="dev-metric-label">Milestones</div>
+                        <div class="mt-2">
+                            <span class="dev-badge-success">
+                                <i class="fas fa-check-circle me-1"></i> Completed
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="dev-card h-100">
+                    <div class="dev-metric">
+                        <div class="dev-metric-value">{{ user.profile.points }}</div>
+                        <div class="dev-metric-label">XP Earned</div>
+                        <div class="mt-2">
+                            <div class="dev-progress">
+                                <div class="dev-progress-bar" style="width: {{ user.profile.progress_to_next_level }}%"></div>
+                            </div>
+                            <small class="d-block mt-1" style="color: var(--dev-text-secondary);">
+                                Level {{ user.profile.level }} → {{ user.profile.level|add:1 }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="dev-card h-100">
+                    <div class="dev-metric">
+                        <div class="dev-metric-value">
+                            {% if user.assignment_submissions.count > 0 %}
+                            {{ user.assignment_submissions.count }}
+                            {% else %}0{% endif %}
+                        </div>
+                        <div class="dev-metric-label">PRs Submitted</div>
+                        <div class="mt-2">
+                            <span class="dev-badge-warning">
+                                <i class="fas fa-code-merge me-1"></i> {{ upcoming_items|length }} pending
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="row">
+            <!-- Project Progress -->
+            <div class="col-xl-8 mb-4">
+                <div class="dev-card h-100">
+                    <div class="dev-card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Active Projects</h5>
+                            <div class="dev-tabs">
+                                <button class="dev-tab active">All</button>
+                                <button class="dev-tab">In Progress</button>
+                                <button class="dev-tab">Completed</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if courses_progress %}
+                        <div class="table-responsive">
+                            <table class="table dev-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Project</th>
+                                        <th>Status</th>
+                                        <th>Deadline</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for course_data in courses_progress %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="dev-avatar me-3">
+                                                    {{ course_data.course.title|first|upper }}
+                                                </div>
+                                                <div>
+                                                    <div class="fw-medium">{{ course_data.course.title }}</div>
+                                                    <small style="color: var(--dev-text-secondary);">
+                                                        {{ course_data.course.lessons.count }} modules
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="dev-progress me-2" style="width: 100px;">
+                                                    <div class="dev-progress-bar" style="width: {{ course_data.progress }}%"></div>
+                                                </div>
+                                                <span class="dev-badge">{{ course_data.progress }}%</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% for item in upcoming_items %}
+                                            {% if item.course.id == course_data.course.id %}
+                                            <span class="dev-chip-{% if item.due_date < now %}danger{% else %}warning{% endif %}">
+                                                <i class="fas fa-{% if item.type == 'Exam' %}file-code{% else %}code-merge{% endif %} me-1"></i>
+                                                {{ item.due_date|date:"M d" }}
+                                            </span>
+                                            {% endif %}
+                                            {% empty %}
+                                            <span style="color: var(--dev-text-secondary);">—</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            <button class="dev-btn btn-sm" onclick="location.href='{{ course_data.course.get_absolute_url }}'">
+                                                <i class="fas fa-play me-1"></i>Continue
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="dev-empty-state">
+                            <div class="dev-empty-state-icon">
+                                <i class="fas fa-code"></i>
+                            </div>
+                            <h5>No active projects</h5>
+                            <p class="mb-3">Start your development journey by taking on a new project</p>
+                            <button class="dev-btn" onclick="location.href='{% url 'courses:course_list' %}'">
+                                <i class="fas fa-rocket me-2"></i>Start Project
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar Panels -->
+            <div class="col-xl-4 mb-4">
+                <!-- Upcoming Code Reviews -->
+                <div class="dev-card mb-4">
+                    <div class="dev-card-header">
+                        <h5 class="mb-0"><i class="fas fa-code-merge me-2"></i>Upcoming Reviews</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if upcoming_items %}
+                        <div class="dev-activity-log">
+                            {% for item in upcoming_items|slice:":3" %}
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-{% if item.type == 'Exam' %}file-code{% else %}code-merge{% endif %}"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">{{ item.title }}</div>
+                                    <div class="activity-time">
+                                        <span class="{% if item.due_date < now %}text-danger{% endif %}">
+                                            <i class="far fa-clock me-1"></i>
+                                            Due: {{ item.due_date|date:"M d, Y H:i" }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <button class="dev-btn-outline btn-sm">
+                                <i class="fas fa-external-link-alt me-1"></i>View Calendar
+                            </button>
+                        </div>
+                        {% else %}
+                        <div class="dev-empty-state py-4">
+                            <div class="dev-empty-state-icon">
+                                <i class="far fa-calendar-check"></i>
+                            </div>
+                            <p>No upcoming deadlines</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Recent Milestones -->
+                <div class="dev-card">
+                    <div class="dev-card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Recent Milestones</h5>
+                            <span class="dev-badge">
+                                v{{ user.certificates.count|default:"0.1" }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if certificates %}
+                        {% for certificate in certificates|slice:":2" %}
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: rgba(63, 185, 80, 0.1); color: var(--dev-success);">
+                                <i class="fas fa-medal"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">{{ certificate.course.title }}</div>
+                                <div class="activity-time">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    Released: {{ certificate.issued_at|date:"Y-m-d" }}
+                                </div>
+                            </div>
+                            <a href="{% url 'courses:download_certificate' certificate.id %}" class="dev-btn btn-sm">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="dev-empty-state py-3">
+                            <div class="dev-empty-state-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <p>Complete projects to earn milestones</p>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Skills Progress -->
+                        <div class="mt-4">
+                            <h6 class="mb-3" style="color: var(--dev-text);">Your Skills</h6>
+                            <div class="dev-skills">
+                                {% for course in courses_progress %}
+                                <span class="skill-tag">{{ course.course.category|default:"Programming" }}</span>
+                                {% empty %}
+                                <span class="skill-tag">Python</span>
+                                <span class="skill-tag">Web Dev</span>
+                                <span class="skill-tag">Algorithms</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Code Metrics Dashboard -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="dev-card">
+                    <div class="dev-card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Code Metrics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-4">
+                                <div class="dev-metric">
+                                    <div class="dev-metric-value">{{ user.discussion_set.count }}</div>
+                                    <div class="dev-metric-label">Code Discussions</div>
+                                    <div class="mt-2">
+                                        <span class="dev-badge">
+                                            <i class="fas fa-comments me-1"></i> Active
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center mb-4">
+                                <div class="dev-metric">
+                                    <div class="dev-metric-value">{{ user.comment_set.count }}</div>
+                                    <div class="dev-metric-label">Code Reviews</div>
+                                    <div class="mt-2">
+                                        <span class="dev-badge-success">
+                                            <i class="fas fa-code-review me-1"></i> Participating
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center mb-4">
+                                <div class="dev-metric">
+                                    <div class="dev-metric-value">
+                                        {% if user.comment_likes.count %}{{ user.comment_likes.count }}{% else %}0{% endif %}
+                                    </div>
+                                    <div class="dev-metric-label">Stars Earned</div>
+                                    <div class="mt-2">
+                                        <span class="dev-badge-warning">
+                                            <i class="fas fa-star me-1"></i> Popular
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <canvas id="devProgressChart" height="100"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Git-style Activity Feed -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="dev-card">
+                    <div class="dev-card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fab fa-git-alt me-2"></i>Recent Activity</h5>
+                            <button class="dev-btn btn-sm">
+                                <i class="fas fa-sync-alt me-1"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="terminal-content">
+                            {% for activity in recent_activity|slice:":5" %}
+                            <div class="terminal-line">
+                                <span class="terminal-prompt">$</span> 
+                                <span class="terminal-command">git commit -m "</span>
+                                <span style="color: var(--dev-success);">{{ activity.description|default:"Updated progress" }}</span>
+                                <span class="terminal-command">"</span>
+                                <span style="color: var(--dev-text-secondary); margin-left: 1rem;">
+                                    {{ activity.timestamp|timesince }} ago
+                                </span>
+                            </div>
+                            {% empty %}
+                            <div class="terminal-line terminal-output">
+                                > No recent activity. Start coding to see your progress here!
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Developer Progress Chart
+    const devCtx = document.getElementById('devProgressChart').getContext('2d');
+    const devChart = new Chart(devCtx, {
+        type: 'line',
+        data: {
+            labels: {{ progress_labels|safe }},
+            datasets: [{
+                label: 'Completion Rate',
+                data: {{ progress_data|safe }},
+                borderColor: '#58a6ff',
+                backgroundColor: 'rgba(88, 166, 255, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#58a6ff',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(48, 54, 61, 0.5)'
+                    },
+                    ticks: {
+                        color: '#8b949e'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: {
+                        color: 'rgba(48, 54, 61, 0.5)'
+                    },
+                    ticks: {
+                        color: '#8b949e',
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#c9d1d9'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#161b22',
+                    titleColor: '#c9d1d9',
+                    bodyColor: '#c9d1d9',
+                    borderColor: '#30363d',
+                    borderWidth: 1
+                }
+            }
+        }
+    });
+    
+    // Tab functionality
+    document.querySelectorAll('.dev-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.dev-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    
+    // Terminal typing effect
+    const terminalLines = document.querySelectorAll('.typewriter');
+    terminalLines.forEach((line, index) => {
+        line.style.animationDelay = `${index * 0.5}s`;
+    });
+    
+    // Streak counter animation
+    const streakBadge = document.querySelector('.dev-badge-success');
+    if (streakBadge && streakBadge.textContent.includes('days')) {
+        setInterval(() => {
+            streakBadge.classList.toggle('blink');
+        }, 2000);
+    }
+    
+    // Simulate live updates
+    function updateDevMetrics() {
+        // This would typically fetch data from an API
+        console.log('Updating developer metrics...');
+        
+        // Animate metric updates
+        document.querySelectorAll('.dev-metric-value').forEach(metric => {
+            const current = parseInt(metric.textContent);
+            if (!isNaN(current)) {
+                const increment = Math.floor(Math.random() * 3);
+                const newValue = current + increment;
+                animateMetric(metric, current, newValue);
+            }
+        });
+    }
+    
+    function animateMetric(element, start, end, duration = 1000) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const value = Math.floor(progress * (end - start) + start);
+            element.textContent = value;
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+    
+    // Update metrics every 30 seconds (simulated)
+    // setInterval(updateDevMetrics, 30000);
+    
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + 1: Focus search
+        if ((e.ctrlKey || e.metaKey) && e.key === '1') {
+            e.preventDefault();
+            window.location.href = '{% url "courses:course_list" %}';
+        }
+        
+        // Ctrl/Cmd + 2: Quick action menu
+        if ((e.ctrlKey || e.metaKey) && e.key === '2') {
+            e.preventDefault();
+            document.querySelector('[data-bs-toggle="dropdown"]').click();
+        }
+    });
+    
+    // Add hover effects for skill tags
+    document.querySelectorAll('.skill-tag').forEach(tag => {
+        tag.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 4px 12px rgba(88, 166, 255, 0.2)';
+        });
+        
+        tag.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    });
+});
+</script>
+{% endblock %}

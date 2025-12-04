@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Forum: {{ forum.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'community:index' %}">Forums</a></li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'community:forum_detail' forum.slug %}">{{ forum.name }}</a>
+                </li>
+                <li class="breadcrumb-item active">Delete Forum</li>
+            </ol>
+        </nav>
+
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">Delete Forum</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h5 class="alert-heading">⚠️ Warning: This action cannot be undone!</h5>
+                    <p class="mb-0">
+                        You are about to permanently delete the forum 
+                        <strong>"{{ forum.name }}"</strong> and all its contents.
+                    </p>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h6>Forum Details:</h6>
+                        <p><strong>Name:</strong> {{ forum.name }}</p>
+                        <p><strong>Description:</strong> {{ forum.description }}</p>
+                        <p><strong>Created:</strong> {{ forum.created_at|date:"M d, Y" }}</p>
+                        <p><strong>Discussions:</strong> {{ forum.discussions.count }}</p>
+                        <p><strong>Status:</strong> 
+                            <span class="badge {% if forum.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ forum.is_active|yesno:"Active,Inactive" }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'community:edit_forum' forum.slug %}" class="btn btn-secondary">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger" 
+                                onclick="return confirm('Are you absolutely sure? This will delete ALL discussions and comments in this forum!')">
+                            🗑️ Delete Forum Permanently
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

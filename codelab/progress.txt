@@ -1,0 +1,3575 @@
+accounts app content 
+forms.py
+from django import forms
+from .models import Profile
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ["full_name", "phone", "profile_picture"]
+        widgets = {
+            "full_name": forms.TextInput(attrs={"class": "form-control"}),
+            "phone": forms.TextInput(attrs={"class": "form-control"}),
+            "profile_picture": forms.FileInput(attrs={"class": "form-control"}),
+        }
+models.py
+from django.db import models
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+class Profile(models.Model):
+    """
+    Extended user profile with points system
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    full_name = models.CharField(max_length=255, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    updated = models.BooleanField(default=False)  # To check if profile is completed
+    email_verification_token = models.CharField(max_length=64, blank=True, null=True)
+    accepted_terms = models.BooleanField(default=False)
+    points = models.IntegerField(default=0)
+    bio = models.TextField(blank=True)
+    location = models.CharField(max_length=100, blank=True)
+    website = models.URLField(blank=True)
+    join_date = models.DateTimeField(auto_now_add=True)
+    last_activity = models.DateTimeField(auto_now=True)
+    
+    # Daily activity tracking
+    last_login_date = models.DateField(null=True, blank=True)
+    consecutive_login_days = models.IntegerField(default=0)
+    
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
+    
+    @property
+    def level(self):
+        """Calculate user level based on points"""
+        return self.points // 100 + 1
+    
+    @property
+    def progress_to_next_level(self):
+        """Progress percentage to next level"""
+        current_level_points = (self.level - 1) * 100
+        points_in_current_level = self.points - current_level_points
+        return min(100, (points_in_current_level / 100) * 100)
+
+class Plan(models.Model):
+    name = models.CharField(max_length=50)
+    description = models.TextField(blank=True, null=True)
+    price = models.DecimalField(max_digits=8, decimal_places=2)
+    duration = models.CharField(max_length=50, help_text="e.g., '1 month', '1 year'")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+views.py
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from courses.models import Enrollment
+from .models import Profile
+from .forms import ProfileForm
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+from courses.models import Course, Enrollment, Certificate, ExamSubmission,Notification,AssignmentSubmission
+from django.db.models import Avg, Count,Q
+from django.utils import timezone
+from django.core.mail import send_mail
+from django.utils.crypto import get_random_string
+from django.core.mail import EmailMessage
+from django.urls import reverse
+from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404
+from django.views.decorators.http import require_POST
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+from django.http import JsonResponse
+from django.utils.crypto import get_random_string
+from django.core.mail import EmailMessage
+from django.contrib.auth.models import User
+from django.contrib.auth import login
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Count, Q, Avg, Case, When, IntegerField, Sum
+from courses.models import Course, Certificate, Enrollment, ExamSubmission
+import json
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required
+from courses.models import Course, Lesson, Assignment, Exam
+from courses.forms import CourseForm, LessonForm, AssignmentForm, ExamForm
+
+# ----------------------------
+# Course CRUD
+# ----------------------------
+@staff_member_required
+def admin_course_detail(request):
+    courses = Course.objects.all()
+    return render(request, "courses/course_list.html", {"courses": courses})
+
+
+@staff_member_required
+def admin_course_add(request):
+    if request.method == "POST":
+        form = CourseForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Course added successfully.")
+            return redirect("accounts:course_detail")
+    else:
+        form = CourseForm()
+    return render(request, "admin/course_form.html", {"form": form, "title": "Add Course"})
+
+@staff_member_required
+def admin_course_edit(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    if request.method == "POST":
+        form = CourseForm(request.POST, instance=course)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Course updated successfully.")
+            return redirect("accounts:course_list")
+    else:
+        form = CourseForm(instance=course)
+    return render(request, "admin/course_form.html", {"form": form, "title": "Edit Course"})
+
+@staff_member_required
+def admin_course_delete(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    course.delete()
+    messages.success(request, "Course deleted successfully.")
+    return redirect("accounts:course_list")
+
+
+# ----------------------------
+# Lesson CRUD
+# ----------------------------
+@staff_member_required
+def admin_lesson_list(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    lessons = course.lessons.all()
+    return render(request, "admin/lesson_list.html", {"course": course, "lessons": lessons})
+
+@staff_member_required
+def admin_lesson_add(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    if request.method == "POST":
+        form = LessonForm(request.POST)
+        if form.is_valid():
+            lesson = form.save(commit=False)
+            lesson.course = course
+            lesson.save()
+            messages.success(request, "Lesson added successfully.")
+            return redirect("accounts:lesson_list", course_id=course.id)
+    else:
+        form = LessonForm()
+    return render(request, "admin/lesson_form.html", {"form": form, "course": course, "title": "Add Lesson"})
+
+@staff_member_required
+def admin_lesson_edit(request, lesson_id):
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    if request.method == "POST":
+        form = LessonForm(request.POST, instance=lesson)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Lesson updated successfully.")
+            return redirect("accounts:lesson_list", course_id=lesson.course.id)
+    else:
+        form = LessonForm(instance=lesson)
+    return render(request, "admin/lesson_form.html", {"form": form, "course": lesson.course, "title": "Edit Lesson"})
+
+@staff_member_required
+def admin_lesson_delete(request, lesson_id):
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    course_id = lesson.course.id
+    lesson.delete()
+    messages.success(request, "Lesson deleted successfully.")
+    return redirect("accounts:lesson_list", course_id=course_id)
+
+
+# ----------------------------
+# Assignment CRUD
+# ----------------------------
+@staff_member_required
+def admin_assignment_list(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    assignments = course.assignments.all()
+    return render(request, "admin/assignment_list.html", {"course": course, "assignments": assignments})
+
+@staff_member_required
+def admin_assignment_add(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    if request.method == "POST":
+        form = AssignmentForm(request.POST)
+        if form.is_valid():
+            assignment = form.save(commit=False)
+            assignment.course = course
+            assignment.save()
+            messages.success(request, "Assignment added successfully.")
+            return redirect("accounts:assignment_list", course_id=course.id)
+    else:
+        form = AssignmentForm()
+    return render(request, "admin/assignment_form.html", {"form": form, "course": course, "title": "Add Assignment"})
+
+@staff_member_required
+def admin_assignment_edit(request, assignment_id):
+    assignment = get_object_or_404(Assignment, id=assignment_id)
+    if request.method == "POST":
+        form = AssignmentForm(request.POST, instance=assignment)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Assignment updated successfully.")
+            return redirect("accounts:assignment_list", course_id=assignment.course.id)
+    else:
+        form = AssignmentForm(instance=assignment)
+    return render(request, "admin/assignment_form.html", {"form": form, "course": assignment.course, "title": "Edit Assignment"})
+
+@staff_member_required
+def admin_assignment_delete(request, assignment_id):
+    assignment = get_object_or_404(Assignment, id=assignment_id)
+    course_id = assignment.course.id
+    assignment.delete()
+    messages.success(request, "Assignment deleted successfully.")
+    return redirect("accounts:assignment_list", course_id=course_id)
+
+
+# ----------------------------
+# Exam CRUD
+# ----------------------------
+@staff_member_required
+def admin_exam_list(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    exams = course.exams.all()
+    return render(request, "admin/exam_list.html", {"course": course, "exams": exams})
+
+@staff_member_required
+def admin_exam_add(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    if request.method == "POST":
+        form = ExamForm(request.POST)
+        if form.is_valid():
+            exam = form.save(commit=False)
+            exam.course = course
+            exam.save()
+            messages.success(request, "Exam added successfully.")
+            return redirect("accounts:exam_list", course_id=course.id)
+    else:
+        form = ExamForm()
+    return render(request, "admin/exam_form.html", {"form": form, "course": course, "title": "Add Exam"})
+
+@staff_member_required
+def admin_exam_edit(request, exam_id):
+    exam = get_object_or_404(Exam, id=exam_id)
+    if request.method == "POST":
+        form = ExamForm(request.POST, instance=exam)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Exam updated successfully.")
+            return redirect("accounts:exam_list", course_id=exam.course.id)
+    else:
+        form = ExamForm(instance=exam)
+    return render(request, "admin/exam_form.html", {"form": form, "course": exam.course, "title": "Edit Exam"})
+
+@staff_member_required
+def admin_exam_delete(request, exam_id):
+    exam = get_object_or_404(Exam, id=exam_id)
+    course_id = exam.course.id
+    exam.delete()
+    messages.success(request, "Exam deleted successfully.")
+    return redirect("accounts:exam_list", course_id=course_id)
+
+
+
+@staff_member_required
+def admin_dashboard(request):
+    # -----------------------------
+    # Basic stats
+    # -----------------------------
+    total_users = User.objects.count()
+    total_courses = Course.objects.count()
+    total_certificates = Certificate.objects.count()
+    total_lessons = Lesson.objects.count()
+    total_assignments = Assignment.objects.count()
+    total_exams = Exam.objects.count()
+    
+    # Additional detailed stats - USING CORRECT FIELD NAMES
+    active_users = User.objects.filter(is_active=True).count()
+    active_courses = Course.objects.filter(published=True).count()  # Changed from is_active to published
+    published_lessons = Lesson.objects.filter(is_published=True).count()
+    # published_lessons = Lesson.objects.count()
+    upcoming_exams = Exam.objects.filter(scheduled_date__gt=timezone.now()).count()
+    
+    # Today's metrics
+    today = timezone.now().date()
+    new_users_today = User.objects.filter(date_joined__date=today).count()
+    # new_certificates_today = Certificate.objects.filter(issued_date__date=today).count()
+    new_certificates_today = Certificate.objects.filter(issued_at__date=today).count()
+
+    
+    # User distribution
+    student_count = User.objects.filter(is_staff=False, is_superuser=False).count()
+    instructor_count = User.objects.filter(groups__name='Instructor').count()
+    staff_count = User.objects.filter(is_staff=True, is_superuser=False).count()
+    admin_count = User.objects.filter(is_superuser=True).count()
+    
+    # Enrollment and completion stats
+    total_enrollments = Enrollment.objects.count()
+    recent_enrollments = Enrollment.objects.select_related('student', 'course').order_by('-enrolled_at')[:5]
+    
+    # Performance metrics (these would be calculated from your actual data)
+    completion_rate = 75
+    avg_exam_score = 82.5
+    pass_rate = 78
+    avg_course_completion = 65
+    assignment_completion_rate = 72
+    engagement_rate = 68
+    
+    # System metrics
+    active_sessions = 142
+    response_time = 124
+    error_rate = 0.2
+    requests_per_minute = 245
+    
+    # Pending submissions
+    pending_submissions = 23
+    
+    # Draft courses count
+    draft_courses = Course.objects.filter(published=False).count()  # Added this for draft count
+    
+    # Exam stats
+    total_submissions = ExamSubmission.objects.count()
+    passed_count = ExamSubmission.objects.filter(passed=True).count()
+    failed_count = ExamSubmission.objects.filter(passed=False).count()
+    
+    exam_stats = {
+        'total_submissions': total_submissions,
+        'passed_count': passed_count,
+        'failed_count': failed_count,
+    }
+
+    # Charts data
+    certs_per_course = Certificate.objects.values('course__title').annotate(total=Count('id'))
+    certs_labels = [c['course__title'] for c in certs_per_course]
+    certs_data = [c['total'] for c in certs_per_course]
+
+    exams = ExamSubmission.objects.values('exam__title').distinct()
+    exam_labels = []
+    passed_data = []
+    failed_data = []
+
+    for e in exams:
+        exam_title = e['exam__title']
+        exam_labels.append(exam_title)
+        passed = ExamSubmission.objects.filter(exam__title=exam_title, passed=True).count()
+        failed = ExamSubmission.objects.filter(exam__title=exam_title, passed=False).count()
+        passed_data.append(passed)
+        failed_data.append(failed)
+
+    # Recent Activity
+    recent_activity = [
+        {
+            'user': request.user,
+            'action': 'Created',
+            'action_color': 'success',
+            'action_icon': 'plus-circle',
+            'details': 'New course "Advanced Python Programming"',
+            'timestamp': timezone.now() - timezone.timedelta(minutes=45),
+            'status_color': 'success'
+        },
+        {
+            'user': request.user,
+            'action': 'Updated',
+            'action_color': 'warning',
+            'action_icon': 'pencil',
+            'details': 'User permissions for john_doe',
+            'timestamp': timezone.now() - timezone.timedelta(hours=2),
+            'status_color': 'success'
+        },
+        {
+            'user': request.user,
+            'action': 'Published',
+            'action_color': 'info',
+            'action_icon': 'globe',
+            'details': 'Lesson "Database Design Patterns"',
+            'timestamp': timezone.now() - timezone.timedelta(hours=5),
+            'status_color': 'success'
+        },
+        {
+            'user': request.user,
+            'action': 'Deleted',
+            'action_color': 'danger',
+            'action_icon': 'trash',
+            'details': 'Old assignment "Introduction Quiz"',
+            'timestamp': timezone.now() - timezone.timedelta(days=1),
+            'status_color': 'success'
+        },
+    ]
+
+    # System alerts
+    system_alerts = [
+        {
+            'type': 'warning',
+            'icon': 'exclamation-triangle',
+            'title': 'Storage Warning',
+            'message': 'Disk usage at 85%'
+        },
+        {
+            'type': 'info',
+            'icon': 'info-circle',
+            'title': 'Maintenance',
+            'message': 'Scheduled maintenance tonight at 2 AM'
+        }
+    ]
+
+    context = {
+        # Basic counts
+        "total_users": total_users,
+        "total_courses": total_courses,
+        "total_certificates": total_certificates,
+        "total_lessons": total_lessons,
+        "total_assignments": total_assignments,
+        "total_exams": total_exams,
+        
+        # Detailed metrics - USING CORRECT FIELD NAMES
+        "active_users": active_users,
+        "active_courses": active_courses,  # Now using published=True
+        "published_lessons": published_lessons,
+        "upcoming_exams": upcoming_exams,
+        "new_users_today": new_users_today,
+        "new_certificates_today": new_certificates_today,
+        "total_enrollments": total_enrollments,
+        "pending_submissions": pending_submissions,
+        "draft_courses": draft_courses,  # Added for template consistency
+        
+        # User distribution
+        "student_count": student_count,
+        "instructor_count": instructor_count,
+        "staff_count": staff_count,
+        "admin_count": admin_count,
+        
+        # Performance metrics
+        "completion_rate": completion_rate,
+        "avg_exam_score": avg_exam_score,
+        "pass_rate": pass_rate,
+        "avg_course_completion": avg_course_completion,
+        "assignment_completion_rate": assignment_completion_rate,
+        "engagement_rate": engagement_rate,
+        
+        # System metrics
+        "active_sessions": active_sessions,
+        "response_time": response_time,
+        "error_rate": error_rate,
+        "requests_per_minute": requests_per_minute,
+        
+        # Charts data
+        "recent_enrollments": recent_enrollments,
+        "exam_stats": exam_stats,
+        "certs_labels": json.dumps(certs_labels),
+        "certs_data": json.dumps(certs_data),
+        "exam_labels": json.dumps(exam_labels),
+        "passed_data": json.dumps(passed_data),
+        "failed_data": json.dumps(failed_data),
+        "recent_activity": recent_activity,
+        "system_alerts": system_alerts,
+    }
+
+    return render(request, "accounts/admin_dashboard.html", context)
+def verify_email(request, token):
+    try:
+        profile = Profile.objects.get(email_verification_token=token)
+        user = profile.user
+        user.is_active = True
+        user.save()
+
+        profile.email_verification_token = ""
+        profile.save()
+
+        messages.success(request, "Email verified successfully! You can now log in.")
+        return redirect("accounts:login")
+
+    except Profile.DoesNotExist:
+        messages.error(request, "Invalid or expired verification link.")
+        return redirect("accounts:login")
+
+def register(request):
+    next_url = request.GET.get('next')
+
+    if request.method == "POST":
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        password1 = request.POST.get("password1")
+        password2 = request.POST.get("password2")
+
+        if not password1 or not password2:
+            messages.error(request, "Please enter both password fields.")
+            return render(request, "accounts/register.html", {"next": next_url})
+
+        if password1 != password2:
+            messages.error(request, "Passwords do not match.")
+            return render(request, "accounts/register.html", {"next": next_url})
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already taken")
+        elif User.objects.filter(email=email).exists():
+            messages.error(request, "Email already registered")
+        else:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password1,
+                is_active=False
+            )
+
+            profile, created = Profile.objects.get_or_create(user=user)
+
+            token = get_random_string(32)
+            profile.email_verification_token = token
+            profile.save()
+
+            verification_link = request.build_absolute_uri(
+                reverse("accounts:verify_email", args=[token])
+            )
+
+            subject = "Verify your Codelab account"
+            body = f"Hi {user.username},\n\nPlease verify your account using this link:\n{verification_link}\n\nThank you!"
+            EmailMessage(subject, body, to=[email]).send()
+
+            messages.success(
+                request,
+                "Account created! Please check your email to verify your account."
+            )
+
+            return redirect(next_url or "accounts:login")
+
+    return render(request, "accounts/register.html", {"next": next_url})
+
+
+
+
+
+
+# ----------------------------
+# Login
+# ----------------------------
+def login_view(request):
+    next_url = request.GET.get('next')
+
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        if not username or not password:
+            messages.error(request, "Please enter both username and password.")
+            return render(request, "accounts/login.html", {"next": next_url})
+
+        user = authenticate(request, username=username, password=password)
+
+        if user:
+            if not user.is_active:
+                messages.error(request, "Please verify your email before logging in.")
+                return redirect("accounts:login")
+
+            login(request, user)
+            return redirect(next_url or reverse("accounts:login_redirect"))
+
+        else:
+            messages.error(request, "Invalid username or password.")
+
+    return render(request, "accounts/login.html", {"next": next_url})
+
+
+
+
+    
+# ----------------------------
+# Login redirect: check profile
+# ----------------------------
+@login_required
+def login_redirect(request):
+    """
+    Redirects users after login based on their role:
+    - Superuser / Staff → admin_dashboard
+    - Student → dashboard
+    """
+    user = request.user
+
+    # Superuser / Staff → admin dashboard
+    if user.is_superuser or user.is_staff:
+        return redirect("accounts:admin_dashboard")
+
+    # Ensure Profile exists
+    profile, created = Profile.objects.get_or_create(user=user)
+
+    # If profile not updated, redirect to update_profile first
+    if not profile.updated:
+        return redirect("accounts:update_profile")
+
+    # Normal student → student dashboard
+    return redirect("accounts:dashboard")
+
+
+
+# ----------------------------
+# Update Profile
+@login_required
+def update_profile(request):
+    profile, created = Profile.objects.get_or_create(user=request.user)
+    
+    if request.method == "POST":
+        form = ProfileForm(request.POST, request.FILES, instance=profile)  # <--- add request.FILES
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.updated = True
+            profile.save()
+            messages.success(request, "Profile updated successfully!")
+            return redirect("accounts:dashboard")
+    else:
+        form = ProfileForm(instance=profile)
+    
+    return render(request, "accounts/update_profile.html", {"form": form})
+
+
+# ----------------------------
+# Logout
+# ----------------------------
+def logout_view(request):
+    logout(request)
+    return redirect("core:home")
+
+@login_required
+def dashboard(request):
+    enrollments = Enrollment.objects.filter(student=request.user)
+    courses_progress = []
+    upcoming_items = []  # unified exams & assignments
+
+    for e in enrollments:
+        course = e.course
+        # -----------------------------
+        # Progress
+        # -----------------------------
+        total_lessons = course.lessons.count()
+        completed_lessons = e.completed_lessons.count() if hasattr(e, 'completed_lessons') else 0
+        progress = int((completed_lessons / total_lessons) * 100) if total_lessons > 0 else 0
+        courses_progress.append({"course": course, "progress": progress})
+
+        # -----------------------------
+        # Upcoming Exams
+        # -----------------------------
+        for exam in course.exams.filter(scheduled_date__gte=timezone.now()):
+            if not ExamSubmission.objects.filter(exam=exam, student=request.user).exists():
+                upcoming_items.append({
+                    "type": "Exam",
+                    "title": exam.title,
+                    "course": course,
+                    "due_date": exam.scheduled_date,
+                    "link": exam.get_absolute_url() if hasattr(exam, 'get_absolute_url') else None
+                })
+                # Create notification if missing
+                if not Notification.objects.filter(user=request.user, message__icontains=exam.title).exists():
+                    Notification.objects.create(
+                        user=request.user,
+                        message=f"Upcoming Exam: {exam.title} for course {course.title} on {exam.scheduled_date.strftime('%d %b %Y')}",
+                        link=exam.get_absolute_url() if hasattr(exam, 'get_absolute_url') else None
+                    )
+
+        # -----------------------------
+        # Upcoming Assignments
+        # -----------------------------
+        for assignment in course.assignments.filter(due_date__gte=timezone.now()):
+            if not AssignmentSubmission.objects.filter(assignment=assignment, student=request.user).exists():
+                upcoming_items.append({
+                    "type": "Assignment",
+                    "title": assignment.title,
+                    "course": course,
+                    "due_date": assignment.due_date,
+                    "link": None  # optional: add assignment detail page URL
+                })
+                if not Notification.objects.filter(user=request.user, message__icontains=assignment.title).exists():
+                    Notification.objects.create(
+                        user=request.user,
+                        message=f"Upcoming Assignment: {assignment.title} for course {course.title} due on {assignment.due_date.strftime('%d %b %Y')}",
+                    )
+
+    # -----------------------------
+    # Certificates
+    # -----------------------------
+    certificates = Certificate.objects.filter(user=request.user)
+
+    # -----------------------------
+    # Notifications
+    # -----------------------------
+    notifications = Notification.objects.filter(user=request.user, is_read=False)[:5]
+
+    # -----------------------------
+    # Data for Chart.js
+    # -----------------------------
+    progress_labels = [c['course'].title for c in courses_progress]
+    progress_data = [c['progress'] for c in courses_progress]
+
+    return render(request, "accounts/dashboard.html", {
+        "courses_progress": courses_progress,
+        "certificates": certificates,
+        "upcoming_items": upcoming_items,
+        "progress_labels": json.dumps(progress_labels),
+        "progress_data": json.dumps(progress_data),
+        "notifications": notifications,
+    })
+
+    # -----------------------------
+    # Certificates
+    # -----------------------------
+    certificates = Certificate.objects.filter(user=request.user)
+
+    # -----------------------------
+    # Notifications
+    # -----------------------------
+    notifications = Notification.objects.filter(user=request.user, is_read=False)[:5]
+
+    # -----------------------------
+    # JSON for Charts
+    # -----------------------------
+    progress_labels = [c['course'].title for c in courses_progress]
+    progress_data = [c['progress'] for c in courses_progress]
+
+    return render(request, "accounts/dashboard.html", {
+        "courses_progress": courses_progress,
+        "certificates": certificates,
+        "upcoming_items": sorted(upcoming_items, key=lambda x: x['due_date']),  # sort by due date
+        "progress_labels": json.dumps(progress_labels),
+        "progress_data": json.dumps(progress_data),
+        "notifications": notifications,
+    })
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+@login_required
+@require_http_methods(["POST"])
+def mark_notification_read(request, notif_id):
+    try:
+        notif = Notification.objects.get(id=notif_id, user=request.user)
+        notif.is_read = True
+        notif.save()
+        return JsonResponse({"status": "success"})
+    except Notification.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Notification not found"}, status=404)
+
+@login_required
+def fetch_unread_notifications(request):
+    notifications = Notification.objects.filter(
+        user=request.user, 
+        is_read=False
+    ).order_by('-created_at')[:10]
+    
+    data = [
+        {
+            "id": n.id,
+            "message": n.message,
+            "link": n.link or "#",
+            "created_at": n.created_at.strftime("%d %b %Y %H:%M")
+        } for n in notifications
+    ]
+    return JsonResponse({
+        "notifications": data, 
+        "count": notifications.count()
+    })
+
+@login_required
+@require_http_methods(["POST", "GET"])
+def mark_all_notifications_read(request):
+    if request.method == "POST" or request.method == "GET":
+        updated_count = Notification.objects.filter(
+            user=request.user, 
+            is_read=False
+        ).update(is_read=True)
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+            return JsonResponse({"status": "success", "updated_count": updated_count})
+        
+        messages.success(request, f"Marked {updated_count} notifications as read.")
+        return redirect(request.META.get('HTTP_REFERER', 'accounts:dashboard'))
+    
+    return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+def forgot_password(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        try:
+            user = User.objects.get(email=email)
+            # Generate a temporary token or new password
+            temp_password = get_random_string(8)
+            user.set_password(temp_password)
+            user.save()
+
+            # Send email with temp password
+            send_mail(
+                subject="Password Reset - Codelab",
+                message=f"Your temporary password is: {temp_password}\nPlease login and change it immediately.",
+                from_email="noreply@codelab.com",
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+            messages.success(request, "A temporary password has been sent to your email.")
+        except User.DoesNotExist:
+            messages.error(request, "No user found with that email.")
+        return redirect("accounts:login")
+    
+    return render(request, "accounts/forgot_password.html")
+
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Keep user logged in
+            messages.success(request, 'Password changed successfully!')
+            return redirect('accounts:update_profile')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'accounts/change_password.html', {'form': form})
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
+
+
+# ----------------------------
+# Static Pages
+# ----------------------------
+
+def about(request):
+    return render(request, "pages/about.html")
+
+
+def faq(request):
+    return render(request, "pages/faq.html")
+
+
+def privacy(request):
+    return render(request, "pages/privacy.html")
+
+
+def terms(request):
+    return render(request, "pages/terms.html")
+
+
+def support(request):
+    return render(request, "pages/support.html")
+
+
+# ----------------------------
+# Contact Form Page
+# ----------------------------
+def contact(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        message = request.POST.get("message")
+
+        if not name or not email or not message:
+            messages.error(request, "All fields are required.")
+            return redirect("accounts:contact")
+
+        # Email sending (adjust settings properly)
+        send_mail(
+            subject=f"New Contact Message from {name}",
+            message=f"Sender Name: {name}\nEmail: {email}\n\nMessage:\n{message}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.DEFAULT_FROM_EMAIL],
+            fail_silently=False,
+        )
+
+        messages.success(request, "Your message has been sent. We'll respond shortly.")
+        return redirect("accounts:contact")
+
+    return render(request, "pages/contact.html")
+
+
+# ----------------------------
+# User Management
+# ----------------------------
+@staff_member_required
+def admin_user_list(request):
+    users = User.objects.all().select_related('profile')
+    return render(request, "admin/user_list.html", {"users": users})
+
+@staff_member_required
+def admin_user_add(request):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+        first_name = request.POST.get("first_name")
+        last_name = request.POST.get("last_name")
+        is_staff = request.POST.get("is_staff") == "on"
+        is_active = request.POST.get("is_active") == "on"
+        
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists.")
+        elif User.objects.filter(email=email).exists():
+            messages.error(request, "Email already exists.")
+        else:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                is_staff=is_staff,
+                is_active=is_active
+            )
+            Profile.objects.create(user=user)
+            messages.success(request, f"User {username} created successfully.")
+            return redirect("accounts:admin_user_list")
+    
+    return render(request, "admin/user_form.html", {"title": "Add User"})
+
+@staff_member_required
+def admin_user_edit(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    profile, created = Profile.objects.get_or_create(user=user)
+    
+    if request.method == "POST":
+        user.username = request.POST.get("username")
+        user.email = request.POST.get("email")
+        user.first_name = request.POST.get("first_name")
+        user.last_name = request.POST.get("last_name")
+        user.is_staff = request.POST.get("is_staff") == "on"
+        user.is_active = request.POST.get("is_active") == "on"
+        
+        # Update password if provided
+        new_password = request.POST.get("password")
+        if new_password:
+            user.set_password(new_password)
+        
+        user.save()
+        
+        # Update profile
+        profile.full_name = request.POST.get("full_name")
+        profile.phone = request.POST.get("phone")
+        profile.save()
+        
+        messages.success(request, f"User {user.username} updated successfully.")
+        return redirect("accounts:admin_user_list")
+    
+    return render(request, "admin/user_form.html", {
+        "title": "Edit User",
+        "user": user,
+        "profile": profile
+    })
+
+@staff_member_required
+def admin_user_delete(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    username = user.username
+    user.delete()
+    messages.success(request, f"User {username} deleted successfully.")
+    return redirect("accounts:admin_user_list")
+
+# ----------------------------
+# Certificate Management
+# ----------------------------
+@staff_member_required
+def admin_certificate_list(request):
+    certificates = Certificate.objects.all().select_related('user', 'course')
+    return render(request, "admin/certificate_list.html", {"certificates": certificates})
+
+@staff_member_required
+def admin_certificate_delete(request, certificate_id):
+    certificate = get_object_or_404(Certificate, id=certificate_id)
+    certificate.delete()
+    messages.success(request, "Certificate deleted successfully.")
+    return redirect("accounts:admin_certificate_list")
+
+# ----------------------------
+# Global Content Management (All items)
+# ----------------------------
+@staff_member_required
+def admin_lesson_list_all(request):
+    lessons = Lesson.objects.all().select_related('course')
+    return render(request, "admin/lesson_list_all.html", {"lessons": lessons})
+
+# In your certificate list view
+@staff_member_required
+def admin_certificate_list(request):
+    certificates = Certificate.objects.all().select_related('user', 'course')
+    unique_students = certificates.values('user').distinct().count()
+    unique_courses = certificates.values('course').distinct().count()
+    this_month = certificates.filter(issued_date__month=timezone.now().month).count()
+    
+    return render(request, "admin/certificate_list.html", {
+        "certificates": certificates,
+        "unique_students": unique_students,
+        "unique_courses": unique_courses,
+        "this_month": this_month
+    })
+
+# In your global assignment list view
+@staff_member_required
+def admin_assignment_list_all(request):
+    assignments = Assignment.objects.all().select_related('course')
+    active_assignments = assignments.filter(is_active=True).count()
+    overdue_assignments = assignments.filter(
+        due_date__lt=timezone.now(), 
+        is_active=True
+    ).count()
+    total_submissions = AssignmentSubmission.objects.count()
+    
+    return render(request, "admin/assignment_list_all.html", {
+        "assignments": assignments,
+        "active_assignments": active_assignments,
+        "overdue_assignments": overdue_assignments,
+        "total_submissions": total_submissions
+    })
+
+# In your global exam list view
+@staff_member_required
+def admin_exam_list_all(request):
+    exams = Exam.objects.all().select_related('course')
+    active_exams = exams.filter(is_active=True).count()
+    upcoming_exams = exams.filter(
+        scheduled_date__gt=timezone.now()
+    ).count()
+    total_submissions = ExamSubmission.objects.count()
+    
+    return render(request, "admin/exam_list_all.html", {
+        "exams": exams,
+        "active_exams": active_exams,
+        "upcoming_exams": upcoming_exams,
+        "total_submissions": total_submissions
+    })
+
+# ----------------------------
+# Quick Add Views
+# ----------------------------
+@staff_member_required
+def admin_lesson_add_quick(request):
+    courses = Course.objects.all()
+    if request.method == "POST":
+        form = LessonForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Lesson added successfully.")
+            return redirect("accounts:admin_lesson_list_all")
+    else:
+        form = LessonForm()
+    return render(request, "admin/quick_lesson_form.html", {
+        "form": form, 
+        "title": "Quick Add Lesson",
+        "courses": courses
+    })
+
+# @staff_member_required
+# def admin_assignment_add_quick(request):
+#     courses = Course.objects.all()
+#     if request.method == "POST":
+#         form = AssignmentForm(request.POST)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request, "Assignment added successfully.")
+#             return redirect("accounts:admin_assignment_list_all")
+#     else:
+#         form = AssignmentForm()
+#     return render(request, "admin/quick_assignment_form.html", {
+#         "form": form, 
+#         "title": "Quick Add Assignment",
+#         "courses": courses
+#     })
+@staff_member_required
+def admin_assignment_add_quick(request):
+    courses = Course.objects.all()
+
+    if request.method == "POST":
+        form = AssignmentForm(request.POST)
+        course_id = request.POST.get("course")   # Get course from select
+
+        if not course_id:
+            messages.error(request, "Please select a course.")
+            return redirect("accounts:admin_assignment_add_quick")
+
+        if form.is_valid():
+            assignment = form.save(commit=False)
+            assignment.course = Course.objects.get(id=course_id)
+            assignment.save()
+
+            messages.success(request, "Assignment added successfully.")
+            return redirect("accounts:admin_assignment_list_all")
+    else:
+        form = AssignmentForm()
+
+    return render(request, "admin/quick_assignment_form.html", {
+        "form": form,
+        "title": "Quick Add Assignment",
+        "courses": courses,
+    })
+
+@login_required
+def profile_settings(request):
+    return render(request, "accounts/profile_settings.html")
+
+@staff_member_required
+def admin_exam_add_quick(request):
+    courses = Course.objects.all()
+    if request.method == "POST":
+        form = ExamForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Exam added successfully.")
+            return redirect("accounts:admin_exam_list_all")
+    else:
+        form = ExamForm()
+    return render(request, "admin/quick_exam_form.html", {
+        "form": form, 
+        "title": "Quick Add Exam",
+        "courses": courses
+    })
+
+@staff_member_required
+def admin_course_list(request):
+    courses = Course.objects.all().prefetch_related('lessons', 'assignments', 'exams')
+    
+    # Apply filters - USING CORRECT FIELD NAMES
+    search_query = request.GET.get('search', '')
+    if search_query:
+        courses = courses.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(short_description__icontains=search_query) |
+            Q(category__name__icontains=search_query)
+        )
+    
+    status_filter = request.GET.get('status', '')
+    if status_filter == 'published':
+        courses = courses.filter(published=True)  # Changed from is_published to published
+    elif status_filter == 'draft':
+        courses = courses.filter(published=False)  # Changed from is_published to published
+    
+    difficulty_filter = request.GET.get('difficulty', '')
+    if difficulty_filter:
+        courses = courses.filter(level=difficulty_filter)  # Changed from difficulty to level
+    
+    category_filter = request.GET.get('category', '')
+    if category_filter:
+        courses = courses.filter(category_id=category_filter)
+    
+    # Apply sorting
+    sort_by = request.GET.get('sort', '-created_at')
+    courses = courses.order_by(sort_by)
+    
+    # Annotate with additional data
+    courses = courses.annotate(
+        enrollment_count=Count('enrollments', distinct=True),
+        lesson_count=Count('lessons', distinct=True),
+        assignment_count=Count('assignments', distinct=True),
+        exam_count=Count('exams', distinct=True),
+        certificate_count=Count('certificates', distinct=True)
+    )
+    
+    # Pagination
+    paginator = Paginator(courses, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Statistics - USING CORRECT FIELD NAMES
+    total_courses = Course.objects.count()
+    active_courses = Course.objects.filter(published=True).count()  # Changed from is_active to published
+    draft_courses = Course.objects.filter(published=False).count()  # Changed from is_published to published
+    total_enrollments = Enrollment.objects.count()
+    total_certificates = Certificate.objects.count()
+    
+    # Calculate average rating (you might need to adjust this based on your Review model)
+    avg_rating = 4.5
+    
+    # Additional stats
+    total_lessons = Lesson.objects.count()
+    total_assignments = Assignment.objects.count()
+    total_exams = Exam.objects.count()
+    completion_rate = 75
+    
+    # Categories for filter
+    categories = Course.objects.all()
+    selected_category = None
+    if category_filter:
+        selected_category = Category.objects.filter(id=category_filter).first()
+    
+    context = {
+        "courses": page_obj,
+        "total_courses": total_courses,
+        "active_courses": active_courses,
+        "draft_courses": draft_courses,
+        "total_enrollments": total_enrollments,
+        "total_certificates": total_certificates,
+        "avg_rating": avg_rating,
+        "total_lessons": total_lessons,
+        "total_assignments": total_assignments,
+        "total_exams": total_exams,
+        "completion_rate": completion_rate,
+        "categories": categories,
+        "selected_category": selected_category,
+    }
+    
+    return render(request, "admin/course_list.html", context)
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import Profile, Plan  # assuming you have a Plan model
+
+@login_required
+def upgrade_account(request):
+    """
+    Allows a user to upgrade their subscription plan.
+    Shows available plans and disables current plan.
+    """
+    user_profile = request.user.profile  # assuming OneToOne UserProfile
+    current_plan = user_profile.plan if hasattr(user_profile, 'plan') else None
+    available_plans = Plan.objects.exclude(id=current_plan.id) if current_plan else Plan.objects.all()
+
+    if request.method == "POST":
+        selected_plan_id = request.POST.get("plan")
+        try:
+            new_plan = Plan.objects.get(id=selected_plan_id)
+        except Plan.DoesNotExist:
+            messages.error(request, "Selected plan does not exist.")
+            return redirect("accounts:upgrade")
+
+        if current_plan and new_plan.id == current_plan.id:
+            messages.warning(request, "You are already on this plan.")
+            return redirect("accounts:upgrade")
+
+        # Update user's plan
+        user_profile.plan = new_plan
+        user_profile.save()
+        messages.success(request, f"Successfully upgraded to {new_plan.name}!")
+        return redirect("accounts:profile_settings")  # redirect back to profile
+
+    context = {
+        "current_plan": current_plan,
+        "available_plans": available_plans,
+    }
+    return render(request, "accounts/upgrade_account.html", context)
+
+@login_required
+def profile_setting(request):
+    profile = request.user.profile
+
+    if request.method == "POST":
+        profile.full_name = request.POST.get("full_name")
+        profile.phone = request.POST.get("phone")
+
+        if request.FILES.get("profile_picture"):
+            profile.profile_picture = request.FILES["profile_picture"]
+
+        profile.save()
+        messages.success(request, "Profile updated successfully.")
+        return redirect("accounts:profile_settings")
+
+    return render(request, "accounts/profile_settings.html", {
+        "profile": profile,
+    })
+
+@login_required
+def accept_terms(request):
+    profile = request.user.profile
+    profile.accepted_terms = True
+    profile.save()
+
+    messages.success(request, "You have accepted the Terms & Conditions.")
+    return redirect("accounts:dashboard")
+urls.py
+from django.urls import path
+from . import views
+
+app_name = "accounts"
+
+urlpatterns = [
+    # Authentication & Core
+    path("dashboard/", views.dashboard, name="dashboard"),
+    path("admin-dashboard/", views.admin_dashboard, name="admin_dashboard"),
+    path("forgot-password/", views.forgot_password, name="forgot_password"),
+    path("register/", views.register, name="register"),
+    path("verify/<str:token>/", views.verify_email, name="verify_email"),
+    path("login/", views.login_view, name="login"),
+    path("logout/", views.logout_view, name="logout"),
+    path("login_redirect/", views.login_redirect, name="login_redirect"),
+    path("update_profile/", views.update_profile, name="update_profile"),
+    path('notification/read/<int:notif_id>/', views.mark_notification_read, name='mark_notification_read'),
+    path('notifications/fetch/', views.fetch_unread_notifications, name='fetch_unread_notifications'),
+    path('notifications/mark-all-read/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
+    path('change-password/', views.change_password, name='change_password'),
+    path("settings/profile/", views.profile_setting, name="profile_settings"),
+    path("accept-terms/", views.accept_terms, name="accept_terms"),
+    path('upgrade/', views.upgrade_account, name='upgrade'),
+
+    # Static Pages
+    path("about/", views.about, name="about"),
+    path("faq/", views.faq, name="faq"),
+    path("privacy/", views.privacy, name="privacy"),
+    path("terms/", views.terms, name="terms"),
+    path("support/", views.support, name="support"),
+    path("contact/", views.contact, name="contact"),
+
+    # ----------------------------
+    # USER MANAGEMENT
+    # ----------------------------
+    path("users/", views.admin_user_list, name="admin_user_list"),
+    path("users/add/", views.admin_user_add, name="admin_user_add"),
+    path("users/<int:user_id>/edit/", views.admin_user_edit, name="admin_user_edit"),
+    path("users/<int:user_id>/delete/", views.admin_user_delete, name="admin_user_delete"),
+
+    # ----------------------------
+    # COURSES
+    # ----------------------------
+    path('courses/detail/', views.admin_course_detail, name='course_detail'),
+    path("courses/", views.admin_course_list, name="course_list"),
+    path("courses/add/", views.admin_course_add, name="course_add"),
+    path("courses/<int:course_id>/edit/", views.admin_course_edit, name="course_edit"),
+    path("courses/<int:course_id>/delete/", views.admin_course_delete, name="course_delete"),
+
+    # ----------------------------
+    # LESSONS
+    # ----------------------------
+    path("courses/<int:course_id>/lessons/", views.admin_lesson_list, name="lesson_list"),
+    path("courses/<int:course_id>/lessons/add/", views.admin_lesson_add, name="lesson_add"),
+    path("lessons/<int:lesson_id>/edit/", views.admin_lesson_edit, name="lesson_edit"),
+    path("lessons/<int:lesson_id>/delete/", views.admin_lesson_delete, name="lesson_delete"),
+    path("lessons/all/", views.admin_lesson_list_all, name="admin_lesson_list_all"),
+    path("lessons/quick-add/", views.admin_lesson_add_quick, name="admin_lesson_add_quick"),
+
+    # ----------------------------
+    # ASSIGNMENTS
+    # ----------------------------
+    path("courses/<int:course_id>/assignments/", views.admin_assignment_list, name="assignment_list"),
+    path("courses/<int:course_id>/assignments/add/", views.admin_assignment_add, name="assignment_add"),
+    path("assignments/<int:assignment_id>/edit/", views.admin_assignment_edit, name="assignment_edit"),
+    path("assignments/<int:assignment_id>/delete/", views.admin_assignment_delete, name="assignment_delete"),
+    path("assignments/all/", views.admin_assignment_list_all, name="admin_assignment_list_all"),
+    path("assignments/quick-add/", views.admin_assignment_add_quick, name="admin_assignment_add_quick"),
+
+    # ----------------------------
+    # EXAMS
+    # ----------------------------
+    path("courses/<int:course_id>/exams/", views.admin_exam_list, name="exam_list"),
+    path("courses/<int:course_id>/exams/add/", views.admin_exam_add, name="exam_add"),
+    path("exams/<int:exam_id>/edit/", views.admin_exam_edit, name="exam_edit"),
+    path("exams/<int:exam_id>/delete/", views.admin_exam_delete, name="exam_delete"),
+    path("exams/all/", views.admin_exam_list_all, name="admin_exam_list_all"),
+    path("exams/quick-add/", views.admin_exam_add_quick, name="admin_exam_add_quick"),
+
+    # ----------------------------
+    # CERTIFICATES
+    # ----------------------------
+    path("certificates/", views.admin_certificate_list, name="admin_certificate_list"),
+    path("certificates/<int:certificate_id>/delete/", views.admin_certificate_delete, name="admin_certificate_delete"),
+
+    # Notifications
+    path('mark_notification_read/<int:notif_id>/', views.mark_notification_read, name='mark_notification_read'),
+    path('fetch_unread_notifications/', views.fetch_unread_notifications, name='fetch_unread_notifications'),
+    path('mark_all_notifications_read/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
+]
+
+in courses app
+forms.py
+from django import forms
+from .models import Course, Lesson, Assignment, Exam, ExamQuestion
+
+# ----------------------------
+# COURSE FORM
+# ----------------------------
+class CourseForm(forms.ModelForm):
+    payment_methods = forms.MultipleChoiceField(
+        choices=[
+            ("mpesa", "M-Pesa"),
+            ("paypal", "PayPal"),
+            ("stripe", "Stripe"),
+            ("manual", "Manual / Bank Transfer"),
+        ],
+        required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={"class": "form-check-input"})
+    )
+
+    class Meta:
+        model = Course
+        fields = [
+            "title",
+            "slug",
+            "short_description",
+            "description",
+            "category",
+            "level",
+            "is_paid",
+            "price",
+            "featured",
+            "payment_methods",
+            "thumbnail",
+            "published",
+        ]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "form-control"}),
+            "slug": forms.TextInput(attrs={"class": "form-control"}),
+            "short_description": forms.Textarea(attrs={"rows": 2, "class": "form-control"}),
+            "description": forms.Textarea(attrs={"rows": 4, "class": "form-control"}),
+            "category": forms.TextInput(attrs={"class": "form-control"}),
+            "level": forms.Select(attrs={"class": "form-select"}),
+            "price": forms.NumberInput(attrs={"class": "form-control"}),
+            "is_paid": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "featured": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "thumbnail": forms.ClearableFileInput(attrs={"class": "form-control"}),
+            "published": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+
+# ----------------------------
+# LESSON FORM
+# ----------------------------
+class LessonForm(forms.ModelForm):
+    class Meta:
+        model = Lesson
+        fields = [
+            "title",
+            "slug",
+            "content",
+            "order",
+            "video_url",
+            "attachment",
+        ]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "form-control"}),
+            "slug": forms.TextInput(attrs={"class": "form-control"}),
+            "content": forms.Textarea(attrs={"rows": 4, "class": "form-control"}),
+            "order": forms.NumberInput(attrs={"class": "form-control"}),
+            "video_url": forms.URLInput(attrs={"class": "form-control"}),
+            "attachment": forms.ClearableFileInput(attrs={"class": "form-control"}),
+        }
+
+
+# ----------------------------
+# ASSIGNMENT FORM
+# ----------------------------
+class AssignmentForm(forms.ModelForm):
+    class Meta:
+        model = Assignment
+        fields = [
+            "title",
+            "description",
+            "due_date",
+            "max_score",
+            "allow_file_upload",
+        ]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "form-control"}),
+            "description": forms.Textarea(attrs={"rows": 4, "class": "form-control"}),
+            "due_date": forms.DateTimeInput(attrs={"type": "datetime-local", "class": "form-control"}),
+            "max_score": forms.NumberInput(attrs={"class": "form-control"}),
+            "allow_file_upload": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+
+# ----------------------------
+# EXAM FORM
+# ----------------------------
+class ExamForm(forms.ModelForm):
+    class Meta:
+        model = Exam
+        fields = [
+            "title",
+            "duration_minutes",
+            "pass_mark",
+            "is_active",
+            "scheduled_date",
+        ]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "form-control"}),
+            "duration_minutes": forms.NumberInput(attrs={"class": "form-control"}),
+            "pass_mark": forms.NumberInput(attrs={"class": "form-control"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "scheduled_date": forms.DateTimeInput(attrs={"type": "datetime-local", "class": "form-control"}),
+        }
+
+
+# ----------------------------
+# EXAM QUESTION FORM
+# ----------------------------
+class ExamQuestionForm(forms.ModelForm):
+    class Meta:
+        model = ExamQuestion
+        fields = [
+            "question_text",
+            "choice_a",
+            "choice_b",
+            "choice_c",
+            "choice_d",
+            "correct_choice",
+            "points",
+        ]
+        widgets = {
+            "question_text": forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
+            "choice_a": forms.TextInput(attrs={"class": "form-control"}),
+            "choice_b": forms.TextInput(attrs={"class": "form-control"}),
+            "choice_c": forms.TextInput(attrs={"class": "form-control"}),
+            "choice_d": forms.TextInput(attrs={"class": "form-control"}),
+            "correct_choice": forms.Select(attrs={"class": "form-select"}),
+            "points": forms.NumberInput(attrs={"class": "form-control"}),
+        }
+models.py
+from django.db import models
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+from django.urls import reverse
+import uuid
+import qrcode
+from io import BytesIO
+from django.core.files.base import ContentFile
+from django.core.files import File
+from community.models import Tag
+
+User = get_user_model()
+
+LEVEL_CHOICES = (
+    ("beginner", "Beginner"),
+    ("intermediate", "Intermediate"),
+    ("advanced", "Advanced"),
+)
+
+PAYMENT_METHODS = (
+    ("mpesa", "M-Pesa"),
+    ("paypal", "PayPal"),
+    ("stripe", "Stripe"),
+    ("manual", "Manual / Bank Transfer"),
+)
+
+
+class Course(models.Model):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+    short_description = models.CharField(max_length=400, blank=True)
+    description = models.TextField()
+    category = models.CharField(max_length=120, blank=True)
+    tag = models.ForeignKey(Tag,related_name='tags',on_delete=models.CASCADE)
+    level = models.CharField(max_length=20, choices=LEVEL_CHOICES, default="beginner")
+    is_paid = models.BooleanField(default=False)
+    price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    featured = models.BooleanField(default=False)
+    payment_methods = models.JSONField(default=list, blank=True)  # store allowed payment types (e.g. ["mpesa","paypal"])
+    thumbnail = models.ImageField(upload_to="course_thumbnails/", blank=True, null=True)
+    published = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    class Meta:
+        ordering = ("-featured", "-created_at")
+        verbose_name = "Course"
+        verbose_name_plural = "Courses"
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse("courses:course_detail", kwargs={"slug": self.slug})
+
+    def is_free(self):
+        """Return True if course is free (price empty/zero or is_paid False)."""
+        return not self.is_paid or (self.price is None or self.price <= 0)
+
+    def get_payment_methods_display(self):
+        """Return human-readable list of configured payment methods."""
+        method_map = dict(PAYMENT_METHODS)
+        return [method_map.get(m, str(m)) for m in self.payment_methods]
+
+
+class Lesson(models.Model):
+    course = models.ForeignKey(Course, related_name="lessons", on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255)
+    content = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)  # used in templates/forms as 'order'
+    video_url = models.URLField(blank=True, null=True)
+    attachment = models.FileField(upload_to="lessons/attachments/", null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    is_published = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ("order",)
+        unique_together = (("course", "slug"),)
+        verbose_name = "Lesson"
+        verbose_name_plural = "Lessons"
+
+    def __str__(self):
+        return f"{self.course.title} — {self.title}"
+
+
+class Assignment(models.Model):
+    course = models.ForeignKey(Course, related_name="assignments", on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    due_date = models.DateTimeField(null=True, blank=True)
+    max_score = models.PositiveIntegerField(default=100)
+    allow_file_upload = models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Assignment"
+        verbose_name_plural = "Assignments"
+
+    def __str__(self):
+        return f"{self.course.title} — {self.title}"
+
+
+class AssignmentSubmission(models.Model):
+    assignment = models.ForeignKey(Assignment, related_name="submissions", on_delete=models.CASCADE)
+    student = models.ForeignKey(User, related_name="assignment_submissions", on_delete=models.CASCADE)
+    file = models.FileField(upload_to="assignments/submissions/", null=True, blank=True)
+    text_answer = models.TextField(blank=True)
+    score = models.PositiveIntegerField(default=0)
+    submitted_at = models.DateTimeField(default=timezone.now)
+    graded = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = (("assignment", "student"),)
+        verbose_name = "Assignment Submission"
+        verbose_name_plural = "Assignment Submissions"
+
+    def __str__(self):
+        return f"{self.assignment.title} — {self.student.username}"
+
+
+class Exam(models.Model):
+    course = models.ForeignKey(Course, related_name="exams", on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    duration_minutes = models.PositiveIntegerField(default=60)
+    pass_mark = models.PositiveIntegerField(default=50)  # percent
+    is_active = models.BooleanField(default=True)
+    scheduled_date = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = "Exam"
+        verbose_name_plural = "Exams"
+
+    def __str__(self):
+        return f"{self.course.title} — {self.title}"
+
+    def get_absolute_url(self):
+        return reverse("courses:exam_detail", kwargs={
+            "course_slug": self.course.slug,
+            "exam_id": self.id
+        })
+
+
+
+class ExamQuestion(models.Model):
+    exam = models.ForeignKey(Exam, related_name="questions", on_delete=models.CASCADE)
+    question_text = models.TextField()
+    choice_a = models.CharField(max_length=255)
+    choice_b = models.CharField(max_length=255)
+    choice_c = models.CharField(max_length=255)
+    choice_d = models.CharField(max_length=255)
+    correct_choice = models.CharField(max_length=1, choices=(("A", "A"), ("B", "B"), ("C", "C"), ("D", "D")))
+    points = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        verbose_name = "Exam Question"
+        verbose_name_plural = "Exam Questions"
+
+    def __str__(self):
+        return f"{self.exam.title} — {self.question_text[:50]}"
+
+
+class ExamSubmission(models.Model):
+    exam = models.ForeignKey(Exam, related_name="submissions", on_delete=models.CASCADE)
+    student = models.ForeignKey(User, related_name="exam_submissions", on_delete=models.CASCADE)
+    score = models.PositiveIntegerField(default=0)
+    submitted_at = models.DateTimeField(default=timezone.now)
+    passed = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = (("exam", "student"),)
+        verbose_name = "Exam Submission"
+        verbose_name_plural = "Exam Submissions"
+
+    def __str__(self):
+        return f"{self.exam.title} — {self.student.username}"
+
+
+class Enrollment(models.Model):
+    course = models.ForeignKey(Course, related_name="enrollments", on_delete=models.CASCADE)
+    student = models.ForeignKey(User, related_name="enrollments", on_delete=models.CASCADE)
+    enrolled_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = (("course", "student"),)
+        verbose_name = "Enrollment"
+        verbose_name_plural = "Enrollments"
+
+    def __str__(self):
+        return f"{self.student.username} — {self.course.title}"
+
+
+class Certificate(models.Model):
+    user = models.ForeignKey(User, related_name="certificates", on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, related_name="certificates", on_delete=models.CASCADE)
+    issued_at = models.DateTimeField(default=timezone.now)
+    cert_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    qr_code = models.ImageField(upload_to="certificates/qr_codes/", null=True, blank=True)
+    file = models.FileField(upload_to="certificates/files/", null=True, blank=True)  # generated PDF
+    issued_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = (("user", "course"),)
+        ordering = ("-issued_at",)
+        verbose_name = "Certificate"
+        verbose_name_plural = "Certificates"
+
+    def __str__(self):
+        return f"Certificate: {self.user.username} — {self.course.title}"
+
+    # Generate QR code
+    def generate_qr(self):
+        payload = f"codelab://certificate/{self.cert_id}"
+        img = qrcode.make(payload)
+        buffer = BytesIO()
+        img.save(buffer, format="PNG")
+        filename = f"cert-{self.cert_id}.png"
+        filebuffer = ContentFile(buffer.getvalue())
+        self.qr_code.save(filename, filebuffer, save=False)
+        buffer.close()
+
+    # Generate PDF Certificate
+    def generate_pdf(self):
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer, pagesize=(600, 400))
+
+        c.setFont("Helvetica-Bold", 24)
+        c.drawCentredString(300, 350, "Certificate of Completion")
+
+        c.setFont("Helvetica", 18)
+        # Get full name from profile, fallback to username
+        if hasattr(self.user, "profile") and getattr(self.user.profile, "full_name", ""):
+            full_name = self.user.profile.full_name
+        else:
+            full_name = self.user.get_full_name() or self.user.username
+
+        c.drawCentredString(300, 300, f"Presented to: {full_name}")
+        c.drawCentredString(300, 250, "For successfully completing the course:")
+
+        c.setFont("Helvetica-Bold", 20)
+        c.drawCentredString(300, 200, f"{self.course.title}")
+
+        c.setFont("Helvetica", 14)
+        c.drawCentredString(300, 150, f"Issued on: {self.issued_at.strftime('%d %B %Y')}")
+
+        c.showPage()
+        c.save()
+        buffer.seek(0)
+        filename = f"certificate-{self.cert_id}.pdf"
+        self.file.save(filename, File(buffer), save=False)
+        buffer.close()
+
+    # Save override: QR + PDF
+    def save(self, *args, **kwargs):
+        if not self.qr_code:
+            try:
+                self.generate_qr()
+            except Exception:
+                pass
+        if not self.file:
+            try:
+                self.generate_pdf()
+            except Exception:
+                pass
+        super().save(*args, **kwargs)
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, related_name="notifications", on_delete=models.CASCADE)
+    message = models.TextField()
+    link = models.URLField(blank=True, null=True)  # Optional link to course/exam
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Notification"
+        verbose_name_plural = "Notifications"
+
+    def __str__(self):
+        return f"Notification for {self.user.username}: {self.message[:30]}"
+class LessonCompletion(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
+    completed_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['user', 'lesson']
+        verbose_name = 'Lesson Completion'
+        verbose_name_plural = 'Lesson Completions'
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.lesson.title}"
+views.py
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Course, Lesson, Assignment, AssignmentSubmission, Exam, ExamQuestion, ExamSubmission, Enrollment, Certificate
+from django.contrib import messages
+from .utils import send_certificate_email
+
+from django.core.paginator import Paginator
+from django.db.models import Count, Q
+from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import render
+from courses.models import Course
+
+def catalog(request):
+    q = request.GET.get("q")
+    filter_type = request.GET.get("filter")
+
+    courses = Course.objects.filter(published=True)
+
+    if q:
+        courses = courses.filter(title__icontains=q)
+
+    if filter_type == "free":
+        courses = courses.filter(is_paid=False)
+    elif filter_type == "paid":
+        courses = courses.filter(is_paid=True)
+    elif filter_type in ["beginner", "intermediate", "advanced"]:
+        courses = courses.filter(level=filter_type)
+
+    return render(request, "pages/catalog.html", {"courses": courses})
+
+
+def staff_required(view_func):
+    """Decorator to ensure user is staff or superuser"""
+    actual_decorator = user_passes_test(
+        lambda u: u.is_active and (u.is_staff or u.is_superuser),
+        login_url='/accounts/login/'
+    )
+    return actual_decorator(view_func)
+def view_certificate(request, pk):
+    cert = get_object_or_404(Certificate, pk=pk, user=request.user)
+    return render(request, "courses/view_certificate.html", {"cert": cert})
+from django.http import FileResponse
+
+def download_certificate(request, pk):
+    cert = get_object_or_404(Certificate, pk=pk, user=request.user)
+    return FileResponse(cert.file.open("rb"), as_attachment=True, filename=cert.filename)
+
+@login_required
+def my_courses(request):
+    # Get all enrollments of the user
+    enrollments = Enrollment.objects.filter(student=request.user).select_related("course")
+
+    courses_progress = []
+
+    for enrollment in enrollments:
+        course = enrollment.course
+        total_lessons = course.lessons.count()
+        completed_lessons = LessonCompletion.objects.filter(
+            user=request.user,
+            lesson__course=course
+        ).count()
+
+        progress = round((completed_lessons / total_lessons) * 100) if total_lessons else 0
+
+        courses_progress.append({
+            "course": course,
+            "enrollment": enrollment,
+            "progress": progress,
+        })
+
+    return render(request, "courses/my_courses.html", {
+        "courses_progress": courses_progress
+    })
+def course_list(request):
+    # Base queryset - show only published courses to regular users
+    if request.user.is_staff or request.user.is_superuser:
+        # Staff can see all courses, including drafts
+        courses = Course.objects.all()
+        
+        # Check if drafts should be shown (for admin view)
+        show_drafts = request.GET.get('drafts') == '1'
+        if not show_drafts:
+            courses = courses.filter(published=True)
+    else:
+        # Regular users only see published courses
+        courses = Course.objects.filter(published=True)
+        show_drafts = False
+    
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        courses = courses.filter(
+            Q(title__icontains=search_query) |
+            Q(short_description__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(category__icontains=search_query)
+        )
+    
+    # Level filter
+    level_filter = request.GET.get('level', '')
+    if level_filter:
+        courses = courses.filter(level=level_filter)
+    
+    # Calculate statistics for admin users
+    published_count = draft_count = featured_count = 0
+    if request.user.is_staff or request.user.is_superuser:
+        published_count = Course.objects.filter(published=True).count()
+        draft_count = Course.objects.filter(published=False).count()
+        featured_count = Course.objects.filter(featured=True).count()
+    
+    # Get enrolled courses for the current user to show progress
+    enrolled_course_ids = []
+    user_progress = {}
+    
+    if request.user.is_authenticated:
+        user_enrollments = Enrollment.objects.filter(student=request.user)
+        enrolled_course_ids = list(user_enrollments.values_list('course_id', flat=True))
+        
+        # Calculate progress for each enrolled course
+        for course_id in enrolled_course_ids:
+            course = Course.objects.get(id=course_id)
+            total_lessons = course.lessons.count()
+            if total_lessons > 0:
+                completed_lessons = LessonCompletion.objects.filter(
+                    user=request.user,
+                    lesson__course=course
+                ).count()
+                user_progress[course_id] = int((completed_lessons / total_lessons) * 100)
+            else:
+                user_progress[course_id] = 0
+    
+    # Add progress information to courses
+    for course in courses:
+        course.user_progress = user_progress.get(course.id, 0)
+    
+    # Pagination
+    paginator = Paginator(courses, 9)  # Show 9 courses per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'courses': page_obj,
+        'enrolled_course_ids': enrolled_course_ids,
+        'search_query': search_query,
+        'level_filter': level_filter,
+        'show_drafts': show_drafts,
+        'published_count': published_count,
+        'draft_count': draft_count,
+        'featured_count': featured_count,
+    }
+    
+    return render(request, "courses/course_list.html", context)
+def course_detail(request, slug):
+    course = get_object_or_404(Course, slug=slug)
+    lessons = course.lessons.all()
+    assignments = course.assignments.all()
+    exams = course.exams.all()
+    enrolled = False
+    progress = 0
+    completed_lessons = []
+    
+    if request.user.is_authenticated:
+        enrolled = Enrollment.objects.filter(course=course, student=request.user).exists()
+        
+        # Calculate progress for enrolled students
+        if enrolled and lessons.exists():
+            # Get completed lessons
+            completed_lessons = LessonCompletion.objects.filter(
+                user=request.user,
+                lesson__in=lessons
+            ).values_list('lesson_id', flat=True)
+            
+            # Calculate progress percentage
+            total_lessons = lessons.count()
+            completed_count = len(completed_lessons)
+            progress = int((completed_count / total_lessons) * 100) if total_lessons > 0 else 0
+            
+            # Mark lessons as completed in the queryset
+            for lesson in lessons:
+                lesson.completed = lesson.id in completed_lessons
+    
+    return render(request, "courses/course_detail.html", {
+        "course": course,
+        "lessons": lessons,
+        "assignments": assignments,
+        "exams": exams,
+        "enrolled": enrolled,
+        "progress": progress,
+        "completed_lessons": completed_lessons
+    })
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from .models import LessonCompletion
+
+@login_required
+@require_POST
+def mark_lesson_complete(request, course_slug, lesson_slug):
+    lesson = get_object_or_404(Lesson, slug=lesson_slug, course__slug=course_slug)
+    
+    # Check if user is enrolled in the course
+    enrolled = Enrollment.objects.filter(
+        course=lesson.course, 
+        student=request.user
+    ).exists()
+    
+    if not enrolled:
+        return JsonResponse({'success': False, 'error': 'Not enrolled in this course'})
+    
+    # Create or get completion record
+    completion, created = LessonCompletion.objects.get_or_create(
+        user=request.user,
+        lesson=lesson
+    )
+    
+    # Calculate new progress
+    course_lessons = lesson.course.lessons.all()
+    completed_count = LessonCompletion.objects.filter(
+        user=request.user,
+        lesson__in=course_lessons
+    ).count()
+    total_lessons = course_lessons.count()
+    progress = int((completed_count / total_lessons) * 100) if total_lessons > 0 else 0
+    
+    return JsonResponse({
+        'success': True,
+        'completed': True,
+        'progress': progress,
+        'completed_count': completed_count,
+        'total_lessons': total_lessons
+    })
+# -----------------------------
+# Enroll in a course
+# -----------------------------
+def enroll_course(request, course_slug):
+    course = get_object_or_404(Course, slug=course_slug)
+
+    # -----------------------------
+    # User is logged in
+    # -----------------------------
+    if request.user.is_authenticated:
+        # Already enrolled
+        if Enrollment.objects.filter(course=course, student=request.user).exists():
+            messages.info(request, f"You are already enrolled in {course.title}.")
+            return redirect(course.get_absolute_url())
+
+        # Free course → enroll directly
+        if not course.is_paid:
+            Enrollment.objects.create(course=course, student=request.user)
+            messages.success(request, f"You have been enrolled in the free course: {course.title}")
+            return redirect(course.get_absolute_url())
+
+        # Paid course → store in session and redirect to payment selection
+        request.session['course_to_pay'] = course.id
+        return redirect('courses:pay_course', course_slug=course.slug)
+
+    # -----------------------------
+    # User is NOT logged in
+    # -----------------------------
+    else:
+        # Store next URL for redirect after login
+        next_url = reverse('courses:enroll_course', args=[course.slug])
+        messages.info(request, "Please login or register to enroll in this course.")
+        return redirect(f"{reverse('accounts:login')}?next={next_url}")
+
+
+
+
+
+
+# -----------------------------
+# Lesson Detail
+# -----------------------------
+def lesson_detail(request, course_slug, lesson_slug):
+    course = get_object_or_404(Course, slug=course_slug)
+    lesson = get_object_or_404(Lesson, slug=lesson_slug, course=course)
+    lessons = course.lessons.all()
+    
+    # Check enrollment
+    enrolled = False
+    if request.user.is_authenticated:
+        enrolled = Enrollment.objects.filter(course=course, student=request.user).exists()
+    
+    if not enrolled:
+        return redirect('courses:course_detail', slug=course_slug)
+    
+    # Get next and previous lessons
+    next_lesson = lessons.filter(order__gt=lesson.order).first()
+    previous_lesson = lessons.filter(order__lt=lesson.order).last()
+    
+    # Check if lesson is completed
+    completed = False
+    if request.user.is_authenticated:
+        completed = LessonCompletion.objects.filter(
+            user=request.user,
+            lesson=lesson
+        ).exists()
+    
+    context = {
+        'course': course,
+        'lesson': lesson,
+        'lessons': lessons,
+        'next_lesson': next_lesson,
+        'previous_lesson': previous_lesson,
+        'completed': completed,
+        'enrolled': enrolled,
+    }
+    
+    return render(request, 'courses/lesson_detail.html', context)
+
+# -----------------------------
+# Assignment Detail & Submission
+# -----------------------------
+@login_required
+def assignment_detail(request, course_slug, assignment_id):
+    course = get_object_or_404(Course, slug=course_slug)
+    assignment = get_object_or_404(Assignment, id=assignment_id, course=course)
+    submitted = AssignmentSubmission.objects.filter(assignment=assignment, student=request.user).first()
+
+    if request.method == "POST":
+        file = request.FILES.get("file")
+        text = request.POST.get("text_answer", "")
+        submission, created = AssignmentSubmission.objects.get_or_create(assignment=assignment, student=request.user)
+        if file:
+            submission.file = file
+        submission.text_answer = text
+        submission.save()
+        messages.success(request, "Assignment submitted successfully!")
+        return redirect(assignment.get_absolute_url())
+
+    return render(request, "courses/assignment_detail.html", {
+        "course": course,
+        "assignment": assignment,
+        "submitted": submitted
+    })
+
+# -----------------------------
+# Exam Detail & Submission
+# -----------------------------
+@login_required
+def exam_detail(request, course_slug, exam_id):
+    course = get_object_or_404(Course, slug=course_slug)
+    exam = get_object_or_404(Exam, id=exam_id, course=course)
+    questions = exam.questions.all()
+    submission = ExamSubmission.objects.filter(exam=exam, student=request.user).first()
+    
+    if request.method == "POST" and not submission:
+        total_score = 0
+        # Calculate total score
+        for q in questions:
+            ans = request.POST.get(str(q.id))
+            if ans == q.correct_choice:
+                total_score += q.points
+
+        passed = total_score >= exam.pass_mark
+        submission = ExamSubmission.objects.create(
+            exam=exam, student=request.user, score=total_score, passed=passed
+        )
+
+        # -----------------------------
+        # Issue Certificate if passed
+        # -----------------------------
+        if passed:
+            cert, created = Certificate.objects.get_or_create(user=request.user, course=course)
+            if created:
+                # Generate QR code & PDF
+                cert.generate_qr()
+                cert.generate_pdf()
+                cert.save()
+                # Send certificate by email
+                try:
+                    send_certificate_email(request.user, cert)
+                except Exception as e:
+                    print("Certificate email error:", e)
+
+        messages.success(request, f"Exam submitted. Score: {total_score}. Passed: {passed}")
+        return redirect(exam.get_absolute_url())
+
+    return render(request, "courses/exam_detail.html", {
+        "course": course,
+        "exam": exam,
+        "questions": questions,
+        "submission": submission
+    })
+
+# -----------------------------
+# Certificates
+# -----------------------------
+@login_required
+def my_certificates(request):
+    certificates = Certificate.objects.filter(user=request.user)
+    return render(request, "courses/certificates.html", {"certificates": certificates})
+# -----------------------------
+# Payment page for paid courses
+# -----------------------------
+# Example: You may have helper modules to interact with payment APIs
+from payments.m_pesa import mpesa_pay, verify_mpesa_payment
+from payments.paypal import paypal_create_order, paypal_capture_order
+from payments.stripe import stripe_create_session, stripe_verify_payment
+
+@login_required
+def pay_course(request, course_slug):
+    course = get_object_or_404(Course, slug=course_slug)
+
+    # -----------------------------
+    # Free course → enroll directly
+    # -----------------------------
+    if not course.is_paid:
+        Enrollment.objects.get_or_create(course=course, student=request.user)
+        messages.info(request, "This course is free. You have been enrolled.")
+        return redirect(course.get_absolute_url())
+
+    # -----------------------------
+    # Paid course
+    # -----------------------------
+    # Store course in session for return after payment
+    request.session['course_to_pay'] = course.id
+
+    if request.method == "POST":
+        payment_method = request.POST.get("payment_method")
+
+        # -----------------------------
+        # M-Pesa Payment
+        # -----------------------------
+        if payment_method == "mpesa":
+            phone_number = request.POST.get("phone_number")
+            # Initiate M-Pesa payment (STK Push)
+            response = mpesa_pay(phone_number, course.price, course.id, request.user.id)
+            if response.get("success"):
+                messages.info(request, "M-Pesa payment initiated. Complete the payment on your phone.")
+            else:
+                messages.error(request, f"M-Pesa Error: {response.get('message')}")
+            return redirect(course.get_absolute_url())
+
+        # -----------------------------
+        # PayPal Payment
+        # -----------------------------
+        elif payment_method == "paypal":
+            # Create PayPal order and get approval URL
+            order = paypal_create_order(course.price, request.user.email, course.id)
+            return redirect(order['approval_url'])
+
+        # -----------------------------
+        # Stripe Payment
+        # -----------------------------
+        elif payment_method == "stripe":
+            session = stripe_create_session(course.price, request.user.email, course.id)
+            return redirect(session.url)
+
+        else:
+            messages.error(request, "Invalid payment method selected.")
+            return redirect(course.get_absolute_url())
+
+    return render(request, "courses/pay_course.html", {"course": course})
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.urls import reverse
+from courses.models import Course, Enrollment
+
+# Payment helpers (mocked / stubbed)
+from payments.m_pesa import mpesa_pay, verify_mpesa_payment
+from payments.paypal import paypal_create_order, paypal_capture_order
+from payments.stripe import stripe_create_session, stripe_verify_payment
+
+
+@login_required
+def pay_course(request, course_slug):
+    """
+    Handles payment for paid courses via M-Pesa, PayPal, or Stripe.
+    Auto-enrolls user after successful payment.
+    """
+    course = get_object_or_404(Course, slug=course_slug)
+
+    # -----------------------------
+    # Free course → enroll immediately
+    # -----------------------------
+    if not course.is_paid:
+        Enrollment.objects.get_or_create(course=course, student=request.user)
+        messages.success(request, "This course is free. You have been enrolled.")
+        return redirect(course.get_absolute_url())
+
+    # -----------------------------
+    # Store course in session for payment callbacks
+    # -----------------------------
+    request.session['course_to_pay'] = course.id
+
+    if request.method == "POST":
+        payment_method = request.POST.get("payment_method")
+
+        # -----------------------------
+        # M-Pesa Payment
+        # -----------------------------
+        if payment_method == "mpesa":
+            phone_number = request.POST.get("phone_number")
+            if not phone_number:
+                messages.error(request, "Phone number is required for M-Pesa payment.")
+                return redirect(course.get_absolute_url())
+
+            response = mpesa_pay(phone_number, course.price, course.id, request.user.id)
+            if response.get("success"):
+                messages.info(request, "M-Pesa payment initiated. Complete it on your phone.")
+            else:
+                messages.error(request, f"M-Pesa Error: {response.get('message')}")
+            return redirect(course.get_absolute_url())
+
+        # -----------------------------
+        # PayPal Payment
+        # -----------------------------
+        elif payment_method == "paypal":
+            order = paypal_create_order(course.price, request.user.email, course.id)
+            return redirect(order['approval_url'])
+
+        # -----------------------------
+        # Stripe Payment
+        # -----------------------------
+        elif payment_method == "stripe":
+            session = stripe_create_session(course.price, request.user.email, course.id)
+            return redirect(session.url)
+
+        # -----------------------------
+        # Invalid method
+        # -----------------------------
+        else:
+            messages.error(request, "Invalid payment method selected.")
+            return redirect(course.get_absolute_url())
+
+    return render(request, "courses/pay_course.html", {"course": course})
+
+
+# -----------------------------
+# Payment Verification Endpoints
+# -----------------------------
+
+@login_required
+def verify_mpesa(request):
+    transaction_id = request.GET.get("transaction_id")
+    course_id = request.GET.get("course_id")
+    if not transaction_id or not course_id:
+        messages.error(request, "Invalid M-Pesa verification request.")
+        return redirect('courses:dashboard')
+
+    if verify_mpesa_payment(transaction_id, request.user.id, course_id):
+        course = get_object_or_404(Course, id=course_id)
+        Enrollment.objects.get_or_create(course=course, student=request.user)
+        messages.success(request, f"M-Pesa payment confirmed! You are now enrolled in {course.title}")
+    else:
+        messages.error(request, "M-Pesa payment verification failed.")
+
+    return redirect('courses:dashboard')
+
+
+@login_required
+def verify_paypal(request):
+    order_id = request.GET.get("order_id")
+    course_id = request.GET.get("course_id")
+    if not order_id or not course_id:
+        messages.error(request, "Invalid PayPal verification request.")
+        return redirect('courses:dashboard')
+
+    if paypal_capture_order(order_id):
+        course = get_object_or_404(Course, id=course_id)
+        Enrollment.objects.get_or_create(course=course, student=request.user)
+        messages.success(request, f"PayPal payment confirmed! You are now enrolled in {course.title}")
+    else:
+        messages.error(request, "PayPal payment failed.")
+
+    return redirect('courses:dashboard')
+
+
+@login_required
+def verify_stripe(request):
+    session_id = request.GET.get("session_id")
+    course_id = request.GET.get("course_id")
+    if not session_id or not course_id:
+        messages.error(request, "Invalid Stripe verification request.")
+        return redirect('courses:dashboard')
+
+    if stripe_verify_payment(session_id):
+        course = get_object_or_404(Course, id=course_id)
+        Enrollment.objects.get_or_create(course=course, student=request.user)
+        messages.success(request, f"Stripe payment confirmed! You are now enrolled in {course.title}")
+    else:
+        messages.error(request, "Stripe payment verification failed.")
+
+    return redirect('courses:dashboard')
+admin.py
+from django.contrib import admin
+from .models import (
+    Course, Lesson, Assignment, AssignmentSubmission, Exam, ExamQuestion,
+    ExamSubmission, Enrollment, Certificate, Notification
+)
+
+# -----------------------------
+# Courses & Lessons
+# -----------------------------
+@admin.register(Course)
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ("title", "category", "level", "is_paid", "price", "featured", "created_at")
+    search_fields = ("title", "category", "tag","description")
+    prepopulated_fields = {"slug": ("title",)}
+    list_filter = ("is_paid", "level", "featured")
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(Lesson)
+class LessonAdmin(admin.ModelAdmin):
+    list_display = ("title", "course", "order", "created_at")
+    search_fields = ("title", "course__title")
+    prepopulated_fields = {"slug": ("title",)}
+    list_filter = ("course",)
+
+
+# -----------------------------
+# Assignments
+# -----------------------------
+@admin.register(Assignment)
+class AssignmentAdmin(admin.ModelAdmin):
+    list_display = ("title", "course", "due_date", "max_score")
+    list_filter = ("course",)
+
+
+@admin.register(AssignmentSubmission)
+class AssignmentSubmissionAdmin(admin.ModelAdmin):
+    list_display = ("assignment", "student", "score", "graded", "submitted_at")
+    list_filter = ("assignment__course", "graded")
+    search_fields = ("student__username", "assignment__title")
+
+
+# -----------------------------
+# Exams
+# -----------------------------
+@admin.register(Exam)
+class ExamAdmin(admin.ModelAdmin):
+    list_display = ("title", "course", "duration_minutes", "is_active")
+    list_filter = ("course", "is_active")
+
+
+@admin.register(ExamQuestion)
+class ExamQuestionAdmin(admin.ModelAdmin):
+    list_display = ("exam", "question_text", "points")
+    search_fields = ("question_text",)
+
+
+@admin.register(ExamSubmission)
+class ExamSubmissionAdmin(admin.ModelAdmin):
+    list_display = ("exam", "student", "score", "passed", "submitted_at")
+    list_filter = ("exam__course", "passed")
+    search_fields = ("student__username", "exam__title")
+
+
+# -----------------------------
+# Enrollment
+# -----------------------------
+@admin.register(Enrollment)
+class EnrollmentAdmin(admin.ModelAdmin):
+    list_display = ("student", "course", "enrolled_at")
+    list_filter = ("course",)
+
+
+# -----------------------------
+# Certificates
+# -----------------------------
+@admin.register(Certificate)
+class CertificateAdmin(admin.ModelAdmin):
+    list_display = ("user", "course", "issued_at", "cert_id")
+    readonly_fields = ("issued_at", "cert_id", "qr_code", "file")
+    search_fields = ("user__username", "user__profile__full_name", "course__title", "cert_id")
+
+
+# -----------------------------
+# Notifications
+# -----------------------------
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("user", "message", "is_read", "created_at")
+    list_filter = ("is_read", "created_at")
+    search_fields = ("user__username", "message")
+    readonly_fields = ("created_at",)
+urls.py
+from django.urls import path
+from . import views
+
+app_name = "courses"
+
+urlpatterns = [
+    path("", views.course_list, name="course_list"),
+    path("my-courses/", views.my_courses, name="my_courses"),
+    path("catalog/", views.catalog, name="catalog"),
+
+    # Certificates
+    path("certificates/", views.my_certificates, name="my_certificates"),
+    path("<slug:slug>/", views.course_detail, name="course_detail"),
+    # Certificates
+    path("certificate/<int:pk>/", views.view_certificate, name="view_certificate"),
+    path("certificate/<int:pk>/download/", views.download_certificate, name="download_certificate"),
+
+    # Lessons
+    path("<slug:course_slug>/lesson/<slug:lesson_slug>/", views.lesson_detail, name="lesson_detail"),
+
+    # Assignments
+    path("<slug:course_slug>/assignment/<int:assignment_id>/", views.assignment_detail, name="assignment_detail"),
+
+    # Exams
+    path("<slug:course_slug>/exam/<int:exam_id>/", views.exam_detail, name="exam_detail"),
+
+    # Enrollment
+    path("<slug:course_slug>/enroll/", views.enroll_course, name="enroll_course"),
+
+    # Paid enrollment simulation
+    path("<slug:course_slug>/pay/", views.pay_course, name="pay_course"),
+
+
+    path('course/<slug:course_slug>/lesson/<slug:lesson_slug>/complete/', views.mark_lesson_complete, name='mark_lesson_complete'),
+
+]
+
+in community app
+forms.py
+from django import forms
+from .models import Discussion, Comment
+from django import forms
+from .models import Forum, Discussion, Comment
+
+class ForumForm(forms.ModelForm):
+    class Meta:
+        model = Forum
+        fields = ['name', 'description', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter forum name'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter forum description',
+                'rows': 4
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+        }
+        labels = {
+            'is_active': 'Active (Visible to users)'
+        }
+
+class DiscussionForm(forms.ModelForm):
+    class Meta:
+        model = Discussion
+        fields = ['title', 'content']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter discussion title'
+            }),
+            'content': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter your discussion content',
+                'rows': 5
+            }),
+        }
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter your comment',
+                'rows': 3
+            }),
+        }
+models.py
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils.text import slugify
+from django.urls import reverse
+ 
+# ======================
+# FORUM MODEL
+# ======================
+class Forum(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    slug = models.SlugField(unique=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return self.name
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+    
+    def get_absolute_url(self):
+        return reverse('community:forum_detail', kwargs={'forum_slug': self.slug})
+
+
+# ======================
+# TAG MODEL
+# ======================
+# ======================
+# TAG MODEL
+# ======================
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(max_length=60, unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+ 
+    # @property
+    # def discussion_count(self):
+    #     return self.discussions.count()
+
+    def get_absolute_url(self):
+        return reverse('community:tags') + f'?tag={self.slug}'
+
+
+# ======================
+# DISCUSSION MODEL
+# ======================
+class Discussion(models.Model):
+    forum = models.ForeignKey(Forum, on_delete=models.CASCADE, related_name='discussions')
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_pinned = models.BooleanField(default=False)
+    views = models.IntegerField(default=0)
+    tags = models.ManyToManyField(Tag, blank=True, related_name='discussions')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-is_pinned', '-created_at']
+    
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        
+        # Award points for new discussion
+        if is_new:
+            self.award_creation_points()
+    
+    def award_creation_points(self):
+        """Award points for creating a discussion"""
+        if hasattr(self.author, 'profile'):
+            self.author.profile.points += 10
+            self.author.profile.save()
+            
+            # Log the transaction
+            PointTransaction.objects.create(
+                user=self.author,
+                points=10,
+                reason=f'Created discussion: {self.title}'
+            )
+    
+    def get_absolute_url(self):
+        return reverse('community:discussion_detail', kwargs={'discussion_id': self.id})
+
+    @property
+    def comment_count(self):
+        return self.comments.count()
+
+
+# ======================
+# COMMENT MODEL (With Replies)
+# ======================
+class Comment(models.Model):
+    discussion = models.ForeignKey(
+        Discussion,
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+
+    # REPLY SUPPORT
+    parent = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        related_name='replies',
+        on_delete=models.CASCADE
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"Comment by {self.author.username}"
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        
+        # Award points for new comment
+        if is_new:
+            self.award_creation_points()
+    
+    def award_creation_points(self):
+        """Award points for creating a comment"""
+        if hasattr(self.author, 'profile'):
+            self.author.profile.points += 5
+            self.author.profile.save()
+            
+            PointTransaction.objects.create(
+                user=self.author,
+                points=5,
+                reason=f'Commented on discussion: {self.discussion.title}'
+            )
+    @property
+    def like_count(self):
+        return self.likes.count()
+
+
+# ======================
+# COMMENT LIKE MODEL
+# ======================
+class CommentLike(models.Model):
+    comment = models.ForeignKey(
+        Comment,
+        on_delete=models.CASCADE,
+        related_name='likes'
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('comment', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} liked comment {self.comment.id}"
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        
+        # Award points for new like
+        if is_new:
+            self.award_points()
+    
+    def award_points(self):
+        """Award points for liking a comment"""
+        # Award to comment author
+        if hasattr(self.comment.author, 'profile'):
+            self.comment.author.profile.points += 2
+            self.comment.author.profile.save()
+            
+            PointTransaction.objects.create(
+                user=self.comment.author,
+                points=2,
+                reason=f'Received like on comment'
+            )
+        
+        # Optional: Award 1 point to the user who gave the like
+        if hasattr(self.user, 'profile'):
+            self.user.profile.points += 1
+            self.user.profile.save()
+            
+            PointTransaction.objects.create(
+                user=self.user,
+                points=1,
+                reason=f'Gave a like to a comment'
+            )
+class Achievement(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=100)
+    description = models.TextField()
+    points = models.IntegerField(default=0)
+    icon = models.CharField(max_length=50, default='fa-trophy')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+
+
+
+
+# Add to your community/models.py
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+
+class PointTransaction(models.Model):
+    """
+    Track all point transactions for audit trail
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='point_transactions')
+    points = models.IntegerField()
+    reason = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.username}: {self.points} points - {self.reason}"
+admin.py
+from django.contrib import admin
+from .models import Forum, Discussion, Comment,Achievement,Tag
+
+@admin.register(Forum)
+class ForumAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug', 'is_active', 'created_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['name', 'description']
+    prepopulated_fields = {'slug': ('name',)}
+
+@admin.register(Discussion)
+class DiscussionAdmin(admin.ModelAdmin):
+    list_display = ['title', 'forum', 'author', 'is_pinned', 'views', 'created_at']
+    list_filter = ['forum', 'is_pinned', 'created_at']
+    search_fields = ['title', 'content']
+    raw_id_fields = ['author']
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ['discussion', 'author', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['content']
+    raw_id_fields = ['author', 'discussion']
+
+admin.site.register(Tag)
+views.py
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.core.paginator import Paginator
+from .models import Forum, Discussion, Comment
+from .forms import DiscussionForm, CommentForm
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.db.models import Count, Max
+from .models import Discussion
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from .models import Forum
+from .forms import ForumForm
+# views.py
+import json
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count, Sum, Avg
+from datetime import datetime, timedelta
+from django.utils import timezone
+import json
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count, Sum, Avg, F, Q
+from django.utils import timezone
+from datetime import datetime, timedelta
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import User
+from django.db.models.functions import Coalesce
+
+# community/views.py
+import json
+from django.shortcuts import render
+from django.contrib.auth.models import User
+from django.db.models import Count, Sum, Avg
+from django.utils import timezone
+from datetime import datetime, timedelta
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+# Updated leaderboard view in views.py
+from django.core.paginator import Paginator
+from django.db.models import Count
+# Add this to your community/views.py
+from django.contrib.auth import get_user_model
+
+def user_profile(request, user_id):
+    """Simple user profile view"""
+    User = get_user_model()
+    profile_user = get_object_or_404(User, id=user_id)
+    
+    # Get user statistics
+    discussion_count = profile_user.discussion_set.count()
+    comment_count = profile_user.comment_set.count()
+    total_posts = discussion_count + comment_count
+    
+    context = {
+        'profile_user': profile_user,
+        'discussion_count': discussion_count,
+        'comment_count': comment_count,
+        'total_posts': total_posts,
+    }
+    
+    return render(request, 'community/user_profile.html', context)
+def leaderboard(request):
+    # Get all users with profiles, ordered by points
+    users = User.objects.select_related('profile').all()
+    
+    # Calculate statistics
+    total_users = users.count()
+    
+    # Active users today (users who logged in today)
+    today = timezone.now().date()
+    active_users_today = users.filter(
+        last_login__date=today
+    ).count()
+    
+    # Total points
+    total_points = users.aggregate(
+        total_points=Sum('profile__points')
+    )['total_points'] or 0
+    
+    # Average points
+    avg_points = users.aggregate(
+        avg_points=Avg('profile__points')
+    )['avg_points'] or 0
+    avg_points = round(avg_points, 1)
+    
+    # Prepare users data for JSON
+    users_data = []
+    sorted_users = sorted(users, key=lambda u: u.profile.points or 0, reverse=True)
+    
+    for idx, user in enumerate(sorted_users, start=1):
+        profile = user.profile
+        
+        # Get post count
+        post_count = user.discussion_set.count() + user.comment_set.count()
+        
+        # Profile picture URL
+        profile_picture = None
+        if profile.profile_picture and hasattr(profile.profile_picture, 'url'):
+            profile_picture = profile.profile_picture.url
+        
+        users_data.append({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'date_joined': user.date_joined.isoformat() if user.date_joined else None,
+            'last_login': user.last_login.isoformat() if user.last_login else None,
+            'profile': {
+                'full_name': profile.full_name or '',
+                'points': profile.points or 0,
+            },
+            'profile_picture': profile_picture,
+            'post_count': post_count,
+            'points_today': 0,
+            'rank': idx,
+        })
+    
+    # Get top contributors (users with most posts)
+    top_contributors = sorted(
+        users, 
+        key=lambda u: u.discussion_set.count() + u.comment_set.count(), 
+        reverse=True
+    )[:5]
+    
+    # Time periods for the template
+    time_periods = [
+        {'value': 'today', 'label': 'Today', 'icon': 'fa-calendar-day'},
+        {'value': 'week', 'label': 'This Week', 'icon': 'fa-calendar-week'},
+        {'value': 'month', 'label': 'This Month', 'icon': 'fa-calendar-alt'},
+        {'value': 'all-time', 'label': 'All Time', 'icon': 'fa-history'}
+    ]
+    
+    # Recent achievements (if you have an Achievement model)
+    recent_achievements = []
+    try:
+        from .models import Achievement
+        recent_achievements = Achievement.objects.select_related('user').order_by('-created_at')[:5]
+    except:
+        pass
+    
+    # Pagination
+    paginator = Paginator(sorted_users[:100], 20)  # Show top 100 users, 20 per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'users': page_obj,
+        'page_obj': page_obj,
+        'is_paginated': paginator.num_pages > 1,
+        'users_json': json.dumps(users_data, default=str),
+        'total_users': total_users,
+        'active_users_today': active_users_today,
+        'total_points': total_points,
+        'avg_points': avg_points,
+        'top_contributors': top_contributors,
+        'recent_achievements': recent_achievements,
+        'time_periods': time_periods,
+    }
+    
+    return render(request, 'community/leaderboard.html', context)
+
+@csrf_exempt
+def api_leaderboard(request, period):
+    """API endpoint for period-based leaderboard"""
+    try:
+        # Get all users
+        users = User.objects.select_related('profile').all()
+        
+        # Filter by period if needed
+        now = timezone.now()
+        if period == 'today':
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            # For now, return all users since we don't track daily points
+            # In a real app, you'd filter by activity in this period
+            filtered_users = users
+        elif period == 'week':
+            start_date = now - timedelta(days=7)
+            filtered_users = users
+        elif period == 'month':
+            start_date = now - timedelta(days=30)
+            filtered_users = users
+        else:  # all-time
+            filtered_users = users
+        
+        # Prepare response data
+        users_data = []
+        sorted_users = sorted(filtered_users, key=lambda u: u.profile.points or 0, reverse=True)
+        
+        for idx, user in enumerate(sorted_users, start=1):
+            profile = user.profile
+            
+            # Profile picture URL
+            profile_picture = None
+            if profile.profile_picture and hasattr(profile.profile_picture, 'url'):
+                profile_picture = profile.profile_picture.url
+            
+            users_data.append({
+                'id': user.id,
+                'username': user.username,
+                'profile': {
+                    'full_name': profile.full_name or '',
+                    'points': profile.points or 0,
+                },
+                'profile_picture': profile_picture,
+                'post_count': user.discussion_set.count() + user.comment_set.count(),
+                'rank': idx,
+            })
+        
+        # Calculate stats
+        stats = {
+            'total_users': len(users_data),
+            'active_users': len(users_data),
+            'total_points': sum(user['profile']['points'] for user in users_data),
+            'avg_points': sum(user['profile']['points'] for user in users_data) / len(users_data) if users_data else 0,
+        }
+        
+        return JsonResponse({
+            'users': users_data,
+            'stats': stats,
+            'period': period,
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+def staff_required(function=None):
+    """
+    Decorator for views that checks if the user is staff or superuser.
+    """
+    actual_decorator = user_passes_test(
+        lambda u: u.is_active and (u.is_staff or u.is_superuser),
+        login_url='/admin/login/'
+    )
+    if function:
+        return actual_decorator(function)
+    return actual_decorator
+
+@login_required
+@staff_required
+def create_forum(request):
+    """
+    Create a new forum (staff/superuser only)
+    """
+    if request.method == 'POST':
+        form = ForumForm(request.POST)
+        if form.is_valid():
+            forum = form.save(commit=False)
+            forum.author = request.user
+            forum.save()
+            messages.success(request, f'Forum "{forum.name}" created successfully!')
+            return redirect('community:forum_detail', forum_slug=forum.slug)
+    else:
+        form = ForumForm()
+    
+    context = {
+        'form': form,
+        'title': 'Create New Forum'
+    }
+    return render(request, 'community/forum_form.html', context)
+
+@login_required
+@staff_required
+def edit_forum(request, forum_slug):
+    """
+    Edit an existing forum (staff/superuser only)
+    """
+    forum = get_object_or_404(Forum, slug=forum_slug)
+    
+    if request.method == 'POST':
+        form = ForumForm(request.POST, instance=forum)
+        if form.is_valid():
+            forum = form.save()
+            messages.success(request, f'Forum "{forum.name}" updated successfully!')
+            return redirect('community:forum_detail', forum_slug=forum.slug)
+    else:
+        form = ForumForm(instance=forum)
+    
+    context = {
+        'form': form,
+        'forum': forum,
+        'title': f'Edit Forum: {forum.name}'
+    }
+    return render(request, 'community/forum_form.html', context)
+
+@login_required
+@staff_required
+def delete_forum(request, forum_slug):
+    """
+    Delete a forum (staff/superuser only)
+    """
+    forum = get_object_or_404(Forum, slug=forum_slug)
+    
+    if request.method == 'POST':
+        forum_name = forum.name
+        forum.delete()
+        messages.success(request, f'Forum "{forum_name}" deleted successfully!')
+        return redirect('community:index')
+    
+    context = {
+        'forum': forum
+    }
+    return render(request, 'community/forum_confirm_delete.html', context)
+
+@login_required
+@staff_required
+def manage_forums(request):
+    """
+    Forum management dashboard for staff/superusers
+    """
+    forums = Forum.objects.all().select_related('author').prefetch_related('discussions')
+    
+    # Statistics
+    total_forums = forums.count()
+    active_forums = forums.filter(is_active=True).count()
+    inactive_forums = forums.filter(is_active=False).count()
+    total_discussions = sum(forum.discussions.count() for forum in forums)
+    
+    context = {
+        'forums': forums,
+        'total_forums': total_forums,
+        'active_forums': active_forums,
+        'inactive_forums': inactive_forums,
+        'total_discussions': total_discussions,
+    }
+    return render(request, 'community/manage_forums.html', context)
+
+@login_required
+def add_comment(request, discussion_id):
+    """
+    Handles adding a comment or reply to a discussion.
+    Supports nested replies using parent_id.
+    """
+    discussion = get_object_or_404(Discussion, id=discussion_id)
+
+    if request.method == "POST":
+        content = request.POST.get('body', '').strip()
+        parent_id = request.POST.get('parent_id')
+        parent_comment = None
+
+        # If replying to a comment, fetch parent
+        if parent_id:
+            try:
+                parent_comment = Comment.objects.get(id=parent_id, discussion=discussion)
+            except Comment.DoesNotExist:
+                parent_comment = None
+
+        if content:
+            Comment.objects.create(
+                discussion=discussion,
+                author=request.user,
+                content=content,
+                parent=parent_comment
+            )
+            messages.success(request, "Your comment has been posted!")
+        else:
+            messages.error(request, "Comment cannot be empty.")
+
+    return redirect('community:discussion_detail', discussion_id=discussion.id)
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from .models import Comment, CommentLike
+
+@login_required
+def toggle_comment_like(request, comment_id):
+    """
+    Like or unlike a comment. Returns JSON with new like count.
+    """
+    comment = get_object_or_404(Comment, id=comment_id)
+    user = request.user
+
+    # Check if the user has already liked
+    existing_like = CommentLike.objects.filter(comment=comment, user=user).first()
+
+    if existing_like:
+        # Unlike
+        existing_like.delete()
+        liked = False
+    else:
+        # Like
+        CommentLike.objects.create(comment=comment, user=user)
+        liked = True
+
+    return JsonResponse({
+        'liked': liked,
+        'like_count': comment.likes.count()
+    })
+
+@login_required
+def like_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    like, created = CommentLike.objects.get_or_create(comment=comment, user=request.user)
+    if not created:
+        like.delete()  # toggle unlike
+    return redirect('community:discussion_detail', discussion_id=comment.discussion.id)
+
+
+def all_discussions(request):
+    discussions = Discussion.objects.all()
+    return render(request, "community/all_discussions.html", {"discussions": discussions})
+
+
+def community_index(request):
+    """Main community page showing forums"""
+    forums = Forum.objects.filter(is_active=True).prefetch_related('discussions')
+
+    
+    # Get recent discussions across all forums, including author profiles
+    recent_discussions = Discussion.objects.filter(
+        forum__is_active=True
+    ).select_related('forum', 'author', 'author__profile').order_by('-created_at')[:10]
+    
+    context = {
+        'forums': forums,
+        'recent_discussions': recent_discussions,
+        'total_discussions': Discussion.objects.count(),
+        'total_comments': Comment.objects.count(),
+    }
+    return render(request, 'community/community.html', context)
+
+@login_required
+def forum_detail(request, forum_slug):
+    """Show discussions in a specific forum"""
+    forum = get_object_or_404(Forum, slug=forum_slug, is_active=True)
+    discussions = forum.discussions.all().select_related('author', 'author__profile').order_by('-is_pinned', '-created_at')
+    
+    # Pagination
+    paginator = Paginator(discussions, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    if request.method == 'POST':
+        form = DiscussionForm(request.POST)
+        if form.is_valid():
+            discussion = form.save(commit=False)
+            discussion.forum = forum
+            discussion.author = request.user
+            discussion.save()
+            messages.success(request, 'Discussion started successfully!')
+            return redirect('community:forum_detail', forum_slug=forum.slug)
+    else:
+        form = DiscussionForm()
+    
+    context = {
+        'forum': forum,
+        'page_obj': page_obj,
+        'form': form,
+    }
+    return render(request, 'community/forum_detail.html', context)
+
+from django.db.models import Prefetch
+
+@login_required
+def discussion_detail(request, discussion_id):
+    discussion = get_object_or_404(
+        Discussion.objects.select_related('author', 'author__profile', 'forum'),
+        id=discussion_id,
+        forum__is_active=True
+    )
+
+    # Prefetch comments and replies efficiently
+    comments_qs = Comment.objects.filter(parent__isnull=True).select_related('author', 'author__profile').prefetch_related(
+        Prefetch('replies', queryset=Comment.objects.select_related('author', 'author__profile'))
+    )
+
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            parent_id = request.POST.get('parent_id')
+            comment = form.save(commit=False)
+            comment.discussion = discussion
+            comment.author = request.user
+            if parent_id:
+                comment.parent_id = int(parent_id)
+            comment.save()
+            messages.success(request, 'Comment added successfully!')
+            return redirect('community:discussion_detail', discussion_id=discussion.id)
+    else:
+        form = CommentForm()
+
+    # Update view count
+    discussion.views += 1
+    discussion.save(update_fields=['views'])
+
+    context = {
+        'discussion': discussion,
+        'comments': comments_qs,
+        'form': form,
+    }
+    return render(request, 'community/discussion_detail.html', context)
+
+
+@login_required
+def create_discussion(request, forum_slug):
+    """Create a new discussion"""
+    forum = None
+    if forum_slug:
+        forum = get_object_or_404(Forum, slug=forum_slug, is_active=True)
+    
+    if request.method == 'POST':
+        form = DiscussionForm(request.POST)
+        if form.is_valid():
+            discussion = form.save(commit=False)
+            discussion.forum = forum
+            discussion.author = request.user
+            discussion.save()
+            messages.success(request, 'Discussion created successfully!')
+            return redirect('community:discussion_detail', discussion_id=discussion.id)
+    else:
+        form = DiscussionForm()
+    
+    context = {
+        'forum': forum,
+        'form': form,
+    }
+    return render(request, 'community/create_discussion.html', context)
+
+
+
+@login_required
+def search_discussions(request):
+    """Search discussions with author profiles"""
+    query = request.GET.get('q', '')
+    discussions = Discussion.objects.none()
+    
+    if query:
+        discussions = Discussion.objects.filter(
+            title__icontains=query
+        ).select_related('forum', 'author', 'author__profile').order_by('-created_at')
+    
+    context = {
+        'discussions': discussions,
+        'query': query,
+        'results_count': discussions.count(),
+    }
+    return render(request, 'community/search_results.html', context)
+
+
+
+@login_required
+def edit_discussion(request, pk):
+    discussion = get_object_or_404(Discussion, pk=pk)
+
+    if request.user != discussion.author and not request.user.is_staff:
+        return redirect('community:discussion_detail', pk=pk)
+
+    if request.method == 'POST':
+        form = DiscussionForm(request.POST, instance=discussion)
+        if form.is_valid():
+            form.save()
+            return redirect('community:discussion_detail', pk=pk)
+    else:
+        form = DiscussionForm(instance=discussion)
+
+    return render(request, 'community/edit_discussion.html', {'form': form, 'discussion': discussion})
+
+@login_required
+def delete_discussion(request, pk):
+    discussion = get_object_or_404(Discussion, pk=pk)
+
+    # Only author or staff can delete
+    if request.user != discussion.author and not request.user.is_staff:
+        messages.error(request, "You do not have permission to delete this discussion.")
+        return redirect('community:discussion_detail', pk=pk)
+
+    if request.method == "POST":
+        discussion.delete()
+        messages.success(request, "Discussion deleted successfully.")
+        return redirect('community:index')
+
+    # Optional: render a confirmation page
+    return render(request, 'community/delete_discussion_confirm.html', {'discussion': discussion})
+
+
+@login_required
+def my_discussions(request):
+    """Show user's discussions with profile info and sidebar insights"""
+
+    # Discussions by logged-in user
+    discussions = (
+        Discussion.objects.filter(author=request.user)
+        .select_related('forum', 'author', 'author__profile')
+        .prefetch_related('comments')
+        .annotate(total_comments=Count('comments'))
+        .order_by('-created_at')
+    )
+
+    # Total comments across all discussions
+    total_comments = sum(d.total_comments for d in discussions)
+
+    # Total views
+    total_views = sum(d.views for d in discussions)
+
+    # Sidebar insights
+    most_active_discussion = discussions.order_by('-total_comments').first()
+    most_viewed_discussion = discussions.order_by('-views').first()
+    latest_discussion = discussions.order_by('-created_at').first()
+
+    # Fetch forums for "New Discussion" dropdown
+    forums = request.user.forum_set.all()[:10]
+
+    context = {
+        'discussions': discussions,
+        'total_comments': total_comments,
+        'total_views': total_views,
+        'most_active_discussion': most_active_discussion,
+        'most_viewed_discussion': most_viewed_discussion,
+        'latest_discussion': latest_discussion,
+        'forums': forums,
+    }
+    return render(request, 'community/my_discussions.html', context)
+
+@login_required
+def add_comment(request, discussion_id):
+    discussion = get_object_or_404(Discussion, id=discussion_id)
+    if request.method == "POST":
+        content = request.POST.get('body')  # form input name
+        if content:
+            Comment.objects.create(
+                discussion=discussion,
+                author=request.user,
+                content=content
+            )
+    return redirect('community:discussion_detail', discussion_id=discussion.id)
+from django.db.models import Count
+from django.core.paginator import Paginator
+from .models import Tag, Discussion
+
+def tags_list(request):
+    """Enhanced tags view with search, filtering, and sorting"""
+    tags = Tag.objects.annotate(
+        discussion_count=Count('discussions')
+    ).order_by('-discussion_count', 'name')
+    
+    # Search functionality
+    search_query = request.GET.get('q', '')
+    if search_query:
+        tags = tags.filter(name__icontains=search_query)
+    
+    # Sorting
+    sort_by = request.GET.get('sort', 'popular')
+    if sort_by == 'name':
+        tags = tags.order_by('name')
+    elif sort_by == 'newest':
+        tags = tags.order_by('-id')
+    
+    # Tag filtering - show discussions for a specific tag
+    tagged_discussions = None
+    selected_tag_slug = request.GET.get('tag')
+    selected_tag = None
+    
+    if selected_tag_slug:
+        selected_tag = Tag.objects.filter(slug=selected_tag_slug).first()
+        if selected_tag:
+            tagged_discussions = Discussion.objects.filter(
+                tags=selected_tag
+            ).select_related('forum', 'author', 'author__profile').prefetch_related('tags').order_by('-created_at')
+    
+    # Pagination for tags
+    paginator = Paginator(tags, 24)  # 24 tags per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'tags': page_obj,
+        'tagged_discussions': tagged_discussions,
+        'selected_tag': selected_tag,
+        'search_query': search_query,
+        'sort_by': sort_by,
+        'page_obj': page_obj,
+    }
+    return render(request, "community/tags.html", context)
+    urls.py
+    from django.urls import path
+from . import views
+
+app_name = "community"
+
+urlpatterns = [
+    path("", views.community_index, name="index"),
+    
+    # Forum management URLs
+    path("forum/create/", views.create_forum, name="create_forum"),
+    path("forum/<slug:forum_slug>/edit/", views.edit_forum, name="edit_forum"),
+    path("forum/<slug:forum_slug>/delete/", views.delete_forum, name="delete_forum"),
+    path("manage-forums/", views.manage_forums, name="manage_forums"),
+    path('profile/<int:user_id>/', views.user_profile, name='user_profile'),
+    
+    # Existing URLs
+    path("forum/<slug:forum_slug>/", views.forum_detail, name="forum_detail"),
+    path("discussion/<int:discussion_id>/", views.discussion_detail, name="discussion_detail"),
+    path("create/<slug:forum_slug>/", views.create_discussion, name="create_discussion"),
+    path("my-discussions/", views.my_discussions, name="my_discussions"),
+    path('discussion/<int:pk>/edit/', views.edit_discussion, name='edit_discussion'),
+    path('discussion/<int:pk>/delete/', views.delete_discussion, name='delete_discussion'),
+    path("search/", views.search_discussions, name="search"),
+    path("discussions/", views.all_discussions, name="all_discussions"),
+    path('leaderboard/', views.leaderboard, name='leaderboard'),
+    path('api/leaderboard/<str:period>/', views.api_leaderboard, name='api_leaderboard'),
+    path('discussion/<int:discussion_id>/add-comment/', views.add_comment, name='add_comment'),
+    path("tags/", views.tags_list, name="tags"),
+    path('comment/<int:comment_id>/like/', views.toggle_comment_like, name='toggle_comment_like'),
+]
+
+

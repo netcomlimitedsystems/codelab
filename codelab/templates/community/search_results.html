@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Search Results</h1>
+
+{% if query %}
+<p>Search results for: "<strong>{{ query }}</strong>"</p>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-8">
+        {% if discussions %}
+            <p>Found {{ results_count }} discussion(s)</p>
+            
+            {% for discussion in discussions %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{% url 'community:discussion_detail' discussion.id %}" class="text-decoration-none">
+                            {{ discussion.title }}
+                        </a>
+                    </h5>
+                    
+                    <p class="card-text">{{ discussion.content|truncatewords:30 }}</p>
+                    
+                    <div class="d-flex justify-content-between text-muted">
+                        <small>
+                            in <a href="{% url 'community:forum_detail' discussion.forum.slug %}">{{ discussion.forum.name }}</a>
+                            • by {{ discussion.author.username }}
+                        </small>
+                        <small>
+                            {{ discussion.comment_count }} comments • {{ discussion.created_at|timesince }} ago
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">
+                No discussions found matching your search.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

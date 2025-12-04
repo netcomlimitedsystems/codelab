@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block title %}Terms of Service - CodeLab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0"><i class="fas fa-file-contract me-2"></i>Terms of Service</h4>
+            </div>
+            <div class="card-body">
+                <div class="terms-content">
+                    <!-- Effective Date -->
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Effective Date: {% now "F j, Y" %}
+                    </div>
+                    
+                    <!-- Introduction -->
+                    <section class="mb-5">
+                        <h5 class="mb-3">Welcome to CodeLab</h5>
+                        <p>
+                            These Terms of Service ("Terms") govern your use of the CodeLab website, courses, 
+                            and services ("Platform"). By accessing or using our Platform, you agree to be bound 
+                            by these Terms. If you disagree with any part of the Terms, you may not access the Platform.
+                        </p>
+                    </section>
+                    
+                    <!-- Account Terms -->
+                    <section class="mb-5">
+                        <h5 class="mb-3">1. Account Registration</h5>
+                        <ul>
+                            <li>You must be at least 13 years old to create an account</li>
+                            <li>You must provide accurate and complete registration information</li>
+                            <li>You are responsible for maintaining the confidentiality of your account credentials</li>
+                            <li>You are responsible for all activities that occur under your account</li>
+                            <li>You must notify us immediately of any unauthorized use of your account</li>
+                        </ul>
+                    </section>
+                    
+                    <!-- Course Access -->
+                    <section class="mb-5">
+                        <h5 class="mb-3">2. Course Enrollment and Access</h5>
+                        <ul>
+                            <li>Free courses are accessible upon registration</li>
+                            <li>Paid courses require payment before access is granted</li>
+                            <li>Course access is personal and non-transferable</li>
+                            <li>You may not share your account or course access with others</li>
+                            <li>We reserve the right to modify or discontinue courses at any time</li>
+                        </ul>
+                    </section>
+                    
+                    <!-- Payment Terms -->
+                    <section class="mb-5">
+                        <h5 class="mb-3">3. Payments and Refunds</h5>
+                        <ul>
+                            <li>All prices are listed in KES unless otherwise specified</li>
+                            <li>Payments are processed through secure third-party providers</li>
+                            <li>We offer a 30-day money-back guarantee for paid courses</li>
+                            <li>Refund requests must be submitted within 30 days of purchase</li>
+                            <li>Refunds are processed to the original payment method</li>
+                            <li>We reserve the right to refuse refunds in cases of abuse</li>
+                        </ul>
+                    </section>
+                    
+                    <!-- User Conduct -->
+                    <section class="mb-5">
+                        <h5 class="mb-3">4. Acceptable Use</h5>
+                        <p>You agree not to:</p>
+                        <ul>
+                            <li>Use the Platform for any illegal purpose</li>
+                            <li>Violate any laws or regulations</li>
+                            <li>Infringe on intellectual property rights</li>
+                            <li>Upload malicious software or viruses</li>
+                            <li>Harass, threaten, or intimidate other users</li>
+                            <li>Attempt to gain unauthorized access to our systems</li>
+                            <li>Use automated systems to access the Platform</li>
+                            <li>Share or distribute course materials without permission</li>
+                        </ul>
+                    </section>
+                    
+                    <!-- Intellectual Property -->
+                    <section class="mb-5">
+                        <h5 class="mb-3">5. Intellectual Property</h5>
+                        <ul>
+                            <li>All course content, materials, and Platform code are owned by CodeLab</li>
+                            <li>You are granted a limited, non-exclusive license to access course materials for personal use</li>
+                            <li>You may not reproduce, distribute, or create derivative works from our content</li>
+                            <li>User-generated content remains your property, but you grant us a license to use it on the Platform</li>
+                            <li>Certificate designs and templates are our intellectual property</li>
+                        </ul>
+                    </section>
+                    
+                    <!-- Community Guidelines -->
+                    <section class="mb-5">
+                        <h5 class="mb-3">6. Community Guidelines</h5>
+                        <p>Our community is built on respect and collaboration:</p>
+                        <ul>
+                            <li>Be respectful and constructive in discussions</li>
+                            <li>Help others learn and grow</li>
+                            <li>Share knowledge and experiences</li>
+                            <li>Report inappropriate content or behavior</li>
+                            <li>Follow specific forum rules and guidelines</li>
+                        </ul>
+                        <p>We reserve the right to remove content and suspend accounts that violate these guidelines.</p>
+                    </section>
+                    
+                    <!-- Termination -->
+                    <section class="mb-5">
+                        <h5 class="mb-3">7. Termination</h5>
+                        <p>We may terminate or suspend your account immediately, without prior notice, for conduct that:</p>
+                        <ul>
+                            <li>Violates these Terms</li>
+                            <li>Threatens the security of our Platform</li>
+                            <li>May cause legal liability for us or other users</li>
+                            <li>Involves fraudulent or abusive behavior</li>
+                        </ul>
+                        <p>Upon termination, your right to use the Platform will immediately cease.</p>
+                    </section>
+                    
+                    <!-- Disclaimer -->
+                    <section class="mb-5">
+                        <h5 class="mb-3">8. Disclaimer of Warranties</h5>
+                        <p>The Platform is provided "as is" without warranties of any kind, either express or implied. We do not warrant that:</p>
+                        <ul>
+                            <li>The Platform will be uninterrupted or error-free</li>
+                            <li>Defects will be corrected</li>
+                            <li>The Platform is free of viruses or other harmful components</li>
+                            <li>The content is accurate, reliable, or complete</li>
+                        </ul>
+                    </section>
+                    
+                    <!-- Limitation of Liability -->
+                    <section class="mb-5">
+                        <h5 class="mb-3">9. Limitation of Liability</h5>
+                        <p>To the maximum extent permitted by law, CodeLab shall not be liable for:</p>
+                        <ul>
+                            <li>Direct, indirect, incidental, or consequential damages</li>
+                            <li>Loss of data, profits, or business opportunities</li>
+                            <li>Cost of substitute goods or services</li>
+                            <li>Unauthorized access to or alteration of your data</li>
+                        </ul>
+                    </section>
+                    
+                    <!-- Changes to Terms -->
+                    <section class="mb-5">
+                        <h5 class="mb-3">10. Changes to Terms</h5>
+                        <p>We reserve the right to modify these Terms at any time. We will notify users of significant changes by:</p>
+                        <ul>
+                            <li>Posting the new Terms on this page</li>
+                            <li>Sending an email notification</li>
+                            <li>Displaying a notice on the Platform</li>
+                        </ul>
+                        <p>Your continued use of the Platform after changes constitutes acceptance of the new Terms.</p>
+                    </section>
+                    
+                    <!-- Governing Law -->
+                    <section class="mb-5">
+                        <h5 class="mb-3">11. Governing Law</h5>
+                        <p>These Terms shall be governed by and construed in accordance with the laws of Kenya, without regard to its conflict of law provisions.</p>
+                    </section>
+                    
+                    <!-- Contact -->
+                    <section class="mb-5">
+                        <h5 class="mb-3">12. Contact Information</h5>
+                        <p>For questions about these Terms, please contact us:</p>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-envelope me-2"></i>Email: legal@codelab.com</li>
+                            <li><i class="fas fa-phone me-2"></i>Phone: +254 700 000 000</li>
+                            <li><i class="fas fa-map-marker-alt me-2"></i>Address: Nairobi, Kenya</li>
+                        </ul>
+                    </section>
+                    
+                    <!-- Acceptance -->
+                    <div class="card border-primary mt-5">
+                        <div class="card-body text-center">
+                            <h6 class="card-title mb-3">Acceptance of Terms</h6>
+                            <p class="card-text text-muted mb-4">
+                                By using our platform, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
+                            </p>
+                            {% if not user.profile.accepted_terms %}
+                                <form method="POST" action="{% url 'accounts:accept_terms' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-check me-1"></i>I Accept the Terms of Service
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Accepted on {{ user.profile.accepted_terms|date:"F j, Y" }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .terms-content section {
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 20px;
+    }
+    
+    .terms-content h5 {
+        color: var(--primary-color);
+    }
+    
+    .terms-content ul {
+        padding-left: 20px;
+    }
+    
+    .terms-content li {
+        margin-bottom: 8px;
+    }
+</style>
+{% endblock %}

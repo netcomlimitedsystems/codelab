@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Security Settings{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-4">
+
+                    <h3 class="mb-4 text-center">🔐 Account Security Settings</h3>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} mt-2">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Password Section -->
+                    <div class="mb-4">
+                        <h5 class="mb-2">Password</h5>
+                        <p class="text-muted">
+                            Update your password regularly to keep your account secure.
+                        </p>
+                        <a href="{% url 'accounts:password_change' %}" 
+                           class="btn btn-primary btn-sm">
+                           Change Password
+                        </a>
+                    </div>
+
+                    <hr>
+
+                    <!-- MFA Section -->
+                    <div class="mb-4">
+                        <h5 class="mb-2">Multi-Factor Authentication (MFA)</h5>
+                        <p class="text-muted">
+                            Add an extra layer of security by enabling MFA.
+                        </p>
+
+                        {% if user.profile.mfa_enabled %}
+                            <div class="alert alert-success p-2">
+                                MFA is currently <strong>Enabled</strong>.
+                            </div>
+
+                            <a href="{% url 'accounts:mfa_setup' %}" 
+                               class="btn btn-outline-danger btn-sm">
+                               Disable or Reconfigure MFA
+                            </a>
+                        {% else %}
+                            <div class="alert alert-warning p-2">
+                                MFA is <strong>Disabled</strong>.
+                            </div>
+
+                            <a href="{% url 'accounts:mfa_setup' %}" 
+                               class="btn btn-primary btn-sm">
+                               Enable MFA
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <!-- Login Activity -->
+                    <div class="mb-4">
+                        <h5 class="mb-2">Recent Login Activity</h5>
+                        <p class="text-muted">
+                            Monitor your recent login activity to detect suspicious behavior.
+                        </p>
+
+                        {% if recent_logins %}
+                            <ul class="list-group">
+                                {% for log in recent_logins %}
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>{{ log.timestamp|date:"d M Y, H:i A" }}</span>
+                                        <span class="text-muted">{{ log.ip_address }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">No login activity found.</p>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <div class="text-center mt-4">
+                        <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">
+                            ← Back to Dashboard
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1525 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ discussion.title }} - CodeLab Dev Community{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --terminal-bg: #0d1117;
+        --editor-bg: #161b22;
+        --border-color: #30363d;
+        --text-light: #c9d1d9;
+        --text-muted: #8b949e;
+        --primary-blue: #58a6ff;
+        --success-green: #3fb950;
+        --warning-orange: #d29922;
+        --danger-red: #f85149;
+        --accent-purple: #bc8cff;
+        --code-yellow: #e3b341;
+    }
+
+    body {
+        background: var(--terminal-bg);
+        color: var(--text-light);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    /* Terminal Header */
+    .terminal-header {
+        background: var(--editor-bg);
+        border-bottom: 1px solid var(--border-color);
+        border-radius: 8px 8px 0 0;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'Courier New', monospace;
+    }
+
+    .terminal-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+
+    .dot-red { background: var(--danger-red); }
+    .dot-yellow { background: var(--warning-orange); }
+    .dot-green { background: var(--success-green); }
+
+    .terminal-title {
+        margin-left: 1rem;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Code Card */
+    .code-card {
+        background: var(--editor-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 0 0 8px 8px;
+        font-family: 'Courier New', monospace;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .code-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, var(--primary-blue), var(--accent-purple));
+    }
+
+    /* Code Lines */
+    .code-line {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border-color);
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        line-height: 1.6;
+        display: flex;
+        gap: 1rem;
+    }
+
+    .code-line:hover {
+        background: rgba(88, 166, 255, 0.05);
+    }
+
+    .line-number {
+        color: var(--text-muted);
+        min-width: 40px;
+        text-align: right;
+        user-select: none;
+    }
+
+    .line-content {
+        flex: 1;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .code-keyword { color: var(--primary-blue); }
+    .code-string { color: var(--success-green); }
+    .code-comment { color: var(--text-muted); }
+    .code-function { color: var(--accent-purple); }
+    .code-number { color: var(--code-yellow); }
+    .code-operator { color: var(--danger-red); }
+
+    /* Issue Container */
+    .issue-container {
+        background: var(--editor-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .issue-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, var(--primary-blue), var(--accent-purple));
+    }
+
+    .issue-header {
+        background: rgba(22, 27, 34, 0.8);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1rem 1.25rem;
+        backdrop-filter: blur(10px);
+    }
+
+    .issue-body {
+        padding: 1.25rem;
+    }
+
+    /* Chip Badges */
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        font-family: 'Courier New', monospace;
+        border: 1px solid transparent;
+        background: rgba(88, 166, 255, 0.1);
+        color: var(--primary-blue);
+    }
+
+    .chip-success {
+        background: rgba(63, 185, 80, 0.1);
+        color: var(--success-green);
+        border-color: rgba(63, 185, 80, 0.3);
+    }
+
+    .chip-warning {
+        background: rgba(210, 153, 34, 0.1);
+        color: var(--warning-orange);
+        border-color: rgba(210, 153, 34, 0.3);
+    }
+
+    .chip-danger {
+        background: rgba(248, 81, 73, 0.1);
+        color: var(--danger-red);
+        border-color: rgba(248, 81, 73, 0.3);
+    }
+
+    /* Button Styles */
+    .btn-dev {
+        background: rgba(88, 166, 255, 0.1);
+        color: var(--primary-blue);
+        border: 1px solid var(--primary-blue);
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    .btn-dev:hover {
+        background: var(--primary-blue);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(88, 166, 255, 0.2);
+    }
+
+    .btn-dev-outline {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-light);
+    }
+
+    .btn-dev-outline:hover {
+        background: var(--border-color);
+        border-color: var(--text-light);
+    }
+
+    /* Developer Avatar */
+    .dev-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, var(--primary-blue), var(--accent-purple));
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1rem;
+        font-family: 'Courier New', monospace;
+    }
+
+    /* Comment Container */
+    .comment-container {
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .comment-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 100%;
+        background: rgba(88, 166, 255, 0.3);
+    }
+
+    .comment-header {
+        background: rgba(22, 27, 34, 0.8);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1rem;
+        backdrop-filter: blur(10px);
+    }
+
+    .comment-body {
+        padding: 1rem;
+    }
+
+    /* Code Block */
+    .code-block {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 1rem;
+        margin: 1rem 0;
+        overflow-x: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    .code-block-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .code-language {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .copy-btn {
+        background: rgba(88, 166, 255, 0.1);
+        color: var(--primary-blue);
+        border: 1px solid rgba(88, 166, 255, 0.3);
+        border-radius: 4px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+        background: rgba(88, 166, 255, 0.2);
+    }
+
+    /* Sidebar Cards */
+    .sidebar-card {
+        background: var(--editor-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+
+    .sidebar-header {
+        background: rgba(22, 27, 34, 0.8);
+        border-bottom: 1px solid var(--border-color);
+        padding: 0.875rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-light);
+    }
+
+    .sidebar-body {
+        padding: 1rem;
+    }
+
+    /* Related Issues */
+    .related-issue {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+    }
+
+    .related-issue:hover {
+        background: rgba(88, 166, 255, 0.05);
+    }
+
+    .related-issue:last-child {
+        border-bottom: none;
+    }
+
+    /* Tags */
+    .tag-cloud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tag {
+        background: rgba(88, 166, 255, 0.1);
+        color: var(--primary-blue);
+        padding: 0.375rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        border: 1px solid rgba(88, 166, 255, 0.2);
+        font-family: 'Courier New', monospace;
+        transition: all 0.2s ease;
+    }
+
+    .tag:hover {
+        background: rgba(88, 166, 255, 0.2);
+        transform: translateY(-1px);
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+        position: fixed;
+        bottom: 80px;
+        right: 20px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .action-btn {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--primary-blue);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        box-shadow: 0 8px 25px rgba(88, 166, 255, 0.4);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .action-btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+
+    .action-btn:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .action-btn:hover {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 12px 30px rgba(88, 166, 255, 0.6);
+    }
+
+    .action-btn-secondary {
+        background: var(--success-green);
+        box-shadow: 0 8px 25px rgba(63, 185, 80, 0.4);
+    }
+
+    .action-tooltip {
+        position: absolute;
+        right: 70px;
+        background: var(--editor-bg);
+        color: var(--text-light);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        opacity: 0;
+        transform: translateX(10px);
+        transition: all 0.3s ease;
+        pointer-events: none;
+        border: 1px solid var(--border-color);
+        font-family: 'Courier New', monospace;
+    }
+
+    .action-btn:hover .action-tooltip {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    /* Comment Form */
+    .comment-form-container {
+        background: var(--editor-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .comment-input {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-light);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        padding: 1rem;
+        width: 100%;
+        resize: vertical;
+        min-height: 120px;
+        transition: all 0.2s ease;
+    }
+
+    .comment-input:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+    }
+
+    /* Stats Panel */
+    .stats-panel {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-family: 'Courier New', monospace;
+        font-size: 1.75rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--primary-blue), var(--accent-purple));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 0.25rem;
+    }
+
+    /* Loading Animation */
+    @keyframes loading {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .loading-shimmer {
+        background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(88, 166, 255, 0.1) 50%,
+            transparent 100%
+        );
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .terminal-header {
+            padding: 0.5rem;
+        }
+
+        .code-line {
+            padding: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .line-number {
+            min-width: 30px;
+        }
+
+        .issue-body, .comment-body {
+            padding: 1rem;
+        }
+
+        .quick-actions {
+            bottom: 70px;
+            right: 15px;
+        }
+
+        .action-btn {
+            width: 50px;
+            height: 50px;
+            font-size: 1.125rem;
+        }
+
+        .action-tooltip {
+            display: none;
+        }
+
+        .stats-panel {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .terminal-title {
+            display: none;
+        }
+
+        .code-card, .issue-container {
+            margin: 0 -15px;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+        }
+
+        .sidebar-card {
+            margin: 0 -15px 1rem;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+        }
+
+        .stats-panel {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    /* Dark mode optimizations */
+    @media (prefers-color-scheme: dark) {
+        .code-block {
+            background: rgba(0, 0, 0, 0.5);
+        }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+        .action-btn,
+        .related-issue,
+        .tag,
+        .chip {
+            transition: none;
+        }
+
+        .action-btn:hover {
+            transform: none;
+        }
+
+        .loading-shimmer {
+            animation: none;
+        }
+    }
+
+    /* Syntax Highlighting */
+    .syntax-keyword { color: var(--primary-blue); }
+    .syntax-string { color: var(--success-green); }
+    .syntax-comment { color: var(--text-muted); }
+    .syntax-function { color: var(--accent-purple); }
+    .syntax-number { color: var(--code-yellow); }
+    .syntax-operator { color: var(--danger-red); }
+
+    /* Toast Notifications */
+    .toast-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+
+    .toast {
+        background: var(--editor-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+    }
+
+    .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .toast-success {
+        border-left: 4px solid var(--success-green);
+    }
+
+    .toast-error {
+        border-left: 4px solid var(--danger-red);
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}<i class="fas fa-code me-2"></i>{{ discussion.title|truncatechars:60 }}{% endblock %}
+{% block page_subtitle %}
+<span class="chip">{{ discussion.forum.name }}</span> • 
+<span class="code-comment">#{{ discussion.id }}</span> • 
+<span class="code-comment">by {{ discussion.author.username }}</span>
+{% endblock %}
+
+{% block page_actions %}
+<div class="d-flex gap-2">
+    <a href="{% url 'community:forum_detail' discussion.forum.slug %}" class="btn btn-dev-outline">
+        <i class="fas fa-code-branch me-2"></i>Back to Repo
+    </a>
+    {% if user == discussion.author or user.is_staff %}
+    <a href="{% url 'community:edit_discussion' discussion.id %}" class="btn btn-dev-outline">
+        <i class="fas fa-code-merge me-2"></i>Edit Issue
+    </a>
+    {% endif %}
+    <button class="btn btn-dev" data-bs-toggle="modal" data-bs-target="#replyModal">
+        <i class="fas fa-terminal me-2"></i>Add Comment
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Issue Header -->
+    <div class="terminal-header">
+        <div class="terminal-dot dot-red" onclick="window.history.back()" style="cursor: pointer;"></div>
+        <div class="terminal-dot dot-yellow" onclick="togglePinned()"></div>
+        <div class="terminal-dot dot-green" id="resolveIssue" onclick="resolveIssue()" style="cursor: pointer;"></div>
+        <span class="terminal-title">issue_{{ discussion.id }}.md</span>
+        <span class="ms-auto">
+            <span class="chip me-2">
+                <i class="fas fa-eye me-1"></i>{{ discussion.views }}
+            </span>
+            {% if discussion.is_pinned %}
+            <span class="chip chip-warning">
+                <i class="fas fa-thumbtack me-1"></i>Pinned
+            </span>
+            {% endif %}
+        </span>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Issue Content -->
+            <div class="issue-container mb-4">
+                <div class="issue-header">
+                    <div class="d-flex align-items-center">
+                        <div class="dev-avatar me-3">
+                            {{ discussion.author.username|first|upper }}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-1">{{ discussion.author.username }}</h5>
+                                    <small class="text-muted">
+                                        <i class="far fa-clock me-1"></i>
+                                        {{ discussion.created_at|timesince }} ago
+                                        <span class="ms-3">
+                                            <i class="fas fa-code-branch me-1"></i>
+                                            {{ discussion.author.profile.level|default:"1" }}
+                                        </span>
+                                    </small>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-dev-outline btn-sm" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" onclick="reportIssue()"><i class="fas fa-bug me-2"></i>Report</a></li>
+                                        {% if user == discussion.author or user.is_staff %}
+                                        <li><a class="dropdown-item" href="{% url 'community:edit_discussion' discussion.id %}"><i class="fas fa-code-merge me-2"></i>Edit</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="{% url 'community:delete_discussion' discussion.id %}"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="issue-body">
+                    <div class="mb-4">
+                        <div class="code-block">
+                            <div class="code-block-header">
+                                <span class="code-language">issue</span>
+                                <button class="copy-btn" onclick="copyIssueContent()">
+                                    <i class="fas fa-copy me-1"></i>Copy
+                                </button>
+                            </div>
+                            <pre class="mb-0">{{ discussion.content }}</pre>
+                        </div>
+                    </div>
+                    
+                    {% if discussion.tags.all %}
+                    <div class="tag-cloud mb-4">
+                        {% for tag in discussion.tags.all %}
+                        <a href="{% url 'community:tags' %}?tag={{ tag.slug }}" class="tag">
+                            <i class="fas fa-tag me-1"></i>{{ tag.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-dev btn-sm" id="likeDiscussionBtn">
+                                <i class="far fa-thumbs-up me-1"></i>
+                                <span id="likeCount">0</span>
+                            </button>
+                            <button class="btn btn-dev-outline btn-sm" data-bs-toggle="modal" data-bs-target="#shareModal">
+                                <i class="fas fa-share me-1"></i>Share
+                            </button>
+                        </div>
+                        {% if discussion.is_solved %}
+                        <span class="chip chip-success">
+                            <i class="fas fa-check me-1"></i>Resolved
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="mb-4">
+                <div class="terminal-header">
+                    <div class="terminal-dot dot-red"></div>
+                    <div class="terminal-dot dot-yellow"></div>
+                    <div class="terminal-dot dot-green"></div>
+                    <span class="terminal-title">comments.js</span>
+                    <span class="ms-auto">
+                        <div class="dropdown">
+                            <button class="btn btn-dev-outline btn-sm" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-sort me-1"></i>Sort
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" data-sort="newest">Newest First</a></li>
+                                <li><a class="dropdown-item" href="#" data-sort="oldest">Oldest First</a></li>
+                                <li><a class="dropdown-item" href="#" data-sort="likes">Most Liked</a></li>
+                            </ul>
+                        </div>
+                    </span>
+                </div>
+                
+                <div class="code-card">
+                    <!-- Comment Form -->
+                    <div class="comment-form-container">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="dev-avatar">
+                                    {{ user.username|first|upper }}
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <form id="commentForm">
+                                    <textarea class="comment-input" id="commentContent" 
+                                              placeholder="Add a comment... (Markdown supported)"></textarea>
+                                    <div class="mt-2 d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-markdown me-1"></i>Supports Markdown
+                                        </small>
+                                        <button type="submit" class="btn btn-dev">Post Comment</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comments List -->
+                    <div id="commentsList">
+                        <div class="code-line">
+                            <span class="line-number">1</span>
+                            <span class="line-content code-comment">
+                                // Loading comments...
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Load More -->
+                    <div class="text-center py-3" id="loadMoreContainer">
+                        <button class="btn btn-dev-outline" id="loadMoreBtn">
+                            <i class="fas fa-spinner fa-spin d-none me-2" id="loadingSpinner"></i>
+                            Load More Comments
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Repository Info -->
+            <div class="sidebar-card mb-4">
+                <div class="sidebar-header">
+                    <i class="fas fa-code-branch me-2"></i>Repository
+                </div>
+                <div class="sidebar-body">
+                    <div class="mb-3">
+                        <a href="{% url 'community:forum_detail' discussion.forum.slug %}" class="text-decoration-none">
+                            <h5 class="mb-1">{{ discussion.forum.name }}</h5>
+                        </a>
+                        <p class="text-muted small mb-2">{{ discussion.forum.description|truncatechars:80 }}</p>
+                        <div class="d-flex justify-content-between small">
+                            <span class="chip">
+                                <i class="fas fa-code me-1"></i>{{ discussion.forum.discussions.count }} issues
+                            </span>
+                            <span class="chip">
+                                <i class="fas fa-users me-1"></i>{{ forum_users }} contributors
+                            </span>
+                        </div>
+                    </div>
+                    <a href="{% url 'community:forum_detail' discussion.forum.slug %}" class="btn btn-dev w-100">
+                        <i class="fas fa-arrow-right me-2"></i>View Repository
+                    </a>
+                </div>
+            </div>
+
+            <!-- Issue Stats -->
+            <div class="sidebar-card mb-4">
+                <div class="sidebar-header">
+                    <i class="fas fa-chart-line me-2"></i>Issue Stats
+                </div>
+                <div class="sidebar-body">
+                    <div class="stats-panel">
+                        <div>
+                            <div class="stat-value" id="statsComments">0</div>
+                            <div class="stat-label">Comments</div>
+                        </div>
+                        <div>
+                            <div class="stat-value" id="statsLikes">0</div>
+                            <div class="stat-label">Likes</div>
+                        </div>
+                        <div>
+                            <div class="stat-value">{{ discussion.views }}</div>
+                            <div class="stat-label">Views</div>
+                        </div>
+                        <div>
+                            <div class="stat-value">{{ discussion.author.discussion_set.count }}</div>
+                            <div class="stat-label">Author Issues</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Issues -->
+            <div class="sidebar-card mb-4">
+                <div class="sidebar-header">
+                    <i class="fas fa-link me-2"></i>Related Issues
+                </div>
+                <div class="sidebar-body p-0">
+                    {% if related_discussions %}
+                        {% for related in related_discussions|slice:":5" %}
+                        <div class="related-issue" onclick="window.location='{{ related.get_absolute_url }}'">
+                            <div class="d-flex align-items-center">
+                                <div class="dev-avatar me-2" style="width: 30px; height: 30px; font-size: 0.875rem;">
+                                    {{ related.author.username|first|upper }}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <small class="d-block">{{ related.title|truncatechars:50 }}</small>
+                                    <small class="text-muted">
+                                        <i class="far fa-clock me-1"></i>{{ related.created_at|timesince }} ago
+                                    </small>
+                                </div>
+                                <div>
+                                    <span class="chip" style="font-size: 0.625rem;">
+                                        {{ related.comment_count }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="p-3 text-center">
+                        <small class="text-muted">No related issues</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Community Guidelines -->
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <i class="fas fa-file-code me-2"></i>Guidelines
+                </div>
+                <div class="sidebar-body">
+                    <div class="code-block">
+                        <pre class="mb-0 code-comment">// Be respectful
+// Provide code examples
+// Mark solutions when found
+// Help others learn
+// Follow community rules</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+    <button class="action-btn" data-bs-toggle="modal" data-bs-target="#replyModal">
+        <i class="fas fa-terminal"></i>
+        <span class="action-tooltip">Add Comment</span>
+    </button>
+    <button class="action-btn action-btn-secondary" onclick="scrollToTop()">
+        <i class="fas fa-arrow-up"></i>
+        <span class="action-tooltip">Back to Top</span>
+    </button>
+</div>
+
+<!-- Reply Modal -->
+<div class="modal fade" id="replyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content code-card">
+            <div class="terminal-header">
+                <div class="terminal-dot dot-red" data-bs-dismiss="modal" style="cursor: pointer;"></div>
+                <div class="terminal-dot dot-yellow"></div>
+                <div class="terminal-dot dot-green" id="submitComment" style="cursor: pointer;"></div>
+                <span class="terminal-title">add_comment.js</span>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <textarea class="comment-input" id="replyContent" rows="8" 
+                              placeholder="Write your comment here... (Markdown supported)"></textarea>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="subscribeReply">
+                    <label class="form-check-label text-muted" for="subscribeReply">
+                        <i class="fas fa-bell me-1"></i>Subscribe to notifications
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content code-card">
+            <div class="terminal-header">
+                <div class="terminal-dot dot-red" data-bs-dismiss="modal" style="cursor: pointer;"></div>
+                <span class="terminal-title">share.js</span>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted">Issue Link</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control search-input" id="shareLink" 
+                               value="{{ request.build_absolute_uri }}" readonly>
+                        <button class="btn btn-dev" onclick="copyShareLink()">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">Share via</label>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-dev-outline flex-fill">
+                            <i class="fab fa-github"></i>
+                        </button>
+                        <button class="btn btn-dev-outline flex-fill">
+                            <i class="fab fa-slack"></i>
+                        </button>
+                        <button class="btn btn-dev-outline flex-fill">
+                            <i class="fas fa-code"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentPage = 1;
+    const commentsPerPage = 10;
+    let sortBy = 'newest';
+    
+    // Load discussion stats
+    loadDiscussionStats();
+    
+    // Load comments
+    loadComments();
+    
+    // Like discussion
+    const likeDiscussionBtn = document.getElementById('likeDiscussionBtn');
+    if (likeDiscussionBtn) {
+        likeDiscussionBtn.addEventListener('click', function() {
+            fetch(`/api/discussions/{{ discussion.id }}/like/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('likeCount').textContent = data.likes;
+                    document.getElementById('statsLikes').textContent = data.likes;
+                    
+                    // Update button appearance
+                    if (data.liked) {
+                        likeDiscussionBtn.innerHTML = '<i class="fas fa-thumbs-up me-1"></i>' + data.likes;
+                        likeDiscussionBtn.classList.add('btn-primary');
+                    } else {
+                        likeDiscussionBtn.innerHTML = '<i class="far fa-thumbs-up me-1"></i>' + data.likes;
+                        likeDiscussionBtn.classList.remove('btn-primary');
+                    }
+                    
+                    // Show points animation
+                    if (data.points_awarded) {
+                        showPointsAnimation(data.points_awarded);
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+    
+    // Post comment
+    const commentForm = document.getElementById('commentForm');
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const content = document.getElementById('commentContent').value.trim();
+            
+            if (!content) {
+                showToast('Please enter a comment', 'error');
+                return;
+            }
+            
+            postComment(content);
+        });
+    }
+    
+    // Post comment via modal
+    document.getElementById('submitComment').addEventListener('click', function() {
+        const content = document.getElementById('replyContent').value.trim();
+        const subscribe = document.getElementById('subscribeReply').checked;
+        
+        if (!content) {
+            showToast('Please enter your comment', 'error');
+            return;
+        }
+        
+        postComment(content, subscribe);
+        bootstrap.Modal.getInstance(document.getElementById('replyModal')).hide();
+        document.getElementById('replyContent').value = '';
+    });
+    
+    // Sort comments
+    document.querySelectorAll('[data-sort]').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            sortBy = this.getAttribute('data-sort');
+            currentPage = 1;
+            loadComments();
+        });
+    });
+    
+    // Load more comments
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', function() {
+            currentPage++;
+            loadComments(true);
+        });
+    }
+    
+    // Functions
+    function loadDiscussionStats() {
+        fetch(`/api/discussions/{{ discussion.id }}/stats/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('likeCount').textContent = data.likes;
+                document.getElementById('statsComments').textContent = data.comments;
+                document.getElementById('statsLikes').textContent = data.likes;
+                
+                // Update like button if user has liked
+                if (data.user_liked && likeDiscussionBtn) {
+                    likeDiscussionBtn.innerHTML = '<i class="fas fa-thumbs-up me-1"></i>' + data.likes;
+                    likeDiscussionBtn.classList.add('btn-primary');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+    
+    function loadComments(append = false) {
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        if (loadingSpinner) loadingSpinner.classList.remove('d-none');
+        
+        fetch(`/api/discussions/{{ discussion.id }}/comments/?page=${currentPage}&sort=${sortBy}`)
+            .then(response => response.json())
+            .then(data => {
+                if (loadingSpinner) loadingSpinner.classList.add('d-none');
+                
+                const commentsList = document.getElementById('commentsList');
+                const loadMoreContainer = document.getElementById('loadMoreContainer');
+                
+                if (!append) {
+                    commentsList.innerHTML = '';
+                }
+                
+                if (data.comments.length === 0 && !append) {
+                    commentsList.innerHTML = `
+                        <div class="code-line">
+                            <span class="line-number">1</span>
+                            <span class="line-content code-comment">
+                                // No comments yet. Be the first to comment!
+                            </span>
+                        </div>
+                    `;
+                    loadMoreContainer.classList.add('d-none');
+                    return;
+                }
+                
+                // Render comments
+                data.comments.forEach((comment, index) => {
+                    const commentEl = createCommentElement(comment, append ? commentsList.children.length + index + 1 : index + 1);
+                    commentsList.appendChild(commentEl);
+                });
+                
+                // Update load more button
+                if (data.has_more) {
+                    loadMoreContainer.classList.remove('d-none');
+                } else {
+                    loadMoreContainer.classList.add('d-none');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading comments:', error);
+                if (loadingSpinner) loadingSpinner.classList.add('d-none');
+            });
+    }
+    
+    function createCommentElement(comment, lineNumber) {
+        const div = document.createElement('div');
+        div.className = 'code-line';
+        div.dataset.commentId = comment.id;
+        
+        div.innerHTML = `
+            <span class="line-number">${lineNumber}</span>
+            <span class="line-content">
+                <span class="code-comment">// ${comment.author_name} • ${comment.created_at}</span>
+                <br>
+                ${comment.content}
+                <br>
+                <div class="mt-2 d-flex align-items-center gap-2">
+                    <button class="btn btn-dev-outline btn-sm like-comment-btn" data-comment-id="${comment.id}">
+                        <i class="far fa-thumbs-up me-1"></i>
+                        <span class="like-count">${comment.likes}</span>
+                    </button>
+                    <button class="btn btn-dev-outline btn-sm" onclick="replyToComment(${comment.id}, '${comment.author_name}')">
+                        <i class="fas fa-reply me-1"></i>Reply
+                    </button>
+                    ${comment.can_edit ? `
+                        <button class="btn btn-dev-outline btn-sm" onclick="editComment(${comment.id})">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </button>
+                    ` : ''}
+                </div>
+            </span>
+        `;
+        
+        // Add event listener for like button
+        setTimeout(() => {
+            const likeBtn = div.querySelector('.like-comment-btn');
+            if (likeBtn) {
+                likeBtn.addEventListener('click', function() {
+                    const commentId = this.dataset.commentId;
+                    likeComment(commentId, this);
+                });
+            }
+        }, 100);
+        
+        return div;
+    }
+    
+    function postComment(content, subscribe = false) {
+        fetch(`/api/discussions/{{ discussion.id }}/comments/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                content: content,
+                subscribe: subscribe
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('commentContent').value = '';
+                
+                // Reload comments
+                currentPage = 1;
+                loadComments();
+                
+                // Update stats
+                loadDiscussionStats();
+                
+                // Show success message
+                showToast('Comment posted successfully!', 'success');
+                
+                // Award points animation
+                if (data.points_awarded) {
+                    showPointsAnimation(data.points_awarded);
+                }
+            } else {
+                showToast('Error posting comment: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error posting comment', 'error');
+        });
+    }
+    
+    function likeComment(commentId, button) {
+        fetch(`/api/comments/${commentId}/like/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const likeCount = button.querySelector('.like-count');
+                if (likeCount) {
+                    likeCount.textContent = data.likes;
+                }
+                
+                // Update button appearance
+                if (data.liked) {
+                    button.innerHTML = '<i class="fas fa-thumbs-up me-1"></i>' + data.likes;
+                    button.classList.add('btn-primary');
+                } else {
+                    button.innerHTML = '<i class="far fa-thumbs-up me-1"></i>' + data.likes;
+                    button.classList.remove('btn-primary');
+                }
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+    
+    // WebSocket for real-time updates
+    if ('WebSocket' in window) {
+        const ws = new WebSocket(`ws://${window.location.host}/ws/discussion/{{ discussion.id }}/`);
+        
+        ws.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            
+            switch (data.type) {
+                case 'new_comment':
+                    // Add new comment to top
+                    const commentsList = document.getElementById('commentsList');
+                    const commentEl = createCommentElement(data.comment, 1);
+                    commentsList.prepend(commentEl);
+                    
+                    // Update stats
+                    const commentCount = document.getElementById('statsComments');
+                    commentCount.textContent = parseInt(commentCount.textContent) + 1;
+                    
+                    // Update line numbers
+                    updateLineNumbers();
+                    break;
+                    
+                case 'comment_liked':
+                    // Update like count for comment
+                    const commentCard = document.querySelector(`[data-comment-id="${data.comment_id}"]`);
+                    if (commentCard) {
+                        const likeCount = commentCard.querySelector('.like-count');
+                        if (likeCount) {
+                            likeCount.textContent = data.likes;
+                        }
+                    }
+                    break;
+                    
+                case 'discussion_updated':
+                    // Update discussion stats
+                    loadDiscussionStats();
+                    break;
+            }
+        };
+        
+        ws.onclose = function() {
+            console.log('WebSocket connection closed');
+        };
+    }
+    
+    // Auto-expand textareas
+    document.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    });
+    
+    // Update line numbers
+    function updateLineNumbers() {
+        const comments = document.querySelectorAll('#commentsList .code-line');
+        comments.forEach((comment, index) => {
+            const lineNumber = comment.querySelector('.line-number');
+            if (lineNumber) {
+                lineNumber.textContent = index + 1;
+            }
+        });
+    }
+});
+
+// Global functions
+function resolveIssue() {
+    fetch(`/api/discussions/{{ discussion.id }}/resolve/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const resolveBtn = document.getElementById('resolveIssue');
+            if (resolveBtn) {
+                resolveBtn.classList.add('dot-green');
+                resolveBtn.classList.remove('dot-yellow');
+            }
+            showToast('Issue marked as resolved!', 'success');
+        }
+    });
+}
+
+function togglePinned() {
+    fetch(`/api/discussions/{{ discussion.id }}/pin/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.pinned ? 'Issue pinned!' : 'Issue unpinned!', 'success');
+        }
+    });
+}
+
+function reportIssue() {
+    // Implement report functionality
+    console.log('Report issue');
+}
+
+function copyIssueContent() {
+    const content = `{{ discussion.content }}`;
+    navigator.clipboard.writeText(content);
+    showToast('Issue content copied!', 'success');
+}
+
+function copyShareLink() {
+    const shareLink = document.getElementById('shareLink');
+    shareLink.select();
+    shareLink.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+    showToast('Link copied to clipboard!', 'success');
+}
+
+function replyToComment(commentId, authorName) {
+    const content = document.getElementById('commentContent');
+    if (content) {
+        content.value = `@${authorName} `;
+        content.focus();
+        showToast(`Replying to ${authorName}`, 'success');
+    }
+}
+
+function editComment(commentId) {
+    // Implement edit functionality
+    showToast('Edit feature coming soon!', 'success');
+}
+
+function scrollToTop() {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+}
+
+function showToast(message, type = 'success') {
+    const container = document.querySelector('.toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function showPointsAnimation(points) {
+    const pointsEl = document.createElement('div');
+    pointsEl.className = 'toast toast-success';
+    pointsEl.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-star me-2"></i>
+            <span>+${points} XP earned!</span>
+        </div>
+    `;
+    
+    const container = document.querySelector('.toast-container');
+    container.appendChild(pointsEl);
+    setTimeout(() => pointsEl.classList.add('show'), 10);
+    
+    setTimeout(() => {
+        pointsEl.classList.remove('show');
+        setTimeout(() => pointsEl.remove(), 300);
+    }, 3000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + Enter: Submit comment
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        const activeElement = document.activeElement;
+        if (activeElement.id === 'commentContent' || activeElement.id === 'replyContent') {
+            e.preventDefault();
+            if (activeElement.id === 'commentContent') {
+                document.getElementById('commentForm').dispatchEvent(new Event('submit'));
+            } else {
+                document.getElementById('submitComment').click();
+            }
+        }
+    }
+    
+    // /: Focus search (if we had one)
+    if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        document.getElementById('commentContent')?.focus();
+    }
+    
+    // Escape: Close modal
+    if (e.key === 'Escape') {
+        const modal = document.querySelector('.modal.show');
+        if (modal) {
+            bootstrap.Modal.getInstance(modal).hide();
+        }
+    }
+});
+</script>
+{% endblock %}

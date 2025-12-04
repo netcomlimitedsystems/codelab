@@ -1,0 +1,1725 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>{% block title %}CodeLab - Software Development Platform{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Poppins:wght@300;400;500;600;700&family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #7c3aed;
+            --accent-color: #06b6d4;
+            --terminal-green: #10b981;
+            --terminal-red: #ef4444;
+            --terminal-yellow: #f59e0b;
+            --code-bg: #0f172a;
+            --sidebar-width: 250px;
+            --header-height: 70px;
+            --glass-bg: rgba(15, 23, 42, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            padding-top: 20px;
+        }
+        
+        /* Animated background elements */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(37, 99, 235, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(37, 99, 235, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .binary-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.3;
+        }
+        
+        .binary-digit {
+            position: absolute;
+            color: var(--terminal-green);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            animation: fall linear infinite;
+        }
+        
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
+            }
+        }
+        
+        .floating-code {
+            position: fixed;
+            color: rgba(37, 99, 235, 0.1);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(16px, 2vw, 24px);
+            pointer-events: none;
+            z-index: -1;
+            animation: float 20s infinite linear;
+        }
+        
+        .floating-code:nth-child(2) {
+            animation-delay: 5s;
+            animation-duration: 25s;
+        }
+        
+        .floating-code:nth-child(3) {
+            animation-delay: 10s;
+            animation-duration: 30s;
+        }
+        
+        @keyframes gridMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.5;
+            }
+            90% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+        }
+        
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-10px);}
+            60% {transform: translateY(-5px);}
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+        }
+        
+        .terminal-text {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--code-bg);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .terminal-text::before {
+            content: '~ $ ';
+            color: var(--terminal-green);
+        }
+        
+        .navbar-brand {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--accent-color) !important;
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .navbar-brand::after {
+            content: '▋';
+            animation: blink 1s infinite;
+            margin-left: 2px;
+            color: var(--terminal-green);
+        }
+        
+        .navbar {
+            background: rgba(15, 23, 42, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #334155;
+            padding: 0.5rem 0;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            padding: 10px 25px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-outline-light {
+            border: 2px solid rgba(255,255,255,0.2);
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-light:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 12px;
+            border: 1px solid #334155;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.6s ease-out;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+            border-color: var(--primary-color);
+        }
+        
+        .card-header {
+            background: rgba(15, 23, 42, 0.8);
+            border-bottom: 1px solid #334155;
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+        }
+        
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+            background: #334155;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.4),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+            background: rgba(37, 99, 235, 0.2);
+            color: #60a5fa;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            font-size: 10px;
+            padding: 4px 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #475569;
+            transition: transform 0.3s;
+        }
+        
+        .avatar:hover {
+            transform: scale(1.1);
+            border-color: var(--primary-color);
+        }
+        
+        .avatar-lg {
+            width: 100px;
+            height: 100px;
+        }
+        
+        .sidebar {
+            min-height: calc(100vh - var(--header-height));
+            background: rgba(15, 23, 42, 0.8);
+            border-right: 1px solid #334155;
+            position: sticky;
+            top: var(--header-height);
+            padding-top: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .sidebar-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-radius: 8px;
+            margin: 5px 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sidebar-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--primary-color);
+            transform: scaleY(0);
+            transition: transform 0.3s;
+        }
+        
+        .sidebar-item:hover, .sidebar-item.active {
+            background: rgba(37, 99, 235, 0.1);
+            color: #60a5fa;
+        }
+        
+        .sidebar-item:hover::before,
+        .sidebar-item.active::before {
+            transform: scaleY(1);
+        }
+        
+        .sidebar-item i {
+            width: 24px;
+            margin-right: 12px;
+            transition: transform 0.3s;
+        }
+        
+        .sidebar-item:hover i {
+            transform: translateX(5px);
+        }
+        
+        .content-wrapper {
+            padding: 20px;
+            min-height: calc(100vh - var(--header-height));
+        }
+        
+        .stats-card {
+            border-left: 4px solid var(--primary-color);
+            animation: fadeInUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+        
+        .stats-card:nth-child(2) { animation-delay: 0.2s; }
+        .stats-card:nth-child(3) { animation-delay: 0.4s; }
+        .stats-card:nth-child(4) { animation-delay: 0.6s; }
+        
+        .stats-card.success {
+            border-left-color: var(--terminal-green);
+        }
+        
+        .stats-card.warning {
+            border-left-color: var(--terminal-yellow);
+        }
+        
+        .stats-card.danger {
+            border-left-color: var(--terminal-red);
+        }
+        
+        .course-card .card-img-top {
+            height: 180px;
+            object-fit: cover;
+            border-radius: 12px 12px 0 0;
+            transition: transform 0.5s;
+        }
+        
+        .course-card:hover .card-img-top {
+            transform: scale(1.05);
+        }
+        
+        .level-badge {
+            padding: 4px 10px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .level-beginner {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid #10b981;
+        }
+        
+        .level-intermediate {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1px solid #f59e0b;
+        }
+        
+        .level-advanced {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid #ef4444;
+        }
+        
+        /* Code snippet styling */
+        .code-snippet {
+            background: var(--code-bg);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .code-snippet::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+        
+        /* Hero Section for Non-Authenticated Users */
+        .hero-section {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .hero-title {
+            font-size: clamp(2rem, 8vw, 4rem);
+            background: linear-gradient(135deg, #60a5fa, #06b6d4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            color: #cbd5e1;
+            margin-bottom: 2rem;
+            max-width: 600px;
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(37, 99, 235, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        /* About Page Styles */
+        .about-hero {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(124, 58, 237, 0.1));
+            border-radius: 20px;
+            padding: 4rem 2rem;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .about-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%232563eb' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+        
+        .team-member {
+            transition: transform 0.3s;
+        }
+        
+        .team-member:hover {
+            transform: translateY(-10px);
+        }
+        
+        /* Contact Page Styles */
+        .contact-card {
+            border: 1px solid #334155;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .contact-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
+        }
+        
+        .contact-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(37, 99, 235, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 1.8rem;
+            color: var(--primary-color);
+        }
+        
+        .contact-form .form-control {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .contact-form .form-control:focus {
+            background: rgba(30, 41, 59, 1);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.25);
+        }
+        
+        .contact-form textarea.form-control {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        /* Login/Register Forms */
+        .auth-card {
+            max-width: 400px;
+            margin: 2rem auto;
+            animation: slideInRight 0.5s ease-out;
+        }
+        
+        .form-control {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            background: rgba(30, 41, 59, 0.9);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.25);
+            color: #e2e8f0;
+        }
+        
+        .form-label {
+            color: #cbd5e1;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 1000;
+                width: 280px;
+                transform: translateX(-100%);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                height: 100vh;
+                overflow-y: auto;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .sidebar-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.7);
+                z-index: 999;
+                display: none;
+                backdrop-filter: blur(5px);
+            }
+            
+            .sidebar-overlay.show {
+                display: block;
+                animation: fadeIn 0.3s ease-out;
+            }
+            
+            .content-wrapper {
+                padding: 15px;
+            }
+            
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            .hero-title {
+                text-align: center;
+            }
+            
+            .hero-subtitle {
+                text-align: center;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            
+            .auth-card {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+            
+            .about-hero {
+                padding: 2rem 1rem;
+                margin-bottom: 2rem;
+            }
+            
+            .contact-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .btn-primary {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .stats-card {
+                margin-bottom: 1rem;
+            }
+            
+            .navbar-nav {
+                text-align: center;
+                padding: 1rem 0;
+            }
+            
+            .dropdown-menu {
+                position: fixed !important;
+                top: 60px !important;
+                left: 10px !important;
+                right: 10px !important;
+                width: auto !important;
+            }
+            
+            .hero-section {
+                padding: 2rem 1rem;
+                text-align: center;
+            }
+            
+            .feature-card {
+                margin-bottom: 1.5rem;
+            }
+            
+            .team-member {
+                margin-bottom: 2rem;
+            }
+        }
+        
+        /* Extra small devices */
+        @media (max-width: 400px) {
+            .container-fluid {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            
+            .content-wrapper {
+                padding: 10px;
+            }
+            
+            .card {
+                border-radius: 8px;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+        
+        /* Large devices */
+        @media (min-width: 1200px) {
+            .container-fluid {
+                max-width: 1400px;
+            }
+        }
+        
+        /* Dark mode adjustments */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #0f172a;
+            }
+        }
+        
+        /* Print styles */
+        @media print {
+            .navbar, .sidebar, footer, .btn {
+                display: none !important;
+            }
+            
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            
+            .card {
+                border: 1px solid #ddd !important;
+                box-shadow: none !important;
+                background: white !important;
+            }
+        }
+        
+        /* Touch device optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            .card:hover {
+                transform: none;
+            }
+            
+            .btn-primary:hover::before {
+                left: -100%;
+            }
+            
+            .sidebar-item:hover {
+                background: transparent;
+            }
+            
+            .sidebar-item.active {
+                background: rgba(37, 99, 235, 0.1);
+            }
+            
+            /* Increase tap targets */
+            .btn, .sidebar-item, .nav-link {
+                min-height: 44px;
+                min-width: 44px;
+            }
+        }
+        
+        /* Reduced motion preferences */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .animate-typing {
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 2px solid var(--terminal-green);
+            animation: typing 3.5s steps(40, end), blink 0.75s step-end infinite;
+        }
+        
+        .animate-bounce {
+            animation: bounce 2s infinite;
+        }
+        
+        /* Real-time formatting styles */
+        .markdown-content {
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        .markdown-content h1 { 
+            font-size: clamp(1.5rem, 5vw, 2rem); 
+            margin-top: 1.5rem; 
+            margin-bottom: 1rem; 
+            color: #60a5fa;
+        }
+        
+        .markdown-content h2 { 
+            font-size: clamp(1.25rem, 4vw, 1.75rem); 
+            margin-top: 1.25rem; 
+            margin-bottom: 0.75rem; 
+            color: #93c5fd;
+        }
+        
+        .markdown-content h3 { 
+            font-size: clamp(1rem, 3vw, 1.5rem); 
+            margin-top: 1rem; 
+            margin-bottom: 0.5rem; 
+            color: #bfdbfe;
+        }
+        
+        .markdown-content p { 
+            margin-bottom: 1rem; 
+            line-height: 1.6; 
+        }
+        
+        .markdown-content ul, .markdown-content ol { 
+            padding-left: 1.5rem; 
+            margin-bottom: 1rem; 
+        }
+        
+        .markdown-content code { 
+            background: rgba(37, 99, 235, 0.1); 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-family: 'JetBrains Mono', monospace;
+            color: #60a5fa;
+            word-break: break-word;
+        }
+        
+        .markdown-content pre { 
+            background: var(--code-bg); 
+            color: #e2e8f0; 
+            padding: 1rem; 
+            border-radius: 8px; 
+            overflow-x: auto; 
+            margin-bottom: 1rem;
+            border: 1px solid #334155;
+        }
+        
+        .markdown-content blockquote { 
+            border-left: 4px solid var(--primary-color); 
+            padding-left: 1rem; 
+            margin-left: 0; 
+            font-style: italic; 
+            color: #94a3b8; 
+            background: rgba(37, 99, 235, 0.05);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(37, 99, 235, 0.1);
+            border-left-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Offline indicator */
+        .offline-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--terminal-red);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 9999;
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Animated background elements -->
+    <div class="bg-grid"></div>
+    <div class="binary-rain" id="binaryRain"></div>
+    <div class="floating-code" style="top: 10%; left: 5%;">{ ... }</div>
+    <div class="floating-code" style="top: 30%; left: 80%;">function()</div>
+    <div class="floating-code" style="top: 70%; left: 15%;">const dev = true;</div>
+    
+    <!-- Offline Indicator -->
+    <div class="offline-indicator" id="offlineIndicator">
+        <i class="fas fa-wifi-slash me-2"></i>You are offline
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm fixed-top">
+        <div class="container-fluid">            
+            <a class="navbar-brand" href="{% url 'accounts:home' %}">
+                <i class="fas fa-code me-2"></i>CodeLab<span class="text-warning">Dev</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'courses:course_list' %}">
+                            <i class="fas fa-laptop-code me-1 d-lg-none d-xl-inline"></i>Courses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'community:index' %}">
+                            <i class="fas fa-code-branch me-1 d-lg-none d-xl-inline"></i>Community
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'community:leaderboard' %}">
+                            <i class="fas fa-trophy me-1 d-lg-none d-xl-inline"></i>Leaderboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:about' %}">
+                            <i class="fas fa-info-circle me-1 d-lg-none d-xl-inline"></i>About
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:contact' %}">
+                            <i class="fas fa-envelope me-1 d-lg-none d-xl-inline"></i>Contact
+                        </a>
+                    </li>
+                    {% if user.is_staff or user.is_superuser %}
+                    <li class="nav-item">
+                        <a class="nav-link text-warning" href="{% url 'accounts:admin_dashboard' %}">
+                            <i class="fas fa-terminal me-1 d-lg-none d-xl-inline"></i>Admin
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                <div class="d-flex align-items-center">
+                    <!-- Authentication State -->
+                    {% if user.is_authenticated %}
+                        <!-- Authenticated User Menu -->
+                        <!-- Notifications -->
+                        <div class="dropdown me-3">
+                            <button class="btn btn-dark position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-bell"></i>
+                                {% if notifications and notifications.count > 0 %}
+                                <span class="badge bg-danger notification-badge">{{ notifications.count }}</span>
+                                {% endif %}
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end p-0" style="width: 350px; background: rgba(15, 23, 42, 0.95); border: 1px solid #334155;">
+                                <div class="card border-0 bg-transparent">
+                                    <div class="card-header d-flex justify-content-between align-items-center bg-dark">
+                                        <h6 class="mb-0">Notifications</h6>
+                                        <a href="{% url 'accounts:mark_all_notifications_read' %}" class="btn btn-sm btn-link text-primary">Mark all read</a>
+                                    </div>
+                                    <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                                        {% for notification in notifications|slice:":5" %}
+                                        <a href="{{ notification.link|default:'#' }}" class="list-group-item list-group-item-action bg-transparent text-light {% if not notification.is_read %}bg-primary bg-opacity-10{% endif %}" data-notif-id="{{ notification.id }}">
+                                            <div class="d-flex">
+                                                <div class="flex-shrink-0">
+                                                    <i class="fas fa-{% if 'exam' in notification.message|lower %}file-code{% elif 'assignment' in notification.message|lower %}tasks{% elif 'code' in notification.message|lower %}code{% else %}terminal{% endif %} text-primary"></i>
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <p class="mb-1">{{ notification.message|truncatechars:80 }}</p>
+                                                    <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+                                                </div>
+                                                {% if not notification.is_read %}
+                                                <span class="badge bg-primary badge-pill">New</span>
+                                                {% endif %}
+                                            </div>
+                                        </a>
+                                        {% empty %}
+                                        <div class="list-group-item text-center text-muted py-4 bg-transparent">
+                                            <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                                            <p>No notifications</p>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="card-footer text-center bg-dark">
+                                        <a href="#" class="text-decoration-none text-primary">View all notifications</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- User Profile Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn d-flex align-items-center p-0 text-light" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                {% if user.profile.profile_picture %}
+                                <img src="{{ user.profile.profile_picture.url }}" class="avatar me-2" alt="Profile" loading="lazy">
+                                {% else %}
+                                <div class="avatar bg-primary text-white d-flex align-items-center justify-content-center me-2">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                {% endif %}
+                                <span class="d-none d-md-inline">{{ user.username|truncatechars:15 }}</span>
+                                <i class="fas fa-chevron-down ms-2"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end bg-dark border border-secondary">
+                                <li><a class="dropdown-item text-light" href="{% url 'accounts:dashboard' %}"><i class="fas fa-terminal me-2"></i>Dashboard</a></li>
+                                <li><a class="dropdown-item text-light" href="{% url 'accounts:profile_settings' %}"><i class="fas fa-user-cog me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item text-light" href="{% url 'courses:my_courses' %}"><i class="fas fa-code me-2"></i>My Courses</a></li>
+                                <li><a class="dropdown-item text-light" href="{% url 'courses:my_certificates' %}"><i class="fas fa-certificate me-2"></i>Certificates</a></li>
+                                <li><hr class="dropdown-divider bg-secondary"></li>
+                                {% if user.profile.points %}
+                                <li class="px-3 py-2">
+                                    <div class="d-flex align-items-center text-warning">
+                                        <i class="fas fa-star me-2"></i>
+                                        <span>{{ user.profile.points }} Dev Points</span>
+                                    </div>
+                                </li>
+                                {% endif %}
+                                <li><a class="dropdown-item text-light" href="{% url 'accounts:change_password' %}"><i class="fas fa-key me-2"></i>Change Password</a></li>
+                                <li><hr class="dropdown-divider bg-secondary"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <!-- Non-Authenticated User Menu -->
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'accounts:login' %}" class="btn btn-outline-light">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login
+                            </a>
+                            <a href="{% url 'accounts:register' %}" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-2"></i>Register
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile sidebar overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <div class="container-fluid mt-5 pt-4">
+        <div class="row">
+            <!-- Sidebar (only shown for authenticated users) -->
+            {% block sidebar %}
+            {% if user.is_authenticated %}
+            <div class="col-lg-3 col-xl-2 d-none d-lg-block sidebar" id="sidebar">
+                <div class="sticky-top" style="top: calc(var(--header-height) + 20px);">
+                    <!-- Profile Summary -->
+                    <div class="text-center mb-4">
+                        {% if user.profile.profile_picture %}
+                        <img src="{{ user.profile.profile_picture.url }}" class="avatar avatar-lg mb-3" alt="Profile" loading="lazy">
+                        {% else %}
+                        <div class="avatar avatar-lg bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="font-size: 2.5rem;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        {% endif %}
+                        <h6 class="mb-1">{{ user.get_full_name|default:user.username|truncatechars:20 }}</h6>
+                        <p class="text-muted small mb-2">{{ user.email|truncatechars:25 }}</p>
+                        {% if user.profile.level %}
+                        <span class="badge bg-primary bg-opacity-25 border border-primary">
+                            <i class="fas fa-layer-group me-1"></i>Level {{ user.profile.level }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Progress -->
+                    {% if user.profile.progress_to_next_level %}
+                    <div class="px-3 mb-4">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-muted">Level Progress</span>
+                            <span class="text-primary">{{ user.profile.progress_to_next_level|floatformat:0 }}%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: {{ user.profile.progress_to_next_level }}%"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Navigation Links -->
+                    <nav class="mt-3">
+                        <a href="{% url 'accounts:dashboard' %}" class="sidebar-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <i class="fas fa-terminal"></i> Dashboard
+                        </a>
+                        <a href="{% url 'courses:my_courses' %}" class="sidebar-item {% if request.resolver_match.url_name == 'my_courses' %}active{% endif %}">
+                            <i class="fas fa-code"></i> My Courses
+                        </a>
+                        <a href="{% url 'courses:course_list' %}" class="sidebar-item {% if 'course_list' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="fas fa-laptop-code"></i> Course Catalog
+                        </a>
+                        <a href="{% url 'community:index' %}" class="sidebar-item {% if 'community' in request.resolver_match.namespace %}active{% endif %}">
+                            <i class="fas fa-code-branch"></i> Community
+                        </a>
+                        <a href="{% url 'courses:my_certificates' %}" class="sidebar-item {% if request.resolver_match.url_name == 'my_certificates' %}active{% endif %}">
+                            <i class="fas fa-certificate"></i> Certificates
+                        </a>
+                        <a href="{% url 'accounts:about' %}" class="sidebar-item {% if request.resolver_match.url_name == 'about' %}active{% endif %}">
+                            <i class="fas fa-info-circle"></i> About
+                        </a>
+                        <a href="{% url 'accounts:contact' %}" class="sidebar-item {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">
+                            <i class="fas fa-envelope"></i> Contact
+                        </a>
+                        <a href="{% url 'accounts:profile_settings' %}" class="sidebar-item {% if request.resolver_match.url_name == 'profile_settings' %}active{% endif %}">
+                            <i class="fas fa-cog"></i> Settings
+                        </a>
+                        
+                        <!-- Admin Links -->
+                        {% if user.is_staff or user.is_superuser %}
+                        <div class="px-3 mt-4 mb-2">
+                            <small class="text-uppercase text-muted">Admin Panel</small>
+                        </div>
+                        <a href="{% url 'accounts:admin_dashboard' %}" class="sidebar-item text-warning">
+                            <i class="fas fa-terminal"></i> Admin Dashboard
+                        </a>
+                        <a href="{% url 'accounts:admin_user_list' %}" class="sidebar-item">
+                            <i class="fas fa-users-cog"></i> Manage Users
+                        </a>
+                        <a href="{% url 'accounts:course_list' %}" class="sidebar-item">
+                            <i class="fas fa-book-code"></i> Manage Courses
+                        </a>
+                        {% endif %}
+                    </nav>
+                    
+                    <!-- Quick Stats -->
+                    <div class="mt-5 px-3">
+                        <div class="card bg-dark border-secondary">
+                            <div class="card-body p-3">
+                                <h6 class="card-title mb-3 text-light">Quick Stats</h6>
+                                <div class="d-flex justify-content-between small mb-2 text-muted">
+                                    <span>Dev Points</span>
+                                    <span class="fw-bold text-warning">{{ user.profile.points|default:0 }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between small mb-2 text-muted">
+                                    <span>Enrolled</span>
+                                    <span class="fw-bold text-primary">{{ user.enrollments.count }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span>Completed</span>
+                                    <span class="fw-bold text-success">{{ user.certificates.count }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endblock %}
+            
+            <!-- Main Content -->
+            <div class="{% if user.is_authenticated %}col-lg-9 col-xl-10{% else %}col-12{% endif %}">
+                <div class="content-wrapper animate-fadeIn">
+                    {% if not user.is_authenticated and request.path == '/' %}
+                        <!-- Hero Section for Non-Authenticated Users -->
+                        <div class="hero-section">
+                            <div class="container">
+                                <div class="row align-items-center">
+                                    <div class="col-lg-6 mb-5 mb-lg-0">
+                                        <div class="hero-content">
+                                            <h1 class="hero-title animate-fadeIn">Code Like a Pro</h1>
+                                            <p class="hero-subtitle animate-fadeIn" style="animation-delay: 0.2s;">
+                                                Master software development with interactive courses, real-world projects, 
+                                                and a thriving developer community.
+                                            </p>
+                                            <div class="d-flex flex-wrap gap-3 animate-fadeIn" style="animation-delay: 0.4s;">
+                                                <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg animate-bounce">
+                                                    <i class="fas fa-rocket me-2"></i>Start Free
+                                                </a>
+                                                <a href="{% url 'courses:course_list' %}" class="btn btn-outline-light btn-lg">
+                                                    <i class="fas fa-play-circle me-2"></i>Explore Courses
+                                                </a>
+                                                <a href="{% url 'accounts:about' %}" class="btn btn-outline-light btn-lg">
+                                                    <i class="fas fa-info-circle me-2"></i>Learn More
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="row g-4">
+                                            <div class="col-md-6">
+                                                <div class="card feature-card">
+                                                    <div class="card-body text-center">
+                                                        <div class="feature-icon mx-auto">
+                                                            <i class="fas fa-code"></i>
+                                                        </div>
+                                                        <h5 class="card-title">Interactive Coding</h5>
+                                                        <p class="card-text">Learn by doing with our built-in code editor and real-time feedback.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card feature-card">
+                                                    <div class="card-body text-center">
+                                                        <div class="feature-icon mx-auto">
+                                                            <i class="fas fa-project-diagram"></i>
+                                                        </div>
+                                                        <h5 class="card-title">Real Projects</h5>
+                                                        <p class="card-text">Build portfolio-worthy projects that showcase your skills.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card feature-card">
+                                                    <div class="card-body text-center">
+                                                        <div class="feature-icon mx-auto">
+                                                            <i class="fas fa-users"></i>
+                                                        </div>
+                                                        <h5 class="card-title">Community</h5>
+                                                        <p class="card-text">Connect with developers worldwide and collaborate on projects.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card feature-card">
+                                                    <div class="card-body text-center">
+                                                        <div class="feature-icon mx-auto">
+                                                            <i class="fas fa-certificate"></i>
+                                                        </div>
+                                                        <h5 class="card-title">Certifications</h5>
+                                                        <p class="card-text">Earn recognized certificates to boost your career prospects.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- Messages -->
+                        {% if messages %}
+                        <div class="messages mb-4">
+                            {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show bg-dark border-{{ message.tags }}" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>{{ message }}
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Page Header -->
+                        {% block page_header %}
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+                            <div class="mb-3 mb-md-0">
+                                <h2 class="mb-1 text-light">{% block page_title %}Dev Dashboard{% endblock %}</h2>
+                                <p class="text-muted mb-0">{% block page_subtitle %}Welcome to your development workspace{% endblock %}</p>
+                            </div>
+                            <div>
+                                {% block page_actions %}{% endblock %}
+                            </div>
+                        </div>
+                        {% endblock %}
+                        
+                        <!-- Main Content Block -->
+                        {% block content %}{% endblock %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark border-top border-secondary py-5 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5 class="mb-3"><i class="fas fa-code me-2 text-primary"></i>CodeLab<span class="text-warning">Dev</span></h5>
+                    <p class="text-light">Master software development with interactive coding courses, real-world projects, and a thriving developer community.</p>
+                    <div class="mt-3">
+                        <a href="#" class="text-primary me-3" aria-label="GitHub"><i class="fab fa-github fa-lg"></i></a>
+                        <a href="#" class="text-primary me-3" aria-label="Stack Overflow"><i class="fab fa-stack-overflow fa-lg"></i></a>
+                        <a href="#" class="text-primary me-3" aria-label="Discord"><i class="fab fa-discord fa-lg"></i></a>
+                        <a href="#" class="text-primary" aria-label="Twitter"><i class="fab fa-twitter fa-lg"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="mb-3">Platform</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{% url 'courses:course_list' %}" class="text-white-50 text-decoration-none"><i class="fas fa-chevron-right me-1 text-primary"></i>Courses</a></li>
+                        <li class="mb-2"><a href="{% url 'community:index' %}" class="text-white-50 text-decoration-none"><i class="fas fa-chevron-right me-1 text-primary"></i>Community</a></li>
+                        <li class="mb-2"><a href="{% url 'community:leaderboard' %}" class="text-white-50 text-decoration-none"><i class="fas fa-chevron-right me-1 text-primary"></i>Leaderboard</a></li>
+                        {% if user.is_authenticated %}
+                        <li class="mb-2"><a href="{% url 'accounts:dashboard' %}" class="text-white-50 text-decoration-none"><i class="fas fa-chevron-right me-1 text-primary"></i>Dashboard</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h6 class="mb-3">Company</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{% url 'accounts:about' %}" class="text-white-50 text-decoration-none"><i class="fas fa-chevron-right me-1 text-primary"></i>About Us</a></li>
+                        <li class="mb-2"><a href="{% url 'accounts:contact' %}" class="text-white-50 text-decoration-none"><i class="fas fa-chevron-right me-1 text-primary"></i>Contact Us</a></li>
+                        <li class="mb-2"><a href="{% url 'accounts:career_list' %}" class="text-white-50 text-decoration-none"><i class="fas fa-chevron-right me-1 text-primary"></i>Careers</a></li>
+                        <li class="mb-2"><a href="{% url 'accounts:blog_list' %}" class="text-white-50 text-decoration-none"><i class="fas fa-chevron-right me-1 text-primary"></i>Blog</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h6 class="mb-3">Support</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{% url 'accounts:support' %}" class="text-white-50 text-decoration-none"><i class="fas fa-chevron-right me-1 text-primary"></i>Help Center</a></li>
+                        <li class="mb-2"><a href="{% url 'accounts:faq' %}" class="text-white-50 text-decoration-none"><i class="fas fa-chevron-right me-1 text-primary"></i>FAQ</a></li>
+                        <li class="mb-2"><a href="{% url 'accounts:privacy' %}" class="text-white-50 text-decoration-none"><i class="fas fa-chevron-right me-1 text-primary"></i>Privacy Policy</a></li>
+                        <li class="mb-2"><a href="{% url 'accounts:terms' %}" class="text-white-50 text-decoration-none"><i class="fas fa-chevron-right me-1 text-primary"></i>Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <h6 class="mb-3">Dev Newsletter</h6>
+                    <form class="d-flex mb-3">
+                        <input type="email" class="form-control bg-dark border-secondary text-light me-2" placeholder="dev@email.com" required>
+                        <button class="btn btn-primary">Subscribe</button>
+                    </form>
+                    <p class="text-white-50 small">Get the latest updates on new courses, tutorials, and developer tips.</p>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <h6 class="mb-3">Contact Info</h6>
+                    <ul class="list-unstyled text-white-50">
+                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2 text-primary"></i>123 Developer St, Tech City</li>
+                        <li class="mb-2"><i class="fas fa-phone me-2 text-primary"></i>+1 (555) 123-4567</li>
+                        <li><i class="fas fa-envelope me-2 text-primary"></i>support@codelabdev.com</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="bg-secondary">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0 text-white-50">&copy; {% now "Y" %} CodeLab<span class="text-warning">Dev</span>. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p class="mb-0 text-white-50">Made with <i class="fas fa-heart text-danger"></i> and <i class="fas fa-code text-primary"></i> for developers</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js for Dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // Mobile sidebar toggle with improved UX
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                    sidebarOverlay.classList.toggle('show');
+                    document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
+                });
+                
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.classList.remove('show');
+                    document.body.style.overflow = '';
+                });
+                
+                // Close sidebar when clicking on links on mobile
+                if (window.innerWidth < 992) {
+                    document.querySelectorAll('.sidebar-item').forEach(link => {
+                        link.addEventListener('click', () => {
+                            sidebar.classList.remove('show');
+                            sidebarOverlay.classList.remove('show');
+                            document.body.style.overflow = '';
+                        });
+                    });
+                }
+            }
+            
+            // Mark notification as read
+            document.querySelectorAll('[data-notif-id]').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    const notifId = this.getAttribute('data-notif-id');
+                    fetch(`/accounts/notification/read/${notifId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'same-origin'
+                    });
+                });
+            });
+            
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(() => {
+                document.querySelectorAll('.alert').forEach(alert => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+            
+            // Real-time notification polling for authenticated users
+            {% if user.is_authenticated %}
+            setInterval(() => {
+                fetch('{% url "accounts:fetch_unread_notifications" %}')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.count > 0) {
+                            // Update notification badge
+                            const badge = document.querySelector('.notification-badge');
+                            if (badge) {
+                                badge.textContent = data.count;
+                            } else {
+                                // Create badge if it doesn't exist
+                                const bellBtn = document.querySelector('#notificationDropdown');
+                                if (bellBtn) {
+                                    const newBadge = document.createElement('span');
+                                    newBadge.className = 'badge bg-danger notification-badge';
+                                    newBadge.textContent = data.count;
+                                    bellBtn.appendChild(newBadge);
+                                }
+                            }
+                            
+                            // Add subtle notification animation
+                            const notificationIcon = document.querySelector('#notificationDropdown i');
+                            notificationIcon.style.transform = 'scale(1.2)';
+                            setTimeout(() => {
+                                notificationIcon.style.transform = 'scale(1)';
+                            }, 300);
+                        }
+                    });
+            }, 30000); // Poll every 30 seconds
+            {% endif %}
+            
+            // Add hover effect to cards on touch devices
+            if ('ontouchstart' in window) {
+                document.querySelectorAll('.card').forEach(card => {
+                    card.addEventListener('touchstart', function() {
+                        this.classList.add('hover');
+                    });
+                    
+                    card.addEventListener('touchend', function() {
+                        setTimeout(() => {
+                            this.classList.remove('hover');
+                        }, 300);
+                    });
+                });
+            }
+            
+            // Typing animation for terminal text
+            const terminalText = document.querySelector('.terminal-text');
+            if (terminalText && !terminalText.classList.contains('hero-subtitle')) {
+                const text = terminalText.textContent;
+                terminalText.textContent = '';
+                terminalText.style.width = 'fit-content';
+                terminalText.style.whiteSpace = 'nowrap';
+                terminalText.style.borderRight = '2px solid #10b981';
+                
+                let i = 0;
+                function typeWriter() {
+                    if (i < text.length) {
+                        terminalText.textContent += text.charAt(i);
+                        i++;
+                        setTimeout(typeWriter, 50);
+                    } else {
+                        // Start blinking cursor after typing
+                        setInterval(() => {
+                            terminalText.style.borderRightColor = 
+                                terminalText.style.borderRightColor === 'transparent' ? '#10b981' : 'transparent';
+                        }, 500);
+                    }
+                }
+                
+                // Start typing after a delay
+                setTimeout(typeWriter, 1000);
+            }
+            
+            // Add parallax effect to floating code elements
+            window.addEventListener('scroll', () => {
+                document.querySelectorAll('.floating-code').forEach((el, index) => {
+                    const speed = 0.5 + (index * 0.1);
+                    const yPos = -(window.pageYOffset * speed);
+                    el.style.transform = `translateY(${yPos}px) rotate(${window.pageYOffset * 0.1}deg)`;
+                });
+            });
+            
+            // Create binary rain effect
+            function createBinaryRain() {
+                const container = document.getElementById('binaryRain');
+                if (!container) return;
+                
+                for (let i = 0; i < 50; i++) {
+                    const digit = document.createElement('div');
+                    digit.className = 'binary-digit';
+                    digit.textContent = Math.random() > 0.5 ? '1' : '0';
+                    digit.style.left = Math.random() * 100 + '%';
+                    digit.style.animationDuration = (Math.random() * 5 + 3) + 's';
+                    digit.style.animationDelay = Math.random() * 5 + 's';
+                    digit.style.opacity = Math.random() * 0.5 + 0.3;
+                    container.appendChild(digit);
+                    
+                    // Remove digit after animation completes
+                    setTimeout(() => {
+                        digit.remove();
+                    }, parseFloat(digit.style.animationDuration) * 1000 + parseFloat(digit.style.animationDelay) * 1000);
+                }
+            }
+            
+            // Start binary rain and repeat
+            createBinaryRain();
+            setInterval(createBinaryRain, 1000);
+            
+            // Offline/online detection
+            window.addEventListener('online', () => {
+                document.getElementById('offlineIndicator').style.display = 'none';
+            });
+            
+            window.addEventListener('offline', () => {
+                document.getElementById('offlineIndicator').style.display = 'block';
+            });
+            
+            // Lazy load images
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            img.src = img.dataset.src;
+                            img.classList.add('loaded');
+                            observer.unobserve(img);
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('img[data-src]').forEach(img => {
+                    imageObserver.observe(img);
+                });
+            }
+        });
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Responsive adjustments on window resize
+        window.addEventListener('resize', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            if (window.innerWidth >= 992) {
+                if (sidebar) {
+                    sidebar.classList.remove('show');
+                }
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.remove('show');
+                }
+                document.body.style.overflow = '';
+            }
+        });
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Form validation enhancement
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const requiredFields = this.querySelectorAll('[required]');
+                let isValid = true;
+                
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        isValid = false;
+                        field.classList.add('is-invalid');
+                    } else {
+                        field.classList.remove('is-invalid');
+                    }
+                });
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    // Show error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'alert alert-danger mt-3';
+                    errorDiv.textContent = 'Please fill in all required fields.';
+                    this.appendChild(errorDiv);
+                    
+                    setTimeout(() => {
+                        errorDiv.remove();
+                    }, 5000);
+                }
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

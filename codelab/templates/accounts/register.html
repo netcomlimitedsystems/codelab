@@ -1,0 +1,1410 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - CodeLab{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-8 col-xl-6 col-xxl-5">
+            <!-- Progress Steps -->
+            <div class="registration-progress mb-3">
+                <div class="steps-container">
+                    <div class="step active" data-step="1">
+                        <div class="step-circle">1</div>
+                        <div class="step-label d-none d-sm-block">Personal</div>
+                    </div>
+                    <div class="step" data-step="2">
+                        <div class="step-circle">2</div>
+                        <div class="step-label d-none d-sm-block">Account</div>
+                    </div>
+                    <div class="step" data-step="3">
+                        <div class="step-circle">3</div>
+                        <div class="step-label d-none d-sm-block">Password</div>
+                    </div>
+                    <div class="step" data-step="4">
+                        <div class="step-circle">4</div>
+                        <div class="step-label d-none d-sm-block">Terms</div>
+                    </div>
+                </div>
+                <div class="progress mt-2" style="height: 4px;">
+                    <div class="progress-bar progress-bar-animated" role="progressbar" style="width: 25%" id="registrationProgress"></div>
+                </div>
+            </div>
+
+            <!-- Registration Card -->
+            <div class="card shadow-sm border-0 registration-card">
+                <div class="card-header bg-primary text-white py-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="step-indicator me-2">
+                                <span class="current-step fw-semibold fs-6">Step <span id="currentStepNumber">1</span></span>
+                                <span class="total-steps text-white-50 ms-1">/ 4</span>
+                            </div>
+                            <h5 class="mb-0">
+                                <i class="fas fa-user-plus me-2"></i>
+                                <span id="stepTitle">Personal Information</span>
+                            </h5>
+                        </div>
+                        <span class="badge bg-white text-primary fs-7 px-2 py-1">
+                            <i class="fas fa-clock me-1"></i>
+                            <span id="formTimer">10:00</span>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-body p-3 p-md-4">
+                    <!-- Security Notice -->
+                    <div class="alert alert-warning border-start border-3 border-warning mb-3 p-2" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-shield-alt text-warning me-2"></i>
+                            <div>
+                                <strong class="d-block fs-7">Secure Registration</strong>
+                                <small class="text-muted fs-8">Your information is protected</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Honeypot Field -->
+                    <div class="d-none">
+                        <input type="text" id="honeypot" name="honeypot" tabindex="-1" autocomplete="off">
+                    </div>
+
+                    <form method="POST" action="{% url 'accounts:register' %}" id="registrationForm" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Step 1: Personal Information - VISIBLE BY DEFAULT -->
+                        <div class="form-step active-step" id="step1">
+                            <div class="step-header text-center mb-3">
+                                <div class="step-icon mb-2">
+                                    <div class="icon-circle bg-primary bg-opacity-10 p-2 rounded-circle d-inline-flex">
+                                        <i class="fas fa-user-circle fa-2x text-primary"></i>
+                                    </div>
+                                </div>
+                                <h6 class="fw-bold mb-1">Personal Details</h6>
+                                <p class="text-muted mb-2 fs-8">Start with your basic information</p>
+                            </div>
+
+                            <!-- Full Name Field -->
+                            <div class="mb-3">
+                                <label for="id_full_name" class="form-label fw-semibold fs-7">
+                                    <i class="fas fa-user me-1 text-primary"></i>Full Name *
+                                </label>
+                                <div class="input-group input-group-md">
+                                    <span class="input-group-text bg-light border-end-0 py-2">
+                                        <i class="fas fa-user text-muted fs-7"></i>
+                                    </span>
+                                    <input type="text" 
+                                           name="full_name" 
+                                           class="form-control border-start-0 py-2" 
+                                           id="id_full_name" 
+                                           placeholder="Enter your full name"
+                                           required
+                                           autocomplete="name">
+                                </div>
+                                <div class="form-text mt-1 fs-8">
+                                    <i class="fas fa-info-circle me-1 text-muted"></i>
+                                    Your legal name as it appears on official documents
+                                </div>
+                            </div>
+
+                            <!-- Email Field -->
+                            <div class="mb-3">
+                                <label for="id_email" class="form-label fw-semibold fs-7">
+                                    <i class="fas fa-envelope me-1 text-primary"></i>Email Address *
+                                </label>
+                                <div class="input-group input-group-md">
+                                    <span class="input-group-text bg-light border-end-0 py-2">
+                                        <i class="fas fa-at text-muted fs-7"></i>
+                                    </span>
+                                    <input type="email" 
+                                           name="email" 
+                                           class="form-control border-start-0 py-2" 
+                                           id="id_email" 
+                                           placeholder="your.email@example.com"
+                                           required
+                                           autocomplete="email">
+                                    <button class="btn btn-outline-secondary border-start-0 py-2" 
+                                            type="button" 
+                                            id="verifyEmailBtn"
+                                            title="Verify email">
+                                        <i class="fas fa-check fs-7"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text mt-1 fs-8">
+                                    <i class="fas fa-shield-alt me-1 text-muted"></i>
+                                    We'll send a verification link
+                                </div>
+                                <div class="mt-1 fs-8" id="emailVerificationStatus"></div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Account Details -->
+                        <div class="form-step" id="step2" style="display: none;">
+                            <div class="step-header text-center mb-3">
+                                <div class="step-icon mb-2">
+                                    <div class="icon-circle bg-info bg-opacity-10 p-2 rounded-circle d-inline-flex">
+                                        <i class="fas fa-user-tag fa-2x text-info"></i>
+                                    </div>
+                                </div>
+                                <h6 class="fw-bold mb-1">Account Details</h6>
+                                <p class="text-muted mb-2 fs-8">Choose your username</p>
+                            </div>
+
+                            <!-- Username Field -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="id_username" class="form-label fw-semibold fs-7">
+                                        <i class="fas fa-user-circle me-1 text-primary"></i>Username *
+                                    </label>
+                                    <span class="badge bg-light text-muted fs-8" id="usernameStatus">Checking...</span>
+                                </div>
+                                <div class="input-group input-group-md">
+                                    <span class="input-group-text bg-light border-end-0 py-2">
+                                        <i class="fas fa-user text-muted fs-7"></i>
+                                    </span>
+                                    <input type="text" 
+                                           name="username" 
+                                           class="form-control border-start-0 py-2" 
+                                           id="id_username" 
+                                           placeholder="Choose a username"
+                                           required
+                                           minlength="3"
+                                           maxlength="30"
+                                           pattern="^[a-zA-Z0-9_\-\.]+$"
+                                           autocomplete="username"
+                                           autocapitalize="none">
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <div class="form-text fs-8">
+                                        <i class="fas fa-info-circle me-1 text-muted"></i>
+                                        3-30 chars: letters, numbers, . _ -
+                                    </div>
+                                    <div id="usernameAvailability" class="text-end fs-8"></div>
+                                </div>
+                            </div>
+
+                            <!-- Display Name Field -->
+                            <div class="mb-3">
+                                <label for="display_name" class="form-label fw-semibold fs-7">
+                                    <i class="fas fa-id-card me-1 text-primary"></i>Display Name (Optional)
+                                </label>
+                                <div class="input-group input-group-md">
+                                    <span class="input-group-text bg-light border-end-0 py-2">
+                                        <i class="fas fa-signature text-muted fs-7"></i>
+                                    </span>
+                                    <input type="text" 
+                                           name="display_name" 
+                                           class="form-control border-start-0 py-2" 
+                                           id="display_name" 
+                                           placeholder="How you appear to others"
+                                           autocomplete="nickname">
+                                </div>
+                                <div class="form-text mt-1 fs-8">
+                                    <i class="fas fa-lightbulb me-1 text-muted"></i>
+                                    Shown instead of username
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Security -->
+                        <div class="form-step" id="step3" style="display: none;">
+                            <div class="step-header text-center mb-3">
+                                <div class="step-icon mb-2">
+                                    <div class="icon-circle bg-success bg-opacity-10 p-2 rounded-circle d-inline-flex">
+                                        <i class="fas fa-lock fa-2x text-success"></i>
+                                    </div>
+                                </div>
+                                <h6 class="fw-bold mb-1">Account Security</h6>
+                                <p class="text-muted mb-2 fs-8">Create a strong password</p>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <!-- Password Field -->
+                                <div class="col-md-6">
+                                    <div class="password-field">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <label for="id_password1" class="form-label fw-semibold fs-7">
+                                                <i class="fas fa-key me-1 text-primary"></i>Password *
+                                            </label>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-secondary py-0" 
+                                                    id="generatePassword"
+                                                    title="Generate password">
+                                                <i class="fas fa-random me-1"></i>Generate
+                                            </button>
+                                        </div>
+                                        <div class="input-group input-group-md">
+                                            <span class="input-group-text bg-light border-end-0 py-2">
+                                                <i class="fas fa-lock text-muted fs-7"></i>
+                                            </span>
+                                            <input type="password" 
+                                                   name="password1" 
+                                                   class="form-control border-start-0 py-2" 
+                                                   id="id_password1" 
+                                                   placeholder="Create password"
+                                                   required
+                                                   minlength="8"
+                                                   autocomplete="new-password">
+                                            <button class="btn btn-outline-secondary border-start-0 py-2" 
+                                                    type="button" 
+                                                    id="togglePassword1">
+                                                <i class="fas fa-eye fs-7"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Confirm Password Field -->
+                                <div class="col-md-6">
+                                    <div class="password-field">
+                                        <label for="id_password2" class="form-label fw-semibold fs-7">
+                                            <i class="fas fa-key me-1 text-primary"></i>Confirm Password *
+                                        </label>
+                                        <div class="input-group input-group-md">
+                                            <span class="input-group-text bg-light border-end-0 py-2">
+                                                <i class="fas fa-lock text-muted fs-7"></i>
+                                            </span>
+                                            <input type="password" 
+                                                   name="password2" 
+                                                   class="form-control border-start-0 py-2" 
+                                                   id="id_password2" 
+                                                   placeholder="Re-enter password"
+                                                   required
+                                                   minlength="8"
+                                                   autocomplete="new-password">
+                                            <button class="btn btn-outline-secondary border-start-0 py-2" 
+                                                    type="button" 
+                                                    id="togglePassword2">
+                                                <i class="fas fa-eye fs-7"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Password Requirements -->
+                            <div class="card border mb-3">
+                                <div class="card-header bg-light py-2">
+                                    <h6 class="mb-0 fs-7">
+                                        <i class="fas fa-list-check me-1"></i>
+                                        Password Requirements
+                                    </h6>
+                                </div>
+                                <div class="card-body p-2">
+                                    <div class="row g-1">
+                                        <div class="col-6 col-md-4">
+                                            <div class="requirement" data-requirement="length">
+                                                <i class="fas fa-times-circle text-danger me-1 fs-8"></i>
+                                                <small class="fs-8">8+ characters</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="requirement" data-requirement="uppercase">
+                                                <i class="fas fa-times-circle text-danger me-1 fs-8"></i>
+                                                <small class="fs-8">Uppercase letter</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="requirement" data-requirement="lowercase">
+                                                <i class="fas fa-times-circle text-danger me-1 fs-8"></i>
+                                                <small class="fs-8">Lowercase letter</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="requirement" data-requirement="number">
+                                                <i class="fas fa-times-circle text-danger me-1 fs-8"></i>
+                                                <small class="fs-8">Number (0-9)</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="requirement" data-requirement="special">
+                                                <i class="fas fa-times-circle text-danger me-1 fs-8"></i>
+                                                <small class="fs-8">Special character</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="requirement" data-requirement="match">
+                                                <i class="fas fa-times-circle text-danger me-1 fs-8"></i>
+                                                <small class="fs-8">Passwords match</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Password Strength Meter -->
+                                    <div class="mt-2">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <small class="text-muted fs-8">Password Strength:</small>
+                                            <small class="text-muted fw-semibold fs-8" id="strengthText">Very Weak</small>
+                                        </div>
+                                        <div class="progress" style="height: 6px; border-radius: 3px;">
+                                            <div class="progress-bar bg-danger" 
+                                                 id="passwordStrength" 
+                                                 role="progressbar" 
+                                                 style="width: 10%; border-radius: 3px;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Terms & Conditions -->
+                        <div class="form-step" id="step4" style="display: none;">
+                            <div class="step-header text-center mb-3">
+                                <div class="step-icon mb-2">
+                                    <div class="icon-circle bg-warning bg-opacity-10 p-2 rounded-circle d-inline-flex">
+                                        <i class="fas fa-file-contract fa-2x text-warning"></i>
+                                    </div>
+                                </div>
+                                <h6 class="fw-bold mb-1">Terms & Conditions</h6>
+                                <p class="text-muted mb-2 fs-8">Review and accept our terms</p>
+                            </div>
+
+                            <!-- Terms & Privacy -->
+                            <div class="mb-3">
+                                <div class="card border">
+                                    <div class="card-body p-3">
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" 
+                                                   class="form-check-input" 
+                                                   id="terms" 
+                                                   name="terms" 
+                                                   required>
+                                            <label class="form-check-label fs-7" for="terms">
+                                                <i class="fas fa-file-contract me-2"></i>
+                                                I agree to the 
+                                                <a href="#" class="text-decoration-none fw-semibold text-primary">Terms</a> 
+                                                and 
+                                                <a href="#" class="text-decoration-none fw-semibold text-primary">Privacy Policy</a>
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                        </div>
+                                        
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" 
+                                                   class="form-check-input" 
+                                                   id="age_verification" 
+                                                   name="age_verification" 
+                                                   required>
+                                            <label class="form-check-label fs-7" for="age_verification">
+                                                <i class="fas fa-user-check me-2"></i>
+                                                I confirm I am at least 13 years old
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                        </div>
+                                        
+                                        <div class="form-check">
+                                            <input type="checkbox" 
+                                                   class="form-check-input" 
+                                                   id="newsletter" 
+                                                   name="newsletter"
+                                                   checked>
+                                            <label class="form-check-label fs-7" for="newsletter">
+                                                <i class="fas fa-newspaper me-2"></i>
+                                                Subscribe to newsletter (optional)
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Review Section -->
+                            <div class="card border mb-3">
+                                <div class="card-header bg-light py-2">
+                                    <h6 class="mb-0 fs-7">
+                                        <i class="fas fa-clipboard-check me-1"></i>
+                                        Review Your Information
+                                    </h6>
+                                </div>
+                                <div class="card-body p-2">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <div class="review-item p-2">
+                                                <small class="text-muted d-block mb-1 fs-8">Full Name</small>
+                                                <div class="fw-semibold fs-7" id="reviewFullName">-</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="review-item p-2">
+                                                <small class="text-muted d-block mb-1 fs-8">Email</small>
+                                                <div class="fw-semibold fs-7" id="reviewEmail">-</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="review-item p-2">
+                                                <small class="text-muted d-block mb-1 fs-8">Username</small>
+                                                <div class="fw-semibold fs-7" id="reviewUsername">-</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="form-navigation mt-4 pt-3 border-top">
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-outline-secondary btn-md px-3" id="prevBtn" disabled>
+                                    <i class="fas fa-arrow-left me-1"></i>Previous
+                                </button>
+                                <button type="button" class="btn btn-primary btn-md px-3" id="nextBtn">
+                                    Next Step <i class="fas fa-arrow-right ms-1"></i>
+                                </button>
+                                <button type="submit" 
+                                        class="btn btn-success btn-md px-3" 
+                                        id="submitBtn"
+                                        style="display: none;">
+                                    <i class="fas fa-user-check me-1"></i>
+                                    Create Account
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Display Django messages -->
+                        {% if messages %}
+                        <div class="messages mt-3">
+                            {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show p-2 fs-7">
+                                <i class="fas fa-{{ message.tags|yesno:'check-circle,exclamation-circle,info-circle' }} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </form>
+
+                    <!-- Alternative Registration -->
+                    <div class="text-center mt-3 pt-3 border-top">
+                        <p class="mb-2 text-muted fs-7">Or register with</p>
+                        <div class="row g-2 justify-content-center">
+                            <div class="col-4 col-sm-3 col-md-2">
+                                <button class="btn btn-light border w-100 py-1" id="googleRegister">
+                                    <i class="fab fa-google text-danger"></i>
+                                    <span class="d-none d-sm-inline ms-1 fs-8">Google</span>
+                                </button>
+                            </div>
+                            <div class="col-4 col-sm-3 col-md-2">
+                                <button class="btn btn-light border w-100 py-1" id="githubRegister">
+                                    <i class="fab fa-github"></i>
+                                    <span class="d-none d-sm-inline ms-1 fs-8">GitHub</span>
+                                </button>
+                            </div>
+                            <div class="col-4 col-sm-3 col-md-2">
+                                <button class="btn btn-light border w-100 py-1" id="microsoftRegister">
+                                    <i class="fab fa-microsoft text-primary"></i>
+                                    <span class="d-none d-sm-inline ms-1 fs-8">Microsoft</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-light border-0 py-3">
+                    <div class="text-center">
+                        <p class="mb-2 fs-7">
+                            <i class="fas fa-user-check me-1"></i>
+                            Already have an account?
+                        </p>
+                        <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary px-3 btn-sm">
+                            <i class="fas fa-sign-in-alt me-1"></i>
+                            Sign In
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Features -->
+            <div class="row mt-3 g-2">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center p-2 bg-light rounded">
+                        <i class="fas fa-lock text-success me-2"></i>
+                        <div>
+                            <div class="fw-semibold fs-7">Bank-Level Security</div>
+                            <small class="text-muted fs-8">AES-256 Encryption</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center p-2 bg-light rounded">
+                        <i class="fas fa-shield-alt text-primary me-2"></i>
+                        <div>
+                            <div class="fw-semibold fs-7">GDPR Compliant</div>
+                            <small class="text-muted fs-8">Privacy Protected</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center p-2 bg-light rounded">
+                        <i class="fas fa-user-secret text-info me-2"></i>
+                        <div>
+                            <div class="fw-semibold fs-7">No Data Selling</div>
+                            <small class="text-muted fs-8">Your Data Stays Yours</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize variables
+    let currentStep = 1;
+    const totalSteps = 4;
+    const stepTitles = [
+        "Personal Information",
+        "Account Details",
+        "Account Security",
+        "Terms & Conditions"
+    ];
+    
+    // DOM Elements
+    const form = document.getElementById('registrationForm');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const stepTitle = document.getElementById('stepTitle');
+    const currentStepNumber = document.getElementById('currentStepNumber');
+    const registrationProgress = document.getElementById('registrationProgress');
+    const progressSteps = document.querySelectorAll('.step');
+    const formTimer = document.getElementById('formTimer');
+    
+    // Ensure Step 1 is visible on load
+    showStep(1);
+    updateNavigation();
+    
+    // Timer functionality
+    let timeLeft = 600; // 10 minutes
+    const timerInterval = setInterval(() => {
+        timeLeft--;
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        if (formTimer) {
+            formTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 60) {
+                formTimer.parentElement.classList.add('bg-warning', 'text-dark');
+                formTimer.parentElement.classList.remove('bg-white', 'text-primary');
+            }
+        }
+        
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            showSessionExpired();
+        }
+    }, 1000);
+    
+    // Step Navigation Functions
+    function showStep(stepNumber) {
+        // Hide all steps
+        for (let i = 1; i <= totalSteps; i++) {
+            const stepElement = document.getElementById('step' + i);
+            if (stepElement) {
+                stepElement.style.display = 'none';
+                stepElement.classList.remove('active-step');
+            }
+        }
+        
+        // Show current step
+        const currentStepElement = document.getElementById('step' + stepNumber);
+        if (currentStepElement) {
+            currentStepElement.style.display = 'block';
+            currentStepElement.classList.add('active-step');
+        }
+        
+        // Update UI elements
+        if (stepTitle) stepTitle.textContent = stepTitles[stepNumber - 1];
+        if (currentStepNumber) currentStepNumber.textContent = stepNumber;
+        
+        // Update progress bar
+        const progressPercentage = ((stepNumber - 1) / (totalSteps - 1)) * 100;
+        if (registrationProgress) {
+            registrationProgress.style.width = `${progressPercentage}%`;
+        }
+        
+        // Update step indicators
+        progressSteps.forEach(step => {
+            const stepNum = parseInt(step.getAttribute('data-step'));
+            if (stepNum < stepNumber) {
+                step.classList.add('completed');
+                step.classList.remove('active');
+            } else if (stepNum === stepNumber) {
+                step.classList.add('active');
+                step.classList.remove('completed');
+            } else {
+                step.classList.remove('active', 'completed');
+            }
+        });
+        
+        // Update review section if on last step
+        if (stepNumber === totalSteps) {
+            updateReviewSection();
+        }
+    }
+    
+    function updateNavigation() {
+        // Update navigation buttons
+        if (prevBtn) prevBtn.disabled = currentStep === 1;
+        if (currentStep === totalSteps) {
+            if (nextBtn) nextBtn.style.display = 'none';
+            if (submitBtn) submitBtn.style.display = 'block';
+        } else {
+            if (nextBtn) nextBtn.style.display = 'block';
+            if (submitBtn) submitBtn.style.display = 'none';
+        }
+    }
+    
+    // Navigation button event listeners
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function() {
+            if (validateCurrentStep()) {
+                currentStep++;
+                showStep(currentStep);
+                updateNavigation();
+            }
+        });
+    }
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function() {
+            currentStep--;
+            showStep(currentStep);
+            updateNavigation();
+        });
+    }
+    
+    // Validation functions
+    function validateCurrentStep() {
+        switch(currentStep) {
+            case 1:
+                return validateStep1();
+            case 2:
+                return validateStep2();
+            case 3:
+                return validateStep3();
+            case 4:
+                return validateStep4();
+            default:
+                return true;
+        }
+    }
+    
+    function validateStep1() {
+        const fullName = document.getElementById('id_full_name');
+        const email = document.getElementById('id_email');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        if (!fullName || !fullName.value.trim() || fullName.value.trim().length < 2) {
+            showToast('Please enter your full name (minimum 2 characters)', 'warning');
+            return false;
+        }
+        
+        if (!email || !email.value.trim() || !emailRegex.test(email.value.trim())) {
+            showToast('Please enter a valid email address', 'warning');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    function validateStep2() {
+        const username = document.getElementById('id_username');
+        const usernameRegex = /^[a-zA-Z0-9_\-\.]{3,30}$/;
+        
+        if (!username || !username.value.trim() || !usernameRegex.test(username.value.trim())) {
+            showToast('Please enter a valid username (3-30 characters: letters, numbers, ., _, -)', 'warning');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    function validateStep3() {
+        const password1 = document.getElementById('id_password1');
+        const password2 = document.getElementById('id_password2');
+        
+        if (!password1 || !password1.value || password1.value.length < 8) {
+            showToast('Password must be at least 8 characters', 'warning');
+            return false;
+        }
+        
+        if (!password2 || password1.value !== password2.value) {
+            showToast('Passwords do not match', 'warning');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    function validateStep4() {
+        const terms = document.getElementById('terms');
+        const age = document.getElementById('age_verification');
+        
+        if (!terms || !terms.checked) {
+            showToast('You must agree to the Terms of Service', 'warning');
+            return false;
+        }
+        
+        if (!age || !age.checked) {
+            showToast('You must confirm you are at least 13 years old', 'warning');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // Username availability check
+    const usernameInput = document.getElementById('id_username');
+    let usernameTimeout;
+    
+    if (usernameInput) {
+        usernameInput.addEventListener('input', function() {
+            clearTimeout(usernameTimeout);
+            const username = this.value.trim();
+            const statusElement = document.getElementById('usernameAvailability');
+            const usernameRegex = /^[a-zA-Z0-9_\-\.]{3,30}$/;
+            
+            if (!username) {
+                if (statusElement) statusElement.innerHTML = '';
+                return;
+            }
+            
+            if (!usernameRegex.test(username)) {
+                if (statusElement) statusElement.innerHTML = '<small class="text-danger"><i class="fas fa-times me-1"></i>Invalid</small>';
+            } else {
+                usernameTimeout = setTimeout(() => {
+                    if (statusElement) statusElement.innerHTML = '<small class="text-info"><i class="fas fa-spinner fa-spin me-1"></i>Checking...</small>';
+                    
+                    // Simulate API call
+                    setTimeout(() => {
+                        const isAvailable = Math.random() > 0.3;
+                        if (statusElement) {
+                            statusElement.innerHTML = isAvailable 
+                                ? '<small class="text-success"><i class="fas fa-check me-1"></i>Available</small>'
+                                : '<small class="text-danger"><i class="fas fa-times me-1"></i>Taken</small>';
+                        }
+                    }, 500);
+                }, 300);
+            }
+        });
+    }
+    
+    // Email verification
+    const verifyEmailBtn = document.getElementById('verifyEmailBtn');
+    if (verifyEmailBtn) {
+        verifyEmailBtn.addEventListener('click', function() {
+            const email = document.getElementById('id_email');
+            const statusElement = document.getElementById('emailVerificationStatus');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (!email || !email.value.trim() || !emailRegex.test(email.value.trim())) {
+                if (statusElement) statusElement.innerHTML = '<small class="text-danger"><i class="fas fa-times me-1"></i>Invalid email</small>';
+                return;
+            }
+            
+            if (statusElement) statusElement.innerHTML = '<small class="text-info"><i class="fas fa-spinner fa-spin me-1"></i>Verifying...</small>';
+            
+            // Simulate API call
+            setTimeout(() => {
+                const isValid = Math.random() > 0.2;
+                if (statusElement) {
+                    statusElement.innerHTML = isValid 
+                        ? '<small class="text-success"><i class="fas fa-check me-1"></i>Verified</small>'
+                        : '<small class="text-danger"><i class="fas fa-times me-1"></i>Already registered</small>';
+                }
+            }, 800);
+        });
+    }
+    
+    // Password strength and visibility
+    const password1 = document.getElementById('id_password1');
+    const password2 = document.getElementById('id_password2');
+    const togglePassword1 = document.getElementById('togglePassword1');
+    const togglePassword2 = document.getElementById('togglePassword2');
+    const generatePassword = document.getElementById('generatePassword');
+    
+    if (togglePassword1 && password1) {
+        togglePassword1.addEventListener('click', function() {
+            togglePasswordVisibility(password1, this);
+        });
+    }
+    
+    if (togglePassword2 && password2) {
+        togglePassword2.addEventListener('click', function() {
+            togglePasswordVisibility(password2, this);
+        });
+    }
+    
+    function togglePasswordVisibility(input, button) {
+        if (!input) return;
+        const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+        input.setAttribute('type', type);
+        if (button) {
+            button.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+        }
+    }
+    
+    // Generate password
+    if (generatePassword && password1 && password2) {
+        generatePassword.addEventListener('click', function() {
+            const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+            let password = '';
+            
+            // Ensure requirements are met
+            password += getRandomChar('abcdefghijklmnopqrstuvwxyz');
+            password += getRandomChar('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+            password += getRandomChar('0123456789');
+            password += getRandomChar('!@#$%^&*');
+            
+            // Fill remaining characters
+            for (let i = 0; i < 4; i++) {
+                password += charset.charAt(Math.floor(Math.random() * charset.length));
+            }
+            
+            // Shuffle the password
+            password = password.split('').sort(() => Math.random() - 0.5).join('');
+            
+            // Set passwords
+            password1.value = password;
+            password2.value = password;
+            
+            // Trigger validation
+            if (password1) password1.dispatchEvent(new Event('input'));
+            if (password2) password2.dispatchEvent(new Event('input'));
+            
+            showToast('Secure password generated!', 'success');
+        });
+    }
+    
+    function getRandomChar(chars) {
+        return chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    
+    // Password strength validation
+    if (password1) {
+        password1.addEventListener('input', function() {
+            validatePasswordStrength(this.value);
+            checkPasswordMatch();
+        });
+    }
+    
+    if (password2) {
+        password2.addEventListener('input', checkPasswordMatch);
+    }
+    
+    function validatePasswordStrength(password) {
+        const requirements = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /[0-9]/.test(password),
+            special: /[^A-Za-z0-9]/.test(password),
+            match: password1 && password2 && password1.value === password2.value && password1.value.length > 0
+        };
+        
+        // Update requirement indicators
+        Object.keys(requirements).forEach(req => {
+            const element = document.querySelector(`[data-requirement="${req}"]`);
+            if (element) {
+                const icon = element.querySelector('i');
+                const isMet = requirements[req];
+                if (icon) {
+                    icon.className = isMet ? 'fas fa-check-circle text-success me-1 fs-8' : 'fas fa-times-circle text-danger me-1 fs-8';
+                }
+            }
+        });
+        
+        // Calculate strength
+        let score = 0;
+        Object.values(requirements).forEach(isMet => {
+            if (isMet) score++;
+        });
+        
+        const percentage = (score / Object.keys(requirements).length) * 100;
+        const strengthBar = document.getElementById('passwordStrength');
+        if (strengthBar) {
+            strengthBar.style.width = percentage + '%';
+            
+            // Update strength text and color
+            let strength, color;
+            if (percentage <= 30) {
+                strength = 'Weak';
+                color = 'bg-danger';
+            } else if (percentage <= 70) {
+                strength = 'Good';
+                color = 'bg-warning';
+            } else {
+                strength = 'Strong';
+                color = 'bg-success';
+            }
+            
+            strengthBar.className = `progress-bar ${color}`;
+            const strengthText = document.getElementById('strengthText');
+            if (strengthText) strengthText.textContent = strength;
+        }
+    }
+    
+    function checkPasswordMatch() {
+        const matchElement = document.querySelector('[data-requirement="match"]');
+        const isMatch = password1 && password2 && password1.value === password2.value && password1.value.length > 0;
+        
+        if (matchElement) {
+            const icon = matchElement.querySelector('i');
+            if (icon) {
+                icon.className = isMatch ? 'fas fa-check-circle text-success me-1 fs-8' : 'fas fa-times-circle text-danger me-1 fs-8';
+            }
+        }
+    }
+    
+    // Update review section
+    function updateReviewSection() {
+        const fullNameElem = document.getElementById('reviewFullName');
+        const emailElem = document.getElementById('reviewEmail');
+        const usernameElem = document.getElementById('reviewUsername');
+        
+        if (fullNameElem) {
+            const fullName = document.getElementById('id_full_name');
+            fullNameElem.textContent = fullName && fullName.value ? fullName.value : '-';
+        }
+        
+        if (emailElem) {
+            const email = document.getElementById('id_email');
+            emailElem.textContent = email && email.value ? email.value : '-';
+        }
+        
+        if (usernameElem) {
+            const username = document.getElementById('id_username');
+            usernameElem.textContent = username && username.value ? username.value : '-';
+        }
+    }
+    
+    // Form submission
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!validateAllSteps()) {
+                showToast('Please fix all errors before submitting', 'error');
+                return;
+            }
+            
+            // Show loading state
+            if (submitBtn) {
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Creating Account...';
+                submitBtn.disabled = true;
+                
+                // Add slight delay for UX
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Submit the form
+                this.submit();
+            }
+        });
+    }
+    
+    function validateAllSteps() {
+        return validateStep1() && validateStep2() && validateStep3() && validateStep4();
+    }
+    
+    function showSessionExpired() {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-2 p-2 fs-7';
+        alertDiv.innerHTML = `
+            <i class="fas fa-clock me-2"></i>
+            <strong>Session Expired:</strong> Please refresh the page.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        if (form) {
+            form.parentNode.insertBefore(alertDiv, form);
+        }
+        
+        if (submitBtn) submitBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+        if (prevBtn) prevBtn.disabled = true;
+    }
+    
+    function showToast(message, type = 'info') {
+        // Create toast container if it doesn't exist
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container position-fixed bottom-0 end-0 p-2';
+            document.body.appendChild(container);
+        }
+        
+        // Create toast
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-bg-${type} border-0`;
+        toast.setAttribute('role', 'alert');
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body fs-7">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        
+        container.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+        bsToast.show();
+        
+        // Remove after hidden
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+    }
+    
+    // Social registration buttons
+    document.querySelectorAll('[id$="Register"]').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const provider = this.id.replace('Register', '');
+            showToast(`Connecting to ${provider}...`, 'info');
+        });
+    });
+    
+    console.log('Registration form loaded successfully');
+});
+</script>
+
+<style>
+/* Font size classes */
+.fs-6 { font-size: 1rem; }
+.fs-7 { font-size: 0.875rem; }
+.fs-8 { font-size: 0.75rem; }
+
+/* Progress Steps */
+.registration-progress {
+    position: relative;
+}
+
+.steps-container {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.steps-container::before {
+    content: '';
+    position: absolute;
+    top: 18px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #e9ecef;
+    z-index: 1;
+}
+
+.step {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    flex: 1;
+}
+
+.step-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin: 0 auto 5px;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.step.active .step-circle {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.step.completed .step-circle {
+    background-color: #198754;
+    color: white;
+}
+
+.step-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.step.active .step-label {
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+.progress-bar-animated {
+    animation: progressBar 0.5s ease-out;
+}
+
+@keyframes progressBar {
+    0% { width: 0%; }
+    100% { width: 100%; }
+}
+
+/* Form Steps */
+.form-step {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.active-step {
+    display: block !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.step-header {
+    margin-bottom: 1.5rem;
+}
+
+.icon-circle {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Form Elements */
+.input-group-md .form-control,
+.input-group-md .input-group-text {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    height: auto;
+}
+
+.input-group-text {
+    transition: all 0.2s ease;
+}
+
+.form-control:focus + .input-group-text,
+.form-control:focus ~ .input-group-text {
+    border-color: #86b7fe;
+    background-color: #e7f1ff;
+}
+
+/* Password Requirements */
+.requirement {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0;
+    transition: all 0.3s ease;
+}
+
+.requirement i {
+    width: 16px;
+}
+
+/* Review Items */
+.review-item {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+/* Card Styling */
+.registration-card {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .steps-container::before {
+        top: 16px;
+    }
+    
+    .step-circle {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+    
+    .step-label {
+        font-size: 0.7rem;
+    }
+    
+    .btn-md {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .form-navigation .d-flex {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .form-navigation .btn {
+        width: 100%;
+    }
+    
+    .card-body {
+        padding: 1rem !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .row.g-2 > [class*="col-"] {
+        margin-bottom: 0.75rem;
+    }
+    
+    .step-indicator {
+        display: none;
+    }
+    
+    .input-group {
+        flex-wrap: nowrap;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .btn, .form-control, .form-check-label {
+        min-height: 40px;
+    }
+    
+    .form-check-input {
+        transform: scale(1.2);
+        margin-right: 8px;
+    }
+    
+    .step-circle {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .card {
+        background-color: #2d3748;
+        border-color: #4a5568;
+    }
+    
+    .bg-light {
+        background-color: #4a5568 !important;
+    }
+    
+    .text-muted {
+        color: #a0aec0 !important;
+    }
+    
+    .review-item {
+        background: #4a5568;
+        border-color: #718096;
+    }
+    
+    .steps-container::before {
+        background-color: #4a5568;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .form-step,
+    .step-circle,
+    .btn,
+    .progress-bar,
+    .registration-card {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* Accessibility */
+.btn:focus,
+.form-control:focus,
+.form-check-input:focus {
+    outline: 2px solid rgba(13, 110, 253, 0.5);
+    outline-offset: 1px;
+}
+
+/* Form Validation States */
+.form-control:invalid:not(:focus):not(:placeholder-shown) {
+    border-color: #dc3545;
+}
+
+.form-control:valid:not(:focus):not(:placeholder-shown) {
+    border-color: #198754;
+}
+
+/* Loading States */
+.spinner-border {
+    animation: spinner-border 0.75s linear infinite;
+}
+
+/* Ensure credential fields are visible */
+#step1 {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Improve mobile spacing */
+@media (max-width: 400px) {
+    .container-fluid {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    .card-body {
+        padding: 0.75rem !important;
+    }
+    
+    .input-group-md .form-control,
+    .input-group-md .input-group-text {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* Better button spacing */
+.btn {
+    white-space: nowrap;
+}
+
+/* Ensure all content fits */
+.registration-card {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+/* Fix for small screens */
+@media (max-width: 360px) {
+    .fs-7 { font-size: 0.8rem; }
+    .fs-8 { font-size: 0.7rem; }
+    
+    .step-circle {
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+    
+    .steps-container::before {
+        top: 14px;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,1707 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ assignment.title }} - {{ course.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Enhanced Assignment Styles */
+    :root {
+        --assignment-primary: #2563eb;
+        --assignment-success: #10b981;
+        --assignment-warning: #f59e0b;
+        --assignment-danger: #ef4444;
+        --assignment-info: #06b6d4;
+        --assignment-bg: #1e293b;
+        --assignment-card: #0f172a;
+        --assignment-border: #334155;
+        --assignment-text: #e2e8f0;
+        --assignment-muted: #94a3b8;
+    }
+
+    /* Assignment Header */
+    .assignment-header {
+        background: linear-gradient(135deg, var(--assignment-info), #0ea5e9);
+        color: white;
+        padding: 2rem;
+        border-radius: 16px 16px 0 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .assignment-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+    }
+
+    /* Assignment Info Cards */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin: 2rem 0;
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .info-card {
+        background: var(--assignment-card);
+        border: 1px solid var(--assignment-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .info-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--assignment-primary);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1);
+    }
+
+    /* Code Editor */
+    .code-editor-container {
+        border: 1px solid var(--assignment-border);
+        border-radius: 12px;
+        overflow: hidden;
+        margin: 2rem 0;
+    }
+
+    .editor-header {
+        background: var(--assignment-bg);
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--assignment-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .editor-body {
+        position: relative;
+        min-height: 400px;
+    }
+
+    #codeEditor {
+        width: 100%;
+        height: 400px;
+        border: none;
+        background: #1e1e1e;
+        color: #d4d4d4;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        padding: 1rem;
+        resize: vertical;
+    }
+
+    /* File Upload */
+    .file-upload-area {
+        border: 2px dashed var(--assignment-border);
+        border-radius: 12px;
+        padding: 3rem 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: var(--assignment-card);
+        margin: 1.5rem 0;
+    }
+
+    .file-upload-area:hover,
+    .file-upload-area.dragover {
+        border-color: var(--assignment-primary);
+        background: rgba(37, 99, 235, 0.05);
+    }
+
+    .file-preview-container {
+        margin: 1.5rem 0;
+    }
+
+    .file-preview {
+        background: var(--assignment-card);
+        border: 1px solid var(--assignment-border);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Submission Status */
+    .submission-status {
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    .submission-status.submitted {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), transparent);
+        border: 1px solid var(--assignment-success);
+    }
+
+    .submission-status.graded {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), transparent);
+        border: 1px solid var(--assignment-primary);
+    }
+
+    .submission-status.pending {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), transparent);
+        border: 1px solid var(--assignment-warning);
+    }
+
+    /* Rubric Section */
+    .rubric-container {
+        background: var(--assignment-card);
+        border: 1px solid var(--assignment-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    .rubric-item {
+        border-bottom: 1px solid var(--assignment-border);
+        padding: 1rem 0;
+    }
+
+    .rubric-item:last-child {
+        border-bottom: none;
+    }
+
+    /* Timeline */
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+        margin: 2rem 0;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--assignment-border);
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 2rem;
+        padding-left: 2rem;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -9px;
+        top: 0;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--assignment-border);
+        border: 3px solid var(--assignment-bg);
+    }
+
+    .timeline-item.submitted::before {
+        background: var(--assignment-success);
+    }
+
+    .timeline-item.graded::before {
+        background: var(--assignment-primary);
+    }
+
+    /* Grading Summary */
+    .grade-card {
+        text-align: center;
+        padding: 2rem;
+        border-radius: 16px;
+        margin: 2rem 0;
+    }
+
+    .grade-card.passed {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), transparent);
+        border: 2px solid var(--assignment-success);
+    }
+
+    .grade-card.failed {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), transparent);
+        border: 2px solid var(--assignment-danger);
+    }
+
+    .grade-number {
+        font-size: 4rem;
+        font-weight: bold;
+        line-height: 1;
+    }
+
+    /* Feedback Section */
+    .feedback-card {
+        background: var(--assignment-card);
+        border: 1px solid var(--assignment-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+    }
+
+    .feedback-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--assignment-border);
+    }
+
+    /* Character Counter */
+    .character-counter {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--assignment-muted);
+    }
+
+    .character-counter.warning {
+        color: var(--assignment-warning);
+    }
+
+    .character-counter.error {
+        color: var(--assignment-danger);
+    }
+
+    /* Tabs Navigation */
+    .assignment-tabs .nav-link {
+        border: none;
+        background: none;
+        color: var(--assignment-muted);
+        font-weight: 500;
+        padding: 1rem 1.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .assignment-tabs .nav-link:hover,
+    .assignment-tabs .nav-link.active {
+        color: var(--assignment-primary);
+        border-bottom: 2px solid var(--assignment-primary);
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .assignment-header {
+            padding: 1.5rem;
+        }
+        
+        .info-card {
+            padding: 1rem;
+        }
+        
+        .editor-body {
+            min-height: 300px;
+        }
+        
+        #codeEditor {
+            height: 300px;
+        }
+        
+        .file-upload-area {
+            padding: 2rem 1rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .assignment-tabs .nav-link {
+            padding: 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        .grade-number {
+            font-size: 3rem;
+        }
+    }
+
+    /* Dark/Light Mode Support */
+    @media (prefers-color-scheme: light) {
+        :root {
+            --assignment-bg: #f8fafc;
+            --assignment-card: #ffffff;
+            --assignment-border: #e2e8f0;
+            --assignment-text: #1e293b;
+            --assignment-muted: #64748b;
+        }
+        
+        #codeEditor {
+            background: #f5f5f5;
+            color: #333;
+        }
+    }
+
+    /* Print Styles */
+    @media print {
+        .assignment-tabs,
+        .file-upload-area,
+        .submit-buttons {
+            display: none !important;
+        }
+        
+        .info-card,
+        .submission-status {
+            break-inside: avoid;
+            border: 1px solid #000;
+        }
+    }
+
+    /* Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+        .info-card,
+        .file-upload-area {
+            transition: none;
+        }
+    }
+</style>
+
+<!-- CodeMirror CSS (for code editor) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/display/fullscreen.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="assignment-container">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'courses:course_list' %}">Courses</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'courses:course_detail' course.slug %}">{{ course.title }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ assignment.title }}</li>
+        </ol>
+    </nav>
+
+    <!-- Assignment Header -->
+    <div class="assignment-header">
+        <div class="d-flex flex-wrap justify-content-between align-items-start">
+            <div>
+                <h1 class="display-5 fw-bold mb-3">{{ assignment.title }}</h1>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge bg-light text-dark">
+                        <i class="fas fa-book me-1"></i>{{ course.title }}
+                    </span>
+                    <span class="badge bg-light text-dark">
+                        <i class="fas fa-clock me-1"></i>
+                        {% if assignment.due_date %}
+                            Due: {{ assignment.due_date|date:"M d, Y, g:i A" }}
+                        {% else %}
+                            No deadline
+                        {% endif %}
+                    </span>
+                    <span class="badge bg-light text-dark">
+                        <i class="fas fa-star me-1"></i>{{ assignment.max_score }} points
+                    </span>
+                </div>
+            </div>
+            <div class="text-end">
+                {% if assignment.is_active %}
+                <span class="badge bg-success fs-6">
+                    <i class="fas fa-check-circle me-1"></i>Active
+                </span>
+                {% else %}
+                <span class="badge bg-secondary fs-6">
+                    <i class="fas fa-times-circle me-1"></i>Inactive
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="assignment-tabs">
+        <ul class="nav nav-tabs border-0" id="assignmentTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details">
+                    <i class="fas fa-info-circle me-2"></i>Details
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="submit-tab" data-bs-toggle="tab" data-bs-target="#submit">
+                    <i class="fas fa-paper-plane me-2"></i>Submit
+                </button>
+            </li>
+            {% if submitted %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="status-tab" data-bs-toggle="tab" data-bs-target="#status">
+                    <i class="fas fa-history me-2"></i>Status
+                </button>
+            </li>
+            {% endif %}
+            {% if assignment.rubric %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="rubric-tab" data-bs-toggle="tab" data-bs-target="#rubric">
+                    <i class="fas fa-clipboard-check me-2"></i>Rubric
+                </button>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+
+    <div class="tab-content" id="assignmentTabContent">
+        <!-- Details Tab -->
+        <div class="tab-pane fade show active" id="details" role="tabpanel">
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Assignment Description -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h4 class="card-title mb-4">
+                                <i class="fas fa-align-left me-2"></i>Assignment Description
+                            </h4>
+                            <div class="markdown-content">
+                                {{ assignment.description|safe }}
+                            </div>
+                            
+                            {% if assignment.code_template %}
+                            <div class="mt-4">
+                                <h5 class="mb-3">Starter Code</h5>
+                                <div class="code-editor-container">
+                                    <div class="editor-header">
+                                        <span>{{ assignment.code_template_filename|default:"starter.js" }}</span>
+                                        <button class="btn btn-sm btn-outline-light" onclick="copyStarterCode()">
+                                            <i class="fas fa-copy me-1"></i>Copy
+                                        </button>
+                                    </div>
+                                    <div class="editor-body">
+                                        <pre><code class="language-javascript" id="starterCode">{{ assignment.code_template }}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if assignment.requirements %}
+                            <div class="mt-4">
+                                <h5 class="mb-3">Requirements</h5>
+                                <ul class="list-group list-group-flush">
+                                    {% for req in assignment.requirements_list %}
+                                    <li class="list-group-item bg-transparent border-0 px-0">
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                        {{ req }}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Additional Resources -->
+                    {% if assignment.resources %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-download me-2"></i>Resources
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                                {% for resource in assignment.resources %}
+                                <div class="list-group-item bg-transparent border-0 px-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-file-{{ resource.type }} me-2 text-primary"></i>
+                                            <strong>{{ resource.name }}</strong>
+                                            <small class="text-muted ms-2">{{ resource.size }}</small>
+                                        </div>
+                                        <a href="{{ resource.url }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-download me-1"></i>Download
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-lg-4">
+                    <!-- Info Cards -->
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                                    <i class="fas fa-clock text-primary fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Due Date</h6>
+                                    <p class="mb-0">
+                                        {% if assignment.due_date %}
+                                        <strong>{{ assignment.due_date|date:"M d, Y" }}</strong><br>
+                                        <small>{{ assignment.due_date|time:"g:i A" }}</small>
+                                        {% else %}
+                                        <strong>No deadline</strong>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            {% if assignment.due_date %}
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-primary" style="width: {{ assignment.time_remaining_percent }}%"></div>
+                            </div>
+                            <small class="text-muted">{{ assignment.time_remaining_days }} days remaining</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                                    <i class="fas fa-star text-success fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Max Score</h6>
+                                    <p class="display-6 fw-bold text-success mb-0">{{ assignment.max_score }}</p>
+                                </div>
+                            </div>
+                            <small class="text-muted">points available</small>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
+                                    <i class="fas fa-file-upload text-info fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">File Upload</h6>
+                                    <p class="mb-0">
+                                        {% if assignment.allow_file_upload %}
+                                        <span class="badge bg-success">Allowed</span><br>
+                                        <small>{{ assignment.allowed_extensions|join:", " }}</small>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Not allowed</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            {% if assignment.max_file_size %}
+                            <small class="text-muted">Max size: {{ assignment.max_file_size }}MB</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
+                                    <i class="fas fa-users text-warning fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Submissions</h6>
+                                    <p class="display-6 fw-bold text-warning mb-0">{{ assignment.submissions.count }}</p>
+                                </div>
+                            </div>
+                            <small class="text-muted">students submitted</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Instructor Info -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title mb-3">
+                                <i class="fas fa-user-tie me-2"></i>Instructor
+                            </h6>
+                            <div class="d-flex align-items-center mb-3">
+                                {% if assignment.instructor.avatar %}
+                                <img src="{{ assignment.instructor.avatar.url }}" 
+                                     class="rounded-circle me-3" width="50" height="50"
+                                     alt="{{ assignment.instructor.get_full_name }}">
+                                {% else %}
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3"
+                                     style="width: 50px; height: 50px;">
+                                    {{ assignment.instructor.get_full_name|first|upper }}
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0">{{ assignment.instructor.get_full_name }}</h6>
+                                    <small class="text-muted">Course Instructor</small>
+                                </div>
+                            </div>
+                            <p class="small text-muted mb-0">{{ assignment.instructor.bio|truncatechars:100 }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submit Tab -->
+        <div class="tab-pane fade" id="submit" role="tabpanel">
+            {% if assignment.is_active %}
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Submission Form -->
+                    <form method="post" enctype="multipart/form-data" id="submissionForm" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    {% if submitted %}
+                                    <i class="fas fa-redo me-2"></i>Update Submission
+                                    {% else %}
+                                    <i class="fas fa-paper-plane me-2"></i>Submit Assignment
+                                    {% endif %}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Text Answer Editor -->
+                                <div class="mb-4">
+                                    <label for="textAnswer" class="form-label">
+                                        <i class="fas fa-align-left me-2"></i>Text Answer
+                                    </label>
+                                    
+                                    {% if assignment.language %}
+                                    <div class="code-editor-container">
+                                        <div class="editor-header">
+                                            <span>solution.{{ assignment.language }}</span>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-light" onclick="formatCode()">
+                                                    <i class="fas fa-code me-1"></i>Format
+                                                </button>
+                                                <button type="button" class="btn btn-outline-light" onclick="clearCode()">
+                                                    <i class="fas fa-trash me-1"></i>Clear
+                                                </button>
+                                                <button type="button" class="btn btn-outline-light" onclick="runTests()">
+                                                    <i class="fas fa-play me-1"></i>Test
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="editor-body">
+                                            <textarea name="text_answer" 
+                                                      id="codeEditor" 
+                                                      rows="20"
+                                                      placeholder="Write your solution here...">{% if submitted %}{{ submitted.text_answer }}{% endif %}</textarea>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="character-counter-container">
+                                        <textarea name="text_answer" 
+                                                  class="form-control" 
+                                                  id="textAnswer" 
+                                                  rows="10"
+                                                  placeholder="Type your answer here..."
+                                                  oninput="updateCharacterCount(this)"
+                                                  maxlength="{{ assignment.max_characters|default:5000 }}">{% if submitted %}{{ submitted.text_answer }}{% endif %}</textarea>
+                                        <div class="character-counter" id="characterCounter">
+                                            <span id="charCount">0</span>
+                                            <span>/ {{ assignment.max_characters|default:5000 }} characters</span>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="form-text">
+                                        {% if assignment.language %}
+                                        Write your code solution above. Use the format button to format your code.
+                                        {% else %}
+                                        Provide a detailed answer. Markdown is supported.
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- File Upload -->
+                                {% if assignment.allow_file_upload %}
+                                <div class="mb-4">
+                                    <label class="form-label">
+                                        <i class="fas fa-file-upload me-2"></i>File Upload
+                                    </label>
+                                    
+                                    <div class="file-upload-area" id="fileUploadArea">
+                                        <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
+                                        <h5>Drag & Drop Files Here</h5>
+                                        <p class="text-muted mb-3">or click to browse</p>
+                                        <input type="file" 
+                                               class="d-none" 
+                                               id="fileInput" 
+                                               name="file"
+                                               accept="{{ assignment.allowed_extensions_string }}"
+                                               {% if assignment.multiple_files %}multiple{% endif %}>
+                                        <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('fileInput').click()">
+                                            <i class="fas fa-folder-open me-2"></i>Browse Files
+                                        </button>
+                                        <div class="mt-2">
+                                            <small class="text-muted">
+                                                {% if assignment.multiple_files %}
+                                                Multiple files allowed
+                                                {% else %}
+                                                Single file only
+                                                {% endif %}
+                                                • Max size: {{ assignment.max_file_size }}MB
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="file-preview-container" id="filePreview"></div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Submission Notes -->
+                                <div class="mb-4">
+                                    <label for="submissionNotes" class="form-label">
+                                        <i class="fas fa-sticky-note me-2"></i>Submission Notes (Optional)
+                                    </label>
+                                    <textarea class="form-control" 
+                                              id="submissionNotes" 
+                                              name="notes" 
+                                              rows="3"
+                                              placeholder="Add any notes for the instructor...">{% if submitted %}{{ submitted.notes }}{% endif %}</textarea>
+                                </div>
+                                
+                                <!-- Submit Buttons -->
+                                <div class="submit-buttons d-flex gap-2">
+                                    {% if assignment.allow_late_submission and assignment.due_date_passed %}
+                                    <button type="submit" 
+                                            name="submit_type" 
+                                            value="late" 
+                                            class="btn btn-warning flex-fill"
+                                            onclick="return confirmLateSubmission()">
+                                        <i class="fas fa-clock me-2"></i>Submit Late
+                                    </button>
+                                    {% endif %}
+                                    
+                                    <button type="submit" 
+                                            name="submit_type" 
+                                            value="draft" 
+                                            class="btn btn-outline-primary">
+                                        <i class="fas fa-save me-2"></i>Save Draft
+                                    </button>
+                                    
+                                    <button type="submit" 
+                                            name="submit_type" 
+                                            value="final" 
+                                            class="btn btn-success flex-fill">
+                                        <i class="fas fa-paper-plane me-2"></i>
+                                        {% if submitted %}Update{% else %}Submit{% endif %} Final
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="col-lg-4">
+                    <!-- Submission Guidelines -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-clipboard-list me-2"></i>Submission Guidelines
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0">
+                                {% if assignment.due_date %}
+                                <li class="mb-2">
+                                    <i class="fas fa-clock text-warning me-2"></i>
+                                    <strong>Due:</strong> {{ assignment.due_date|date:"M d, Y, g:i A" }}
+                                </li>
+                                {% endif %}
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    {{ assignment.max_score }} points available
+                                </li>
+                                {% if assignment.allow_file_upload %}
+                                <li class="mb-2">
+                                    <i class="fas fa-file text-primary me-2"></i>
+                                    Files: {{ assignment.allowed_extensions|join:", " }}
+                                </li>
+                                {% endif %}
+                                {% if assignment.late_submission_penalty %}
+                                <li class="mb-2">
+                                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                                    Late penalty: {{ assignment.late_submission_penalty }}% per day
+                                </li>
+                                {% endif %}
+                                {% if assignment.plagiarism_check %}
+                                <li class="mb-2">
+                                    <i class="fas fa-shield-alt text-info me-2"></i>
+                                    Plagiarism check enabled
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Code Testing Panel -->
+                    {% if assignment.language and assignment.test_cases %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-vial me-2"></i>Test Your Code
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="small text-muted mb-3">
+                                Run test cases to verify your solution before submission.
+                            </p>
+                            <div class="mb-3">
+                                <button class="btn btn-outline-primary w-100 mb-2" onclick="runTests()">
+                                    <i class="fas fa-play me-2"></i>Run All Tests
+                                </button>
+                                <button class="btn btn-outline-secondary w-100" onclick="runSampleTests()">
+                                    <i class="fas fa-flask me-2"></i>Run Sample Tests
+                                </button>
+                            </div>
+                            <div id="testResults" class="d-none">
+                                <h6 class="mb-2">Test Results</h6>
+                                <div id="testOutput"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                    <div>
+                        <h5 class="alert-heading mb-2">Assignment Closed</h5>
+                        <p class="mb-0">This assignment is no longer active and cannot be submitted.</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Status Tab -->
+        {% if submitted %}
+        <div class="tab-pane fade" id="status" role="tabpanel">
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Submission Details -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <!-- Submission Status -->
+                            <div class="submission-status {% if submitted.graded %}graded{% else %}pending{% endif %}">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h4 class="mb-2">
+                                            <i class="fas fa-{% if submitted.graded %}check-circle{% else %}clock{% endif %} me-2"></i>
+                                            {% if submitted.graded %}
+                                            Graded
+                                            {% else %}
+                                            Submission Pending
+                                            {% endif %}
+                                        </h4>
+                                        <p class="mb-0">
+                                            Submitted: {{ submitted.submitted_at|date:"F j, Y, g:i A" }}
+                                        </p>
+                                    </div>
+                                    {% if submitted.graded %}
+                                    <div class="text-end">
+                                        <div class="display-4 fw-bold text-primary">{{ submitted.score }}</div>
+                                        <small class="text-muted">/ {{ assignment.max_score }} points</small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Timeline -->
+                                <div class="timeline">
+                                    <div class="timeline-item submitted">
+                                        <h6>Submitted</h6>
+                                        <p class="small text-muted mb-1">{{ submitted.submitted_at|date:"M d, Y, g:i A" }}</p>
+                                        <p class="mb-0">Assignment submitted for grading</p>
+                                    </div>
+                                    
+                                    {% if submitted.graded %}
+                                    <div class="timeline-item graded">
+                                        <h6>Graded</h6>
+                                        <p class="small text-muted mb-1">{{ submitted.graded_at|date:"M d, Y, g:i A" }}</p>
+                                        <p class="mb-0">Graded by {{ submitted.graded_by.get_full_name }}</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Submitted Files -->
+                            {% if submitted.file %}
+                            <div class="mt-4">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-paperclip me-2"></i>Submitted Files
+                                </h5>
+                                <div class="file-preview">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-file-code fa-2x text-primary me-3"></i>
+                                        <div>
+                                            <h6 class="mb-1">{{ submitted.filename }}</h6>
+                                            <small class="text-muted">{{ submitted.file.size|filesizeformat }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="btn-group">
+                                        <a href="{{ submitted.file.url }}" 
+                                           class="btn btn-outline-primary btn-sm"
+                                           download>
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        <a href="{{ submitted.file.url }}" 
+                                           class="btn btn-outline-primary btn-sm"
+                                           target="_blank">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Submitted Answer -->
+                            {% if submitted.text_answer %}
+                            <div class="mt-4">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-align-left me-2"></i>Your Answer
+                                </h5>
+                                <div class="code-editor-container">
+                                    <div class="editor-header">
+                                        <span>Your Solution</span>
+                                        <button class="btn btn-sm btn-outline-light" onclick="copySubmittedCode()">
+                                            <i class="fas fa-copy me-1"></i>Copy
+                                        </button>
+                                    </div>
+                                    <div class="editor-body">
+                                        <pre><code class="language-{{ assignment.language|default:'plaintext' }}">{{ submitted.text_answer }}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Instructor Feedback -->
+                            {% if submitted.graded and submitted.feedback %}
+                            <div class="feedback-card mt-4">
+                                <div class="feedback-meta">
+                                    <div>
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-comment-dots me-2"></i>Instructor Feedback
+                                        </h6>
+                                        <small class="text-muted">
+                                            From {{ submitted.graded_by.get_full_name }}
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-primary">{{ submitted.graded_at|date:"M d, Y" }}</span>
+                                </div>
+                                <div class="feedback-content">
+                                    {{ submitted.feedback|safe }}
+                                </div>
+                                
+                                {% if submitted.rubric_scores %}
+                                <div class="mt-3">
+                                    <h6 class="mb-3">Rubric Scores</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Criterion</th>
+                                                    <th>Max Points</th>
+                                                    <th>Awarded</th>
+                                                    <th>Feedback</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for score in submitted.rubric_scores %}
+                                                <tr>
+                                                    <td>{{ score.criterion }}</td>
+                                                    <td>{{ score.max_points }}</td>
+                                                    <td>
+                                                        <span class="badge bg-{{ score.color }}">{{ score.awarded }}</span>
+                                                    </td>
+                                                    <td>{{ score.feedback }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <!-- Grade Summary -->
+                    {% if submitted.graded %}
+                    <div class="grade-card {% if submitted.score >= assignment.passing_score %}passed{% else %}failed{% endif %}">
+                        <div class="grade-number mb-2">{{ submitted.score }}</div>
+                        <h5 class="mb-3">
+                            {% if submitted.score >= assignment.passing_score %}
+                            <i class="fas fa-trophy me-2"></i>Assignment Passed
+                            {% else %}
+                            <i class="fas fa-times-circle me-2"></i>Assignment Failed
+                            {% endif %}
+                        </h5>
+                        <p class="mb-3">
+                            Your score: <strong>{{ submitted.score }}/{{ assignment.max_score }}</strong>
+                        </p>
+                        {% if assignment.passing_score %}
+                        <p class="mb-0">
+                            Passing score: {{ assignment.passing_score }}
+                            {% if submitted.score < assignment.passing_score %}
+                            <br>
+                            <small class="text-danger">
+                                You needed {{ assignment.passing_score|sub:submitted.score }} more points
+                            </small>
+                            {% endif %}
+                        </p>
+                        {% endif %}
+                        
+                        <div class="mt-4">
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-success" 
+                                     style="width: {{ submitted.score_percentage }}%"></div>
+                            </div>
+                            <small class="text-muted">{{ submitted.score_percentage|floatformat:1 }}% achieved</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Statistics -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title mb-3">
+                                <i class="fas fa-chart-bar me-2"></i>Statistics
+                            </h6>
+                            <div class="row text-center">
+                                <div class="col-6 mb-3">
+                                    <div class="h4 mb-1">{{ assignment.average_score|default:"0" }}</div>
+                                    <small class="text-muted">Average Score</small>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <div class="h4 mb-1">{{ assignment.submissions.count }}</div>
+                                    <small class="text-muted">Total Submissions</small>
+                                </div>
+                                <div class="col-6">
+                                    <div class="h4 mb-1">{{ assignment.highest_score|default:"0" }}</div>
+                                    <small class="text-muted">Highest Score</small>
+                                </div>
+                                <div class="col-6">
+                                    <div class="h4 mb-1">{{ assignment.lowest_score|default:"0" }}</div>
+                                    <small class="text-muted">Lowest Score</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Resubmission -->
+                    {% if assignment.allow_resubmission and assignment.is_active %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title mb-3">
+                                <i class="fas fa-redo me-2"></i>Resubmit
+                            </h6>
+                            <p class="small text-muted mb-3">
+                                You can resubmit this assignment to improve your score.
+                            </p>
+                            <button class="btn btn-outline-primary w-100" onclick="switchToSubmitTab()">
+                                <i class="fas fa-redo me-2"></i>Resubmit Assignment
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Rubric Tab -->
+        {% if assignment.rubric %}
+        <div class="tab-pane fade" id="rubric" role="tabpanel">
+            <div class="rubric-container">
+                <h4 class="mb-4">
+                    <i class="fas fa-clipboard-check me-2"></i>Grading Rubric
+                </h4>
+                
+                <div class="mb-4">
+                    <p class="text-muted">{{ assignment.rubric.description }}</p>
+                </div>
+                
+                {% for category in assignment.rubric.categories %}
+                <div class="rubric-item">
+                    <h5 class="mb-3">{{ category.title }} ({{ category.weight }}%)</h5>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%">Level</th>
+                                    <th style="width: 20%">Points</th>
+                                    <th>Criteria</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for level in category.levels %}
+                                <tr class="{% if level.points == category.max_points %}table-success{% endif %}">
+                                    <td>{{ level.name }}</td>
+                                    <td>{{ level.points }} / {{ category.max_points }}</td>
+                                    <td>{{ level.criteria }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <div class="mt-4">
+                    <h6 class="mb-3">How Grading Works</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Total possible points: <strong>{{ assignment.max_score }}</strong>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Passing score: <strong>{{ assignment.passing_score|default:assignment.max_score|multiply:0.7|floatformat:0 }}</strong>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Late submissions: {% if assignment.late_submission_penalty %}
+                            <strong>{{ assignment.late_submission_penalty }}% penalty per day</strong>
+                            {% else %}
+                            <strong>Not accepted</strong>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- CodeMirror JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/display/fullscreen.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize assignment page
+        initAssignmentPage();
+        initFileUpload();
+        initCharacterCounter();
+        initTabs();
+        
+        {% if assignment.language %}
+        initCodeEditor();
+        {% endif %}
+        
+        {% if submitted and submitted.text_answer %}
+        updateCharacterCount(document.getElementById('textAnswer'));
+        {% endif %}
+    });
+    
+    function initAssignmentPage() {
+        // Initialize tooltips
+        const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
+        
+        // Initialize form validation
+        initFormValidation();
+        
+        // Initialize copy buttons
+        initCopyButtons();
+    }
+    
+    function initCodeEditor() {
+        // Determine language mode
+        let mode = 'javascript';
+        switch('{{ assignment.language|lower }}') {
+            case 'python':
+                mode = 'python';
+                break;
+            case 'html':
+                mode = 'htmlmixed';
+                break;
+            case 'css':
+                mode = 'css';
+                break;
+            case 'javascript':
+            default:
+                mode = 'javascript';
+        }
+        
+        // Initialize CodeMirror
+        window.codeEditor = CodeMirror.fromTextArea(document.getElementById('codeEditor'), {
+            mode: mode,
+            theme: 'dracula',
+            lineNumbers: true,
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            lineWrapping: true,
+            indentUnit: 4,
+            extraKeys: {
+                "F11": function(cm) {
+                    cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+                },
+                "Esc": function(cm) {
+                    if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false);
+                }
+            }
+        });
+        
+        // Set editor content from textarea if exists
+        const textarea = document.getElementById('textAnswer');
+        if (textarea && textarea.value) {
+            codeEditor.setValue(textarea.value);
+        }
+        
+        // Update hidden textarea when editor changes
+        codeEditor.on('change', function() {
+            textarea.value = codeEditor.getValue();
+        });
+    }
+    
+    function initFileUpload() {
+        const uploadArea = document.getElementById('fileUploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('filePreview');
+        
+        if (!uploadArea || !fileInput) return;
+        
+        // Click handler
+        uploadArea.addEventListener('click', function() {
+            fileInput.click();
+        });
+        
+        // Drag and drop handlers
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        // Highlight drop area
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            uploadArea.classList.add('dragover');
+        }
+        
+        function unhighlight() {
+            uploadArea.classList.remove('dragover');
+        }
+        
+        // Handle dropped files
+        uploadArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+        
+        // Handle selected files
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+        
+        function handleFiles(files) {
+            previewContainer.innerHTML = '';
+            
+            if (!files.length) return;
+            
+            Array.from(files).forEach(file => {
+                // Validate file size
+                const maxSize = {{ assignment.max_file_size|default:10 }} * 1024 * 1024;
+                if (file.size > maxSize) {
+                    alert(`File ${file.name} exceeds maximum size of ${maxSize / (1024 * 1024)}MB`);
+                    return;
+                }
+                
+                // Validate file extension
+                const allowedExtensions = {{ assignment.allowed_extensions|safe|default:"[]" }};
+                const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+                
+                if (allowedExtensions.length > 0 && !allowedExtensions.includes(fileExt)) {
+                    alert(`File type ${fileExt} not allowed. Allowed types: ${allowedExtensions.join(', ')}`);
+                    return;
+                }
+                
+                // Create preview
+                const preview = document.createElement('div');
+                preview.className = 'file-preview';
+                
+                const fileIcon = getFileIcon(file.name);
+                const fileSize = formatFileSize(file.size);
+                
+                preview.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="${fileIcon} fa-2x text-primary me-3"></i>
+                        <div>
+                            <h6 class="mb-1">${file.name}</h6>
+                            <small class="text-muted">${fileSize}</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                previewContainer.appendChild(preview);
+            });
+            
+            // Update file input
+            const dataTransfer = new DataTransfer();
+            Array.from(files).forEach(file => dataTransfer.items.add(file));
+            fileInput.files = dataTransfer.files;
+        }
+    }
+    
+    function getFileIcon(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const icons = {
+            'js': 'fab fa-js-square',
+            'py': 'fab fa-python',
+            'html': 'fab fa-html5',
+            'css': 'fab fa-css3-alt',
+            'json': 'fas fa-code',
+            'txt': 'fas fa-file-alt',
+            'pdf': 'fas fa-file-pdf',
+            'zip': 'fas fa-file-archive',
+            'jpg': 'fas fa-file-image',
+            'jpeg': 'fas fa-file-image',
+            'png': 'fas fa-file-image',
+            'gif': 'fas fa-file-image'
+        };
+        
+        return icons[ext] || 'fas fa-file';
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    window.removeFile = function(button) {
+        const preview = button.closest('.file-preview');
+        preview.remove();
+        
+        // Update file input
+        const fileInput = document.getElementById('fileInput');
+        const files = Array.from(fileInput.files);
+        const fileName = preview.querySelector('h6').textContent;
+        const newFiles = files.filter(file => file.name !== fileName);
+        
+        const dataTransfer = new DataTransfer();
+        newFiles.forEach(file => dataTransfer.items.add(file));
+        fileInput.files = dataTransfer.files;
+    };
+    
+    function initCharacterCounter() {
+        const textarea = document.getElementById('textAnswer');
+        if (!textarea) return;
+        
+        // Initialize count
+        updateCharacterCount(textarea);
+    }
+    
+    window.updateCharacterCount = function(textarea) {
+        const counter = document.getElementById('characterCounter');
+        const charCount = document.getElementById('charCount');
+        
+        if (!counter || !charCount) return;
+        
+        const maxChars = textarea.getAttribute('maxlength') || 5000;
+        const currentChars = textarea.value.length;
+        const remaining = maxChars - currentChars;
+        
+        charCount.textContent = currentChars;
+        
+        // Update color based on remaining characters
+        counter.classList.remove('warning', 'error');
+        
+        if (remaining <= maxChars * 0.1) {
+            counter.classList.add('warning');
+        }
+        
+        if (remaining <= 0) {
+            counter.classList.add('error');
+        }
+    };
+    
+    function initTabs() {
+        // Handle tab switching
+        const tabLinks = document.querySelectorAll('[data-bs-toggle="tab"]');
+        tabLinks.forEach(link => {
+            link.addEventListener('shown.bs.tab', function(e) {
+                // Save active tab to localStorage
+                localStorage.setItem('assignmentActiveTab', e.target.getAttribute('data-bs-target'));
+                
+                // If switching to submit tab, update code editor
+                if (e.target.getAttribute('data-bs-target') === '#submit' && window.codeEditor) {
+                    setTimeout(() => {
+                        window.codeEditor.refresh();
+                    }, 100);
+                }
+            });
+        });
+        
+        // Restore active tab
+        const savedTab = localStorage.getItem('assignmentActiveTab');
+        if (savedTab) {
+            const tab = document.querySelector(`[data-bs-target="${savedTab}"]`);
+            if (tab) {
+                new bootstrap.Tab(tab).show();
+            }
+        }
+    }
+    
+    function initFormValidation() {
+        const form = document.getElementById('submissionForm');
+        if (!form) return;
+        
+        form.addEventListener('submit', function(e) {
+            // Check if text answer is empty
+            const textAnswer = window.codeEditor ? window.codeEditor.getValue() : document.getElementById('textAnswer').value;
+            if (!textAnswer.trim()) {
+                e.preventDefault();
+                alert('Please provide an answer before submitting.');
+                return;
+            }
+            
+            // Check file requirements
+            {% if assignment.require_file and assignment.allow_file_upload %}
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput.files.length === 0) {
+                e.preventDefault();
+                alert('Please upload a file as required.');
+                return;
+            }
+            {% endif %}
+        });
+    }
+    
+    function initCopyButtons() {
+        // Copy starter code
+        window.copyStarterCode = function() {
+            const code = document.getElementById('starterCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('Starter code copied to clipboard!', 'success');
+            });
+        };
+        
+        // Copy submitted code
+        window.copySubmittedCode = function() {
+            const code = document.querySelector('#status pre code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('Code copied to clipboard!', 'success');
+            });
+        };
+    }
+    
+    window.formatCode = function() {
+        if (!window.codeEditor) return;
+        
+        const code = window.codeEditor.getValue();
+        
+        // Simple formatting (in real app, use a proper formatter)
+        const formatted = code
+            .replace(/\s*{\s*/g, ' { ')
+            .replace(/\s*}\s*/g, ' } ')
+            .replace(/\s*\(\s*/g, ' (')
+            .replace(/\s*\)\s*/g, ') ')
+            .replace(/\s*,\s*/g, ', ')
+            .replace(/;\s*/g, '; ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        
+        window.codeEditor.setValue(formatted);
+        showToast('Code formatted!', 'info');
+    };
+    
+    window.clearCode = function() {
+        if (!window.codeEditor) return;
+        
+        if (confirm('Are you sure you want to clear the editor?')) {
+            window.codeEditor.setValue('');
+            showToast('Editor cleared!', 'info');
+        }
+    };
+    
+    window.runTests = function() {
+        if (!window.codeEditor) return;
+        
+        const code = window.codeEditor.getValue();
+        
+        // Show loading
+        const testResults = document.getElementById('testResults');
+        const testOutput = document.getElementById('testOutput');
+        
+        testResults.classList.remove('d-none');
+        testOutput.innerHTML = `
+            <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Running tests...</p>
+            </div>
+        `;
+        
+        // Simulate test execution (in real app, make API call)
+        setTimeout(() => {
+            const results = simulateTests(code);
+            displayTestResults(results);
+        }, 2000);
+    };
+    
+    function simulateTests(code) {
+        // Mock test results based on code quality
+        const hasFunction = code.includes('function') || code.includes('def ');
+        const hasReturn = code.includes('return');
+        const hasComments = code.includes('//') || code.includes('#');
+        const lines = code.split('\n').length;
+        
+        return [
+            {
+                name: 'Code compiles',
+                passed: hasFunction || lines > 5,
+                message: hasFunction ? 'Code compiles successfully' : 'Code structure incomplete'
+            },
+            {
+                name: 'Function returns value',
+                passed: hasReturn,
+                message: hasReturn ? 'Function returns appropriate value' : 'Missing return statement'
+            },
+            {
+                name: 'Code comments',
+                passed: hasComments,
+                message: hasComments ? 'Code is well-documented' : 'Consider adding comments'
+            },
+            {
+                name: 'Edge cases handled',
+                passed: code.includes('if') || code.includes('try'),
+                message: 'Edge cases need attention'
+            }
+        ];
+    }
+    
+    function displayTestResults(results) {
+        const testOutput = document.getElementById('testOutput');
+        let html = '';
+        
+        results.forEach(result => {
+            html += `
+                <div class="d-flex align-items-center mb-2 p-2 rounded ${result.passed ? 'bg-success bg-opacity-10' : 'bg-danger bg-opacity-10'}">
+                    <i class="fas fa-${result.passed ? 'check-circle text-success' : 'times-circle text-danger'} me-3"></i>
+                    <div>
+                        <strong>${result.name}</strong>
+                        <div class="small">${result.message}</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        const passedCount = results.filter(r => r.passed).length;
+        const totalCount = results.length;
+        const percentage = Math.round((passedCount / totalCount) * 100);
+        
+        html = `
+            <div class="alert ${percentage >= 75 ? 'alert-success' : percentage >= 50 ? 'alert-warning' : 'alert-danger'}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <strong>Test Results: ${passedCount}/${totalCount} passed</strong>
+                    <span class="badge ${percentage >= 75 ? 'bg-success' : percentage >= 50 ? 'bg-warning' : 'bg-danger'}">
+                        ${percentage}%
+                    </span>
+                </div>
+            </div>
+            ${html}
+        `;
+        
+        testOutput.innerHTML = html;
+    }
+    
+    window.runSampleTests = function() {
+        // Run only sample test cases
+        showToast('Running sample tests...', 'info');
+        runTests();
+    };
+    
+    window.confirmLateSubmission = function() {
+        const penalty = {{ assignment.late_submission_penalty|default:0 }};
+        if (penalty > 0) {
+            return confirm(`Late submission will incur a ${penalty}% penalty. Continue?`);
+        }
+        return true;
+    };
+    
+    window.switchToSubmitTab = function() {
+        const submitTab = document.getElementById('submit-tab');
+        new bootstrap.Tab(submitTab).show();
+        
+        // Scroll to top of form
+        setTimeout(() => {
+            document.getElementById('submit').scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+    };
+    
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-bg-${type} border-0`;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        `;
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+        bsToast.show();
+        
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+    }
+    
+    // Handle window resize for code editor
+    window.addEventListener('resize', function() {
+        if (window.codeEditor) {
+            setTimeout(() => {
+                window.codeEditor.refresh();
+            }, 100);
+        }
+    });
+</script>
+
+<!-- Syntax Highlighting -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+{% endblock %}

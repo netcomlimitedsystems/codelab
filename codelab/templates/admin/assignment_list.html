@@ -1,0 +1,554 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Assignment Management - Admin{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">Assignment Management</h2>
+                <p class="text-muted mb-0">
+                    {% if course %}
+                        Course: {{ course.title }}
+                    {% else %}
+                        All Assignments
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                {% if course %}
+                    <a href="{% url 'accounts:assignment_add' course_id=course.id %}" class="btn btn-primary me-2">
+                        <i class="fas fa-plus me-1"></i>Add Assignment
+                    </a>
+                    <a href="{% url 'accounts:course_edit' course_id=course.id %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Course
+                    </a>
+                {% else %}
+                    <a href="{% url 'accounts:admin_assignment_add_quick' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Quick Add
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card bg-primary bg-opacity-10 border-primary">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-0">Total Assignments</h6>
+                                <h3 class="mb-0">{{ assignments|length }}</h3>
+                            </div>
+                            <div class="icon-wrapper">
+                                <i class="fas fa-tasks fa-2x text-primary opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success bg-opacity-10 border-success">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-0">Active</h6>
+                                <h3 class="mb-0">{{ active_assignments }}</h3>
+                            </div>
+                            <div class="icon-wrapper">
+                                <i class="fas fa-check-circle fa-2x text-success opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-warning bg-opacity-10 border-warning">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-0">Overdue</h6>
+                                <h3 class="mb-0">{{ overdue_assignments }}</h3>
+                            </div>
+                            <div class="icon-wrapper">
+                                <i class="fas fa-exclamation-triangle fa-2x text-warning opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-info bg-opacity-10 border-info">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-0">Submissions</h6>
+                                <h3 class="mb-0">{{ total_submissions }}</h3>
+                            </div>
+                            <div class="icon-wrapper">
+                                <i class="fas fa-file-upload fa-2x text-info opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <input type="text" 
+                               class="form-control" 
+                               name="search" 
+                               placeholder="Search assignments..." 
+                               value="{{ request.GET.search }}">
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <select class="form-select" name="status">
+                            <option value="">All Status</option>
+                            <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                            <option value="overdue" {% if request.GET.status == 'overdue' %}selected{% endif %}>Overdue</option>
+                            <option value="upcoming" {% if request.GET.status == 'upcoming' %}selected{% endif %}>Upcoming</option>
+                        </select>
+                    </div>
+                    
+                    {% if not course %}
+                    <div class="col-md-2">
+                        <select class="form-select" name="course">
+                            <option value="">All Courses</option>
+                            {% for c in courses %}
+                                <option value="{{ c.id }}" {% if request.GET.course == c.id %}selected{% endif %}>
+                                    {{ c.title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="col-md-2">
+                        <input type="date" 
+                               class="form-control" 
+                               name="due_date" 
+                               value="{{ request.GET.due_date }}">
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <select class="form-select" name="sort">
+                            <option value="-created_at" {% if request.GET.sort == '-created_at' %}selected{% endif %}>Newest First</option>
+                            <option value="created_at" {% if request.GET.sort == 'created_at' %}selected{% endif %}>Oldest First</option>
+                            <option value="due_date" {% if request.GET.sort == 'due_date' %}selected{% endif %}>Due Date (Asc)</option>
+                            <option value="-due_date" {% if request.GET.sort == '-due_date' %}selected{% endif %}>Due Date (Desc)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Assignments Table -->
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Assignment</th>
+                                {% if not course %}<th>Course</th>{% endif %}
+                                <th>Due Date</th>
+                                <th>Max Score</th>
+                                <th>Submissions</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment in assignments %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="assignment-icon bg-primary bg-opacity-10 text-primary rounded d-flex align-items-center justify-content-center me-3"
+                                                 style="width: 40px; height: 40px;">
+                                                <i class="fas fa-tasks"></i>
+                                            </div>
+                                            <div>
+                                                <strong>{{ assignment.title }}</strong>
+                                                <div class="small text-muted">
+                                                    {{ assignment.description|truncatewords:5 }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    
+                                    {% if not course %}
+                                    <td>
+                                        <a href="{% url 'accounts:course_edit' course_id=assignment.course.id %}" 
+                                           class="text-decoration-none">
+                                            <span class="badge bg-primary">
+                                                {{ assignment.course.title }}
+                                            </span>
+                                        </a>
+                                    </td>
+                                    {% endif %}
+                                    
+                                    <td>
+                                        {% if assignment.due_date %}
+                                            <div class="text-muted">
+                                                {{ assignment.due_date|date:"M d, Y" }}
+                                            </div>
+                                            <div class="small">
+                                                {{ assignment.due_date|date:"h:i A" }}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">No due date</span>
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <td>
+                                        <span class="badge bg-info">{{ assignment.max_score }}</span>
+                                    </td>
+                                    
+                                    <td>
+                                        <span class="badge bg-secondary">
+                                            {{ assignment.submissions.count }}
+                                        </span>
+                                    </td>
+                                    
+                                    <td>
+                                        {% if assignment.is_active %}
+                                            {% if assignment.due_date and assignment.due_date < now %}
+                                                <span class="badge bg-danger">Overdue</span>
+                                            {% elif assignment.due_date and assignment.due_date > now %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-warning">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ assignment.created_at|date:"M d, Y" }}
+                                        </small>
+                                    </td>
+                                    
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'courses:assignment_detail' course_slug=assignment.course.slug assignment_id=assignment.id %}" 
+                                               target="_blank"
+                                               class="btn btn-outline-primary" 
+                                               title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'accounts:assignment_edit' assignment_id=assignment.id %}" 
+                                               class="btn btn-outline-warning" 
+                                               title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="#" 
+                                               class="btn btn-outline-info" 
+                                               title="Submissions"
+                                               onclick="viewSubmissions({{ assignment.id }})">
+                                                <i class="fas fa-file-upload"></i>
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn btn-outline-danger" 
+                                                    title="Delete"
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#deleteModal{{ assignment.id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Delete Modal -->
+                                        <div class="modal fade" id="deleteModal{{ assignment.id }}" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Confirm Delete</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        Are you sure you want to delete the assignment 
+                                                        <strong>"{{ assignment.title }}"</strong>?
+                                                        <div class="alert alert-warning mt-3">
+                                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                                            This will also delete all associated submissions.
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <form method="POST" action="{% url 'accounts:assignment_delete' assignment_id=assignment.id %}" class="d-inline">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-danger">Delete Assignment</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="{% if course %}8{% else %}9{% endif %}" class="text-center py-4">
+                                        <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">No assignments found</p>
+                                        {% if course %}
+                                            <a href="{% url 'accounts:assignment_add' course_id=course.id %}" class="btn btn-primary">
+                                                <i class="fas fa-plus me-1"></i>Create First Assignment
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Pagination -->
+            {% if assignments.has_other_pages %}
+                <div class="card-footer">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if assignments.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        First
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ assignments.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        Previous
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in assignments.paginator.page_range %}
+                                {% if assignments.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > assignments.number|add:'-3' and num < assignments.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                            {{ num }}
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if assignments.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ assignments.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        Next
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ assignments.paginator.num_pages }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        Last
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Bulk Actions -->
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="fas fa-tasks me-2"></i>Bulk Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <select class="form-select" id="bulkAction">
+                            <option value="" selected disabled>Choose action...</option>
+                            <option value="activate">Activate Selected</option>
+                            <option value="deactivate">Deactivate Selected</option>
+                            <option value="delete">Delete Selected</option>
+                            <option value="extend">Extend Due Date</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3" id="extendDateContainer" style="display: none;">
+                        <input type="date" class="form-control" id="extendDate">
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-primary w-100" onclick="performBulkAction()">
+                            Apply
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        color: #495057;
+        background-color: #f8f9fa;
+    }
+    
+    .table td {
+        vertical-align: middle;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .assignment-icon {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+    }
+</style>
+
+{% block extra_js %}
+<script>
+    // View submissions
+    function viewSubmissions(assignmentId) {
+        window.open(`/admin/assignments/${assignmentId}/submissions/`, '_blank');
+    }
+    
+    // Bulk actions
+    document.getElementById('bulkAction').addEventListener('change', function() {
+        const extendContainer = document.getElementById('extendDateContainer');
+        if (this.value === 'extend') {
+            extendContainer.style.display = 'block';
+        } else {
+            extendContainer.style.display = 'none';
+        }
+    });
+    
+    function performBulkAction() {
+        const action = document.getElementById('bulkAction').value;
+        if (!action) {
+            alert('Please select an action');
+            return;
+        }
+        
+        const selectedAssignments = [];
+        document.querySelectorAll('input[name="assignment_ids"]:checked').forEach(checkbox => {
+            selectedAssignments.push(checkbox.value);
+        });
+        
+        if (selectedAssignments.length === 0) {
+            alert('Please select at least one assignment');
+            return;
+        }
+        
+        if (action === 'delete') {
+            if (!confirm(`Are you sure you want to delete ${selectedAssignments.length} assignment(s)?`)) {
+                return;
+            }
+        }
+        
+        let data = {
+            action: action,
+            assignment_ids: selectedAssignments
+        };
+        
+        if (action === 'extend') {
+            const extendDate = document.getElementById('extendDate').value;
+            if (!extendDate) {
+                alert('Please select a date');
+                return;
+            }
+            data.extend_date = extendDate;
+        }
+        
+        // Perform bulk action via AJAX
+        fetch('{% url "accounts:assignment_bulk_action" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred');
+        });
+    }
+    
+    // Add checkboxes to table rows
+    document.addEventListener('DOMContentLoaded', function() {
+        const tableHeader = document.querySelector('thead tr');
+        const checkCell = document.createElement('th');
+        checkCell.innerHTML = '<input type="checkbox" id="selectAll">';
+        tableHeader.insertBefore(checkCell, tableHeader.firstChild);
+        
+        const tbodyRows = document.querySelectorAll('tbody tr');
+        tbodyRows.forEach(row => {
+            const checkCell = document.createElement('td');
+            checkCell.innerHTML = '<input type="checkbox" name="assignment_ids" value="{{ assignment.id }}">';
+            row.insertBefore(checkCell, row.firstChild);
+        });
+        
+        // Select all functionality
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('input[name="assignment_ids"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+    });
+    
+    // Due date status highlighting
+    document.addEventListener('DOMContentLoaded', function() {
+        const now = new Date();
+        document.querySelectorAll('td:nth-child(3)').forEach(td => {
+            const dateText = td.querySelector('.text-muted')?.textContent;
+            if (dateText) {
+                const dueDate = new Date(dateText + ' ' + td.querySelector('.small')?.textContent);
+                if (dueDate < now) {
+                    td.style.backgroundColor = '#fff5f5';
+                } else if (dueDate < new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)) { // 3 days
+                    td.style.backgroundColor = '#fff9db';
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

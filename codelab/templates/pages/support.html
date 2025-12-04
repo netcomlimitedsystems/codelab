@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% block title %}Support Center - CodeLab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <!-- Support Header -->
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold mb-3">How Can We Help You?</h1>
+            <p class="lead text-muted">
+                Browse our help resources or submit a support ticket
+            </p>
+        </div>
+        
+        <!-- Quick Help Cards -->
+        <div class="row mb-5">
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 text-center border-primary">
+                    <div class="card-body">
+                        <div class="icon-wrapper mb-3">
+                            <i class="fas fa-book fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="card-title">Knowledge Base</h5>
+                        <p class="card-text text-muted">
+                            Browse our comprehensive documentation and tutorials
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 text-center border-success">
+                    <div class="card-body">
+                        <div class="icon-wrapper mb-3">
+                            <i class="fas fa-question-circle fa-3x text-success"></i>
+                        </div>
+                        <h5 class="card-title">FAQ</h5>
+                        <p class="card-text text-muted">
+                            Find answers to frequently asked questions
+                        </p>
+                        <a href="{% url 'accounts:faq' %}" class="stretched-link"></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 text-center border-warning">
+                    <div class="card-body">
+                        <div class="icon-wrapper mb-3">
+                            <i class="fas fa-comments fa-3x text-warning"></i>
+                        </div>
+                        <h5 class="card-title">Community</h5>
+                        <p class="card-text text-muted">
+                            Get help from other learners in our community
+                        </p>
+                        <a href="{% url 'community:index' %}" class="stretched-link"></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 text-center border-info">
+                    <div class="card-body">
+                        <div class="icon-wrapper mb-3">
+                            <i class="fas fa-ticket-alt fa-3x text-info"></i>
+                        </div>
+                        <h5 class="card-title">Submit Ticket</h5>
+                        <p class="card-text text-muted">
+                            Can't find what you need? Submit a support ticket
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Support Form -->
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="fas fa-headset me-2"></i>Submit Support Ticket</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <form method="POST" class="needs-validation" novalidate>
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label for="ticketSubject" class="form-label">Subject</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="ticketSubject" 
+                                       name="subject" 
+                                       required
+                                       placeholder="Briefly describe your issue">
+                                <div class="invalid-feedback">
+                                    Please provide a subject for your ticket.
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="ticketCategory" class="form-label">Category</label>
+                                <select class="form-select" id="ticketCategory" name="category" required>
+                                    <option value="" selected disabled>Select a category</option>
+                                    <option value="account">Account Issues</option>
+                                    <option value="technical">Technical Problems</option>
+                                    <option value="payment">Payment & Billing</option>
+                                    <option value="course">Course Content</option>
+                                    <option value="certificate">Certificates</option>
+                                    <option value="other">Other</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select a category.
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="ticketPriority" class="form-label">Priority</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="priority" id="priorityLow" value="low" checked>
+                                    <label class="form-check-label" for="priorityLow">
+                                        <span class="badge bg-secondary">Low</span> - General inquiry
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="priority" id="priorityMedium" value="medium">
+                                    <label class="form-check-label" for="priorityMedium">
+                                        <span class="badge bg-warning">Medium</span> - Feature request or minor issue
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="priority" id="priorityHigh" value="high">
+                                    <label class="form-check-label" for="priorityHigh">
+                                        <span class="badge bg-danger">High</span> - Critical issue preventing learning
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="ticketMessage" class="form-label">Description</label>
+                                <textarea class="form-control" 
+                                          id="ticketMessage" 
+                                          name="message" 
+                                          rows="6" 
+                                          required
+                                          placeholder="Please provide detailed information about your issue..."></textarea>
+                                <div class="form-text">
+                                    Include steps to reproduce, error messages, and screenshots if applicable.
+                                </div>
+                                <div class="invalid-feedback">
+                                    Please describe your issue in detail.
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="ticketAttachment" class="form-label">Attachments</label>
+                                <input type="file" 
+                                       class="form-control" 
+                                       id="ticketAttachment" 
+                                       name="attachment"
+                                       multiple
+                                       accept=".jpg,.jpeg,.png,.pdf,.txt">
+                                <div class="form-text">
+                                    Upload screenshots or files that help explain your issue (max 10MB total).
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-info btn-lg">
+                                    <i class="fas fa-paper-plane me-2"></i>Submit Ticket
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card border-info">
+                            <div class="card-body">
+                                <h6 class="card-title mb-3"><i class="fas fa-lightbulb me-2"></i>Before Submitting</h6>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <i class="fas fa-search text-info me-2"></i>
+                                        <small>Check our <a href="{% url 'accounts:faq' %}">FAQ</a> for quick answers</small>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-users text-info me-2"></i>
+                                        <small>Ask in the <a href="{% url 'community:index' %}">community</a> for peer support</small>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-history text-info me-2"></i>
+                                        <small>Include relevant course or lesson details</small>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-desktop text-info me-2"></i>
+                                        <small>Mention your browser and device type</small>
+                                    </li>
+                                </ul>
+                                
+                                <hr>
+                                
+                                <h6 class="card-title mb-3"><i class="fas fa-clock me-2"></i>Response Times</h6>
+                                <div class="mb-2">
+                                    <span class="badge bg-danger">High Priority</span>
+                                    <small class="text-muted">Within 4 hours</small>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="badge bg-warning">Medium Priority</span>
+                                    <small class="text-muted">Within 24 hours</small>
+                                </div>
+                                <div>
+                                    <span class="badge bg-secondary">Low Priority</span>
+                                    <small class="text-muted">Within 48 hours</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contact Information -->
+        <div class="row mt-5">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-envelope fa-3x text-primary mb-3"></i>
+                        <h5>Email Support</h5>
+                        <p class="text-muted">support@codelab.com</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-phone fa-3x text-success mb-3"></i>
+                        <h5>Phone Support</h5>
+                        <p class="text-muted">+254 700 000 000</p>
+                        <small class="text-muted">Mon-Fri, 9AM-5PM EAT</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-comment-dots fa-3x text-warning mb-3"></i>
+                        <h5>Live Chat</h5>
+                        <p class="text-muted">Coming Soon</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Form validation
+    (function() {
+        'use strict';
+        var form = document.querySelector('.needs-validation');
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    })();
+    
+    // File size validation
+    document.getElementById('ticketAttachment').addEventListener('change', function(e) {
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        const files = e.target.files;
+        let totalSize = 0;
+        
+        for (let file of files) {
+            totalSize += file.size;
+        }
+        
+        if (totalSize > maxSize) {
+            alert('Total file size exceeds 10MB limit. Please select smaller files.');
+            this.value = '';
+        }
+    });
+    
+    // Character counter for message
+    const messageTextarea = document.getElementById('ticketMessage');
+    const charCounter = document.createElement('small');
+    charCounter.className = 'text-muted float-end';
+    messageTextarea.parentElement.appendChild(charCounter);
+    
+    messageTextarea.addEventListener('input', function() {
+        const count = this.value.length;
+        charCounter.textContent = `${count}/2000 characters`;
+        
+        if (count > 2000) {
+            charCounter.className = 'text-danger float-end';
+        } else if (count > 1500) {
+            charCounter.className = 'text-warning float-end';
+        } else {
+            charCounter.className = 'text-muted float-end';
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

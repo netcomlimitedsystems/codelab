@@ -1,0 +1,1206 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Developer Guidelines - CodeLab{% endblock %}
+{% block meta_description %}Code of conduct and development practices for the CodeLab developer community.{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --terminal-bg: #0d1117;
+        --editor-bg: #161b22;
+        --border-color: #30363d;
+        --text-light: #c9d1d9;
+        --text-muted: #8b949e;
+        --primary-blue: #58a6ff;
+        --success-green: #3fb950;
+        --warning-orange: #d29922;
+        --danger-red: #f85149;
+        --accent-purple: #bc8cff;
+        --code-yellow: #e3b341;
+    }
+
+    body {
+        background: var(--terminal-bg);
+        color: var(--text-light);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    /* Terminal Header */
+    .terminal-header {
+        background: var(--editor-bg);
+        border-bottom: 1px solid var(--border-color);
+        border-radius: 8px 8px 0 0;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'Courier New', monospace;
+    }
+
+    .terminal-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+
+    .dot-red { background: var(--danger-red); }
+    .dot-yellow { background: var(--warning-orange); }
+    .dot-green { background: var(--success-green); }
+
+    .terminal-title {
+        margin-left: 1rem;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Code Card */
+    .code-card {
+        background: var(--editor-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 0 0 8px 8px;
+        font-family: 'Courier New', monospace;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .code-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, var(--primary-blue), var(--accent-purple));
+    }
+
+    /* Code Lines */
+    .code-line {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border-color);
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        line-height: 1.6;
+        display: flex;
+        gap: 1rem;
+    }
+
+    .code-line:hover {
+        background: rgba(88, 166, 255, 0.05);
+    }
+
+    .line-number {
+        color: var(--text-muted);
+        min-width: 40px;
+        text-align: right;
+        user-select: none;
+    }
+
+    .line-content {
+        flex: 1;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .code-keyword { color: var(--primary-blue); }
+    .code-string { color: var(--success-green); }
+    .code-comment { color: var(--text-muted); }
+    .code-function { color: var(--accent-purple); }
+    .code-number { color: var(--code-yellow); }
+    .code-operator { color: var(--danger-red); }
+
+    /* Guidelines Container */
+    .guidelines-container {
+        background: var(--editor-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .guidelines-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, var(--primary-blue), var(--accent-purple));
+    }
+
+    .guidelines-header {
+        background: rgba(22, 27, 34, 0.8);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1.25rem;
+        backdrop-filter: blur(10px);
+    }
+
+    .guidelines-body {
+        padding: 1.5rem;
+    }
+
+    /* Chip Badges */
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        font-family: 'Courier New', monospace;
+        border: 1px solid transparent;
+        background: rgba(88, 166, 255, 0.1);
+        color: var(--primary-blue);
+    }
+
+    .chip-success {
+        background: rgba(63, 185, 80, 0.1);
+        color: var(--success-green);
+        border-color: rgba(63, 185, 80, 0.3);
+    }
+
+    .chip-warning {
+        background: rgba(210, 153, 34, 0.1);
+        color: var(--warning-orange);
+        border-color: rgba(210, 153, 34, 0.3);
+    }
+
+    .chip-danger {
+        background: rgba(248, 81, 73, 0.1);
+        color: var(--danger-red);
+        border-color: rgba(248, 81, 73, 0.3);
+    }
+
+    /* Button Styles */
+    .btn-dev {
+        background: rgba(88, 166, 255, 0.1);
+        color: var(--primary-blue);
+        border: 1px solid var(--primary-blue);
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    .btn-dev:hover {
+        background: var(--primary-blue);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(88, 166, 255, 0.2);
+    }
+
+    .btn-dev-outline {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-light);
+    }
+
+    .btn-dev-outline:hover {
+        background: var(--border-color);
+        border-color: var(--text-light);
+    }
+
+    /* Code Block */
+    .code-block {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 1rem;
+        margin: 1rem 0;
+        overflow-x: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    .code-block-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .code-language {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .copy-btn {
+        background: rgba(88, 166, 255, 0.1);
+        color: var(--primary-blue);
+        border: 1px solid rgba(88, 166, 255, 0.3);
+        border-radius: 4px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+        background: rgba(88, 166, 255, 0.2);
+    }
+
+    /* Principle Card */
+    .principle-card {
+        background: var(--editor-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        height: 100%;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .principle-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary-blue), var(--accent-purple));
+    }
+
+    .principle-card:hover {
+        border-color: var(--primary-blue);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(88, 166, 255, 0.1);
+    }
+
+    .principle-icon {
+        font-size: 2rem;
+        color: var(--primary-blue);
+        margin-bottom: 1rem;
+        background: rgba(88, 166, 255, 0.1);
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+    }
+
+    /* Rules List */
+    .rules-list {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .rules-list li {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .rules-list li:last-child {
+        border-bottom: none;
+    }
+
+    .rule-icon {
+        color: var(--success-green);
+        margin-top: 0.25rem;
+        flex-shrink: 0;
+    }
+
+    /* Severity Tags */
+    .severity-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        font-family: 'Courier New', monospace;
+        margin-left: 0.5rem;
+    }
+
+    .severity-low { background: rgba(63, 185, 80, 0.1); color: var(--success-green); }
+    .severity-medium { background: rgba(210, 153, 34, 0.1); color: var(--warning-orange); }
+    .severity-high { background: rgba(248, 81, 73, 0.1); color: var(--danger-red); }
+    .severity-critical { background: rgba(188, 140, 255, 0.1); color: var(--accent-purple); }
+
+    /* Accordion */
+    .guideline-accordion {
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .accordion-header {
+        background: rgba(22, 27, 34, 0.8);
+        border: none;
+        padding: 1.25rem;
+        font-weight: 600;
+        color: var(--text-light);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .accordion-header:hover {
+        background: rgba(88, 166, 255, 0.05);
+    }
+
+    .accordion-header .icon {
+        transition: transform 0.3s ease;
+    }
+
+    .accordion-header.active .icon {
+        transform: rotate(180deg);
+    }
+
+    .accordion-content {
+        padding: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    .accordion-content.active {
+        padding: 1.25rem;
+        max-height: 1000px;
+    }
+
+    /* Report Card */
+    .report-card {
+        background: var(--editor-bg);
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .report-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--danger-red), var(--warning-orange));
+    }
+
+    /* Pledge Section */
+    .pledge-section {
+        background: rgba(88, 166, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+        position: fixed;
+        bottom: 80px;
+        right: 20px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .action-btn {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--primary-blue);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        box-shadow: 0 8px 25px rgba(88, 166, 255, 0.4);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .action-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 12px 30px rgba(88, 166, 255, 0.6);
+    }
+
+    .action-btn-secondary {
+        background: var(--danger-red);
+        box-shadow: 0 8px 25px rgba(248, 81, 73, 0.4);
+    }
+
+    .action-tooltip {
+        position: absolute;
+        right: 70px;
+        background: var(--editor-bg);
+        color: var(--text-light);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        opacity: 0;
+        transform: translateX(10px);
+        transition: all 0.3s ease;
+        pointer-events: none;
+        border: 1px solid var(--border-color);
+        font-family: 'Courier New', monospace;
+    }
+
+    .action-btn:hover .action-tooltip {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    /* Toast Notifications */
+    .toast-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+
+    .toast {
+        background: var(--editor-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+    }
+
+    .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .toast-success {
+        border-left: 4px solid var(--success-green);
+    }
+
+    .toast-error {
+        border-left: 4px solid var(--danger-red);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .terminal-header {
+            padding: 0.5rem;
+        }
+
+        .code-line {
+            padding: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .line-number {
+            min-width: 30px;
+        }
+
+        .guidelines-body {
+            padding: 1rem;
+        }
+
+        .quick-actions {
+            bottom: 70px;
+            right: 15px;
+        }
+
+        .action-btn {
+            width: 50px;
+            height: 50px;
+            font-size: 1.125rem;
+        }
+
+        .action-tooltip {
+            display: none;
+        }
+
+        .principle-card {
+            padding: 1rem;
+        }
+
+        .principle-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .terminal-title {
+            display: none;
+        }
+
+        .code-card, .guidelines-container {
+            margin: 0 -15px;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+        }
+
+        .report-card {
+            padding: 1.5rem;
+        }
+
+        .pledge-section {
+            padding: 1.5rem;
+        }
+    }
+
+    /* Dark mode optimizations */
+    @media (prefers-color-scheme: dark) {
+        .code-block {
+            background: rgba(0, 0, 0, 0.5);
+        }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+        .action-btn,
+        .principle-card,
+        .accordion-header {
+            transition: none;
+        }
+
+        .action-btn:hover {
+            transform: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Terminal -->
+    <div class="mb-4">
+        <div class="terminal-header">
+            <div class="terminal-dot dot-red"></div>
+            <div class="terminal-dot dot-yellow"></div>
+            <div class="terminal-dot dot-green"></div>
+            <span class="terminal-title">README.md - Developer Guidelines</span>
+            <span class="ms-auto">
+                <span class="chip">v2.1.0</span>
+            </span>
+        </div>
+        <div class="code-card">
+            <div class="code-line">
+                <span class="line-number">1</span>
+                <span class="line-content code-comment"># CodeLab Developer Community Guidelines</span>
+            </div>
+            <div class="code-line">
+                <span class="line-number">2</span>
+                <span class="line-content code-comment">// Building a safe, respectful, and productive environment for all developers.</span>
+            </div>
+            <div class="code-line">
+                <span class="line-number">3</span>
+                <span class="line-content">
+                    <span class="code-keyword">const</span> community = <span class="code-function">new</span> DeveloperCommunity({
+                </span>
+            </div>
+            <div class="code-line">
+                <span class="line-number">4</span>
+                <span class="line-content">&nbsp;&nbsp;members: <span class="code-number">10000</span>,</span>
+            </div>
+            <div class="code-line">
+                <span class="line-number">5</span>
+                <span class="line-content">&nbsp;&nbsp;principles: <span class="code-string">"Respect, Empathy, Learning"</span>,</span>
+            </div>
+            <div class="code-line">
+                <span class="line-number">6</span>
+                <span class="line-content>&nbsp;&nbsp;status: <span class="code-string">"Active"</span></span>
+            </div>
+            <div class="code-line">
+                <span class="line-number">7</span>
+                <span class="line-content">});</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Principles -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="guidelines-container">
+                <div class="guidelines-header">
+                    <h4 class="mb-0"><i class="fas fa-code me-2"></i>Core Development Principles</h4>
+                </div>
+                <div class="guidelines-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="principle-card">
+                                <div class="principle-icon">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <h5 class="fw-bold mb-2">Respect & Empathy</h5>
+                                <p class="text-muted small">Treat everyone with kindness. We all come from different backgrounds and skill levels.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="principle-card">
+                                <div class="principle-icon">
+                                    <i class="fas fa-code-merge"></i>
+                                </div>
+                                <h5 class="fw-bold mb-2">Constructive Reviews</h5>
+                                <p class="text-muted small">Offer helpful, specific feedback that encourages growth and learning.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="principle-card">
+                                <div class="principle-icon">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <h5 class="fw-bold mb-2">Lifelong Learning</h5>
+                                <p class="text-muted small">Embrace curiosity and share knowledge. Every question is an opportunity to learn.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Development Guidelines -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="guidelines-container">
+                <div class="guidelines-header">
+                    <h4 class="mb-0"><i class="fas fa-file-code me-2"></i>Development Guidelines</h4>
+                </div>
+                <div class="guidelines-body">
+                    <div class="code-block">
+                        <div class="code-block-header">
+                            <span class="code-language">guidelines.js</span>
+                            <button class="copy-btn" onclick="copyGuidelines()">
+                                <i class="fas fa-copy me-1"></i>Copy
+                            </button>
+                        </div>
+                        <pre class="mb-0">// 1. Respect All Developers
+//    - Use welcoming and inclusive language
+//    - Respect different opinions and skill levels
+//    - No personal attacks or discrimination
+
+// 2. Stay On Topic
+//    - Post in appropriate channels
+//    - Keep discussions technical and productive
+//    - Use designated off-topic areas
+
+// 3. No Spam or Self-Promotion
+//    - No unsolicited promotions
+//    - Avoid repetitive posting
+//    - Share resources contextually
+
+// 4. Clear Communication
+//    - Use code formatting appropriately
+//    - Explain concepts clearly
+//    - Be patient with learners
+
+// 5. Report Issues
+//    - Report violations promptly
+//    - Keep reports factual
+//    - Respect privacy and confidentiality</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Code of Conduct -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="guidelines-container">
+                <div class="guidelines-header">
+                    <h4 class="mb-0"><i class="fas fa-gavel me-2"></i>Code of Conduct</h4>
+                </div>
+                <div class="guidelines-body">
+                    <div class="guideline-accordion">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user-shield me-3"></i>
+                                <span>Inclusive Development Environment</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="severity-tag severity-high">Required</span>
+                                <i class="fas fa-chevron-down icon ms-2"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <p>We are committed to providing a friendly, safe, and welcoming environment for all developers, regardless of:</p>
+                            <ul class="rules-list">
+                                <li>
+                                    <i class="fas fa-check rule-icon"></i>
+                                    <span>Gender, gender identity, or gender expression</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check rule-icon"></i>
+                                    <span>Technical skill level or experience</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check rule-icon"></i>
+                                    <span>Race, ethnicity, or nationality</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check rule-icon"></i>
+                                    <span>Age, disability, or physical appearance</span>
+                                </li>
+                            </ul>
+                            <p class="mt-3 text-muted">Discrimination or harassment of any kind will not be tolerated.</p>
+                        </div>
+                    </div>
+
+                    <div class="guideline-accordion">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-code me-3"></i>
+                                <span>Technical Conduct</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="severity-tag severity-medium">Important</span>
+                                <i class="fas fa-chevron-down icon ms-2"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <p>When providing technical help or reviewing code:</p>
+                            <ul class="rules-list">
+                                <li>
+                                    <i class="fas fa-code rule-icon"></i>
+                                    <span>Explain concepts clearly and patiently</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-code rule-icon"></i>
+                                    <span>Provide constructive feedback</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-code rule-icon"></i>
+                                    <span>Don't assume prior knowledge</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-code rule-icon"></i>
+                                    <span>Use proper code formatting</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-code rule-icon"></i>
+                                    <span>Cite sources when sharing solutions</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="guideline-accordion">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-shield-alt me-3"></i>
+                                <span>Enforcement & Reporting</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="severity-tag severity-critical">Critical</span>
+                                <i class="fas fa-chevron-down icon ms-2"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="code-block">
+                                <pre class="mb-0">// Report violations to: community@codelab.dev
+// Response time: Usually within 24 hours
+
+// All reports are:
+// - Reviewed promptly
+// - Investigated fairly
+// - Kept confidential
+
+// Moderators can:
+// - Remove inappropriate content
+// - Issue warnings
+// - Suspend accounts
+// - Ban users for severe violations</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="report-card">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h4 class="fw-bold mb-2"><i class="fas fa-bug me-2"></i>Found a Bug? Report It.</h4>
+                        <p class="text-muted mb-3">If you encounter behavior that violates our guidelines, please report it immediately. All reports are confidential.</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-dev" onclick="showReportModal()">
+                                <i class="fas fa-flag me-2"></i>Report Issue
+                            </button>
+                            <button class="btn btn-dev-outline" onclick="showContactModal()">
+                                <i class="fas fa-headset me-2"></i>Contact Team
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4 d-none d-md-flex justify-content-center">
+                        <div class="text-center">
+                            <i class="fas fa-shield-alt fa-3x text-muted"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Pledge -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="pledge-section">
+                <div class="mb-4">
+                    <i class="fas fa-code fa-2x text-primary mb-3"></i>
+                    <h4 class="fw-bold mb-3">Developer Pledge</h4>
+                    <div class="code-block mb-4">
+                        <pre class="mb-0 code-comment">// We pledge to make participation in our community a harassment-free experience
+// for everyone, regardless of age, experience, background, or identity.
+// We commit to maintaining a welcoming and inclusive environment
+// where all developers can learn, grow, and contribute.</pre>
+                    </div>
+                    <div class="form-check d-inline-block me-3">
+                        <input class="form-check-input" type="checkbox" id="pledgeAgree">
+                        <label class="form-check-label" for="pledgeAgree">
+                            I agree to follow these guidelines
+                        </label>
+                    </div>
+                    <a href="{% url 'community:index' %}" class="btn btn-dev" id="joinButton">
+                        <i class="fas fa-code-branch me-2"></i>Join Development
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+    <button class="action-btn" onclick="scrollToTop()">
+        <i class="fas fa-arrow-up"></i>
+        <span class="action-tooltip">Back to Top</span>
+    </button>
+    <button class="action-btn action-btn-secondary" onclick="showReportModal()">
+        <i class="fas fa-bug"></i>
+        <span class="action-tooltip">Report Issue</span>
+    </button>
+</div>
+
+<!-- Report Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content code-card">
+            <div class="terminal-header">
+                <div class="terminal-dot dot-red" data-bs-dismiss="modal" style="cursor: pointer;"></div>
+                <div class="terminal-dot dot-yellow"></div>
+                <div class="terminal-dot dot-green" id="submitReport" style="cursor: pointer;"></div>
+                <span class="terminal-title">report_issue.js</span>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted">Violation Type</label>
+                    <select class="form-control search-input" id="violationType">
+                        <option value="">Select violation type</option>
+                        <option value="harassment">Harassment or Discrimination</option>
+                        <option value="spam">Spam or Self-Promotion</option>
+                        <option value="offtopic">Off-topic Content</option>
+                        <option value="language">Inappropriate Language</option>
+                        <option value="code">Poor Code Quality</option>
+                        <option value="other">Other Violation</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted">Issue Details</label>
+                    <textarea class="form-control search-input" id="issueDetails" rows="4" placeholder="Describe the issue..."></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted">Content URL (optional)</label>
+                    <input type="url" class="form-control search-input" id="contentUrl" placeholder="https://">
+                </div>
+                
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="keepConfidential">
+                    <label class="form-check-label text-muted" for="keepConfidential">
+                        <i class="fas fa-lock me-1"></i>Keep my report confidential
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Modal -->
+<div class="modal fade" id="contactModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content code-card">
+            <div class="terminal-header">
+                <div class="terminal-dot dot-red" data-bs-dismiss="modal" style="cursor: pointer;"></div>
+                <span class="terminal-title">contact_mods.js</span>
+            </div>
+            <div class="modal-body">
+                <div class="code-block mb-3">
+                    <pre class="mb-0 code-comment">// Contact Community Moderators
+// Response time: Usually within 24 hours
+// All communications are confidential</pre>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="fw-bold mb-3">Contact Options:</h6>
+                    <ul class="rules-list">
+                        <li>
+                            <i class="fas fa-envelope rule-icon"></i>
+                            <div>
+                                <div class="fw-bold">Email</div>
+                                <small class="text-muted">community@codelab.dev</small>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-code rule-icon"></i>
+                            <div>
+                                <div class="fw-bold">GitHub Issues</div>
+                                <small class="text-muted">github.com/codelab/community/issues</small>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-user-shield rule-icon"></i>
+                            <div>
+                                <div class="fw-bold">Direct Message</div>
+                                <small class="text-muted">Any moderator in the community</small>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize accordion behavior
+    function toggleAccordion(header) {
+        const content = header.nextElementSibling;
+        const icon = header.querySelector('.icon');
+        
+        header.classList.toggle('active');
+        content.classList.toggle('active');
+        
+        if (header.classList.contains('active')) {
+            icon.style.transform = 'rotate(180deg)';
+        } else {
+            icon.style.transform = 'rotate(0deg)';
+        }
+    }
+    
+    window.toggleAccordion = toggleAccordion;
+    
+    // Pledge agreement tracking
+    const pledgeCheckbox = document.getElementById('pledgeAgree');
+    const joinButton = document.getElementById('joinButton');
+    
+    if (pledgeCheckbox && joinButton) {
+        pledgeCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                joinButton.classList.remove('disabled');
+                joinButton.style.opacity = '1';
+            } else {
+                joinButton.classList.add('disabled');
+                joinButton.style.opacity = '0.6';
+            }
+        });
+    }
+    
+    // Report modal
+    window.showReportModal = function() {
+        const modal = new bootstrap.Modal(document.getElementById('reportModal'));
+        modal.show();
+        
+        // Focus on textarea
+        setTimeout(() => {
+            document.getElementById('issueDetails').focus();
+        }, 500);
+    };
+    
+    // Contact modal
+    window.showContactModal = function() {
+        const modal = new bootstrap.Modal(document.getElementById('contactModal'));
+        modal.show();
+    };
+    
+    // Submit report
+    document.getElementById('submitReport').addEventListener('click', function() {
+        const type = document.getElementById('violationType').value;
+        const details = document.getElementById('issueDetails').value;
+        
+        if (!type || !details) {
+            showToast('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        // In a real application, you would send this to your backend
+        console.log('Report submitted:', { type, details });
+        
+        showToast('Report submitted successfully!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
+        
+        // Clear form
+        document.getElementById('violationType').value = '';
+        document.getElementById('issueDetails').value = '';
+        document.getElementById('contentUrl').value = '';
+        document.getElementById('keepConfidential').checked = false;
+    });
+    
+    // Copy guidelines
+    window.copyGuidelines = function() {
+        const guidelines = document.querySelector('.code-block pre').textContent;
+        navigator.clipboard.writeText(guidelines);
+        showToast('Guidelines copied to clipboard!', 'success');
+    };
+    
+    // Scroll to top
+    window.scrollToTop = function() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    };
+    
+    // Show toast notification
+    function showToast(message, type = 'success') {
+        const container = document.querySelector('.toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 10);
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+    
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Escape: Close modal
+        if (e.key === 'Escape') {
+            const modal = document.querySelector('.modal.show');
+            if (modal) {
+                bootstrap.Modal.getInstance(modal).hide();
+            }
+        }
+        
+        // Ctrl/Cmd + R: Show report modal
+        if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+            e.preventDefault();
+            showReportModal();
+        }
+        
+        // Ctrl/Cmd + C: Copy guidelines
+        if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+            const selection = window.getSelection().toString();
+            if (!selection && document.querySelector('.code-block')) {
+                e.preventDefault();
+                copyGuidelines();
+            }
+        }
+    });
+    
+    // Add keyboard shortcut hint
+    const codeBlock = document.querySelector('.code-block');
+    if (codeBlock) {
+        const hint = document.createElement('div');
+        hint.className = 'mt-2 small text-muted';
+        hint.innerHTML = '<i class="fas fa-keyboard me-1"></i>Press Ctrl+C to copy';
+        codeBlock.parentNode.appendChild(hint);
+    }
+    
+    // Initialize with first accordion open
+    const firstAccordion = document.querySelector('.guideline-accordion .accordion-header');
+    if (firstAccordion) {
+        firstAccordion.classList.add('active');
+        const firstContent = firstAccordion.nextElementSibling;
+        const firstIcon = firstAccordion.querySelector('.icon');
+        
+        if (firstContent) {
+            firstContent.classList.add('active');
+            firstIcon.style.transform = 'rotate(180deg)';
+        }
+    }
+    
+    // Add smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            if (href !== '#') {
+                e.preventDefault();
+                const target = document.querySelector(href);
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            }
+        });
+    });
+    
+    // Add hover effects to principle cards
+    document.querySelectorAll('.principle-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.boxShadow = '0 15px 30px rgba(88, 166, 255, 0.1)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    });
+    
+    // Auto-expand textareas
+    document.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    });
+});
+</script>
+{% endblock %}

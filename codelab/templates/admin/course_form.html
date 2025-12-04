@@ -1,0 +1,529 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_subtitle %}Course Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="courseForm">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">Course Title *</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">{{ form.title.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.level.id_for_label }}" class="form-label">Level *</label>
+                            {{ form.level }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.slug.id_for_label }}" class="form-label">URL Slug *</label>
+                            {{ form.slug }}
+                            <small class="text-muted">Used in URLs (e.g., "python-basics")</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                            {{ form.category }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.short_description.id_for_label }}" class="form-label">Short Description</label>
+                        {{ form.short_description }}
+                        <small class="text-muted">Displayed on course cards (max 400 chars)</small>
+                        <div class="char-count">
+                            <span id="shortDescCount">0</span>/400
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Full Description *</label>
+                        <div class="editor-toolbar mb-2">
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-secondary" data-command="bold">
+                                    <i class="fas fa-bold"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" data-command="italic">
+                                    <i class="fas fa-italic"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" data-command="insertUnorderedList">
+                                    <i class="fas fa-list-ul"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" data-command="insertOrderedList">
+                                    <i class="fas fa-list-ol"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" data-command="createLink">
+                                    <i class="fas fa-link"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" data-command="insertImage">
+                                    <i class="fas fa-image"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" data-command="code">
+                                    <i class="fas fa-code"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {{ form.description }}
+                        <small class="text-muted">Supports Markdown formatting</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Pricing</label>
+                            <div class="form-check mb-2">
+                                {{ form.is_paid }}
+                                <label class="form-check-label" for="{{ form.is_paid.id_for_label }}">
+                                    Paid Course
+                                </label>
+                            </div>
+                            <div id="priceField" class="mt-2" style="display: none;">
+                                {{ form.price }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <div class="form-check mb-2">
+                                {{ form.published }}
+                                <label class="form-check-label" for="{{ form.published.id_for_label }}">
+                                    Published
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                {{ form.featured }}
+                                <label class="form-check-label" for="{{ form.featured.id_for_label }}">
+                                    Featured Course
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Payment Methods</label>
+                        <div class="row">
+                            {% for checkbox in form.payment_methods %}
+                            <div class="col-md-3 mb-2">
+                                <div class="form-check">
+                                    {{ checkbox.tag }}
+                                    <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                                        {{ checkbox.choice_label }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.thumbnail.id_for_label }}" class="form-label">Course Thumbnail</label>
+                        <div class="mb-3">
+                            {% if form.instance.thumbnail %}
+                            <img src="{{ form.instance.thumbnail.url }}" id="thumbnailPreview" 
+                                 class="img-thumbnail" style="max-height: 200px;">
+                            {% else %}
+                            <div id="thumbnailPreview" class="img-thumbnail bg-light d-flex align-items-center justify-content-center" 
+                                 style="height: 200px;">
+                                <i class="fas fa-image fa-3x text-muted"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {{ form.thumbnail }}
+                        <small class="text-muted">Recommended: 1280x720 px, max 5MB</small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'accounts:course_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Course</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Course Preview -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Preview</h6>
+            </div>
+            <div class="card-body">
+                <div class="course-preview">
+                    <div id="previewThumbnail" class="mb-3 bg-light" style="height: 150px; border-radius: 8px; overflow: hidden;">
+                        {% if form.instance.thumbnail %}
+                        <img src="{{ form.instance.thumbnail.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                        <div class="h-100 d-flex align-items-center justify-content-center">
+                            <i class="fas fa-image fa-2x text-muted"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <h5 id="previewTitle">{{ form.instance.title|default:"Course Title" }}</h5>
+                    <p class="text-muted small" id="previewShortDesc">
+                        {{ form.instance.short_description|default:"Short description will appear here" }}
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge" id="previewLevel">
+                            {{ form.instance.level|default:"beginner"|title }}
+                        </span>
+                        <span id="previewPrice">
+                            {% if form.instance.is_paid and form.instance.price %}
+                            <strong>${{ form.instance.price }}</strong>
+                            {% else %}
+                            <span class="badge bg-success">FREE</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Course Stats -->
+        {% if form.instance.id %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Course Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="display-6 text-primary">{{ form.instance.enrollments.count }}</div>
+                        <small class="text-muted">Enrollments</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="display-6 text-success">{{ form.instance.lessons.count }}</div>
+                        <small class="text-muted">Lessons</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="display-6 text-warning">{{ form.instance.certificates.count }}</div>
+                        <small class="text-muted">Certificates</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="display-6 text-info">4.8</div>
+                        <small class="text-muted">Rating</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if form.instance.id %}
+                    <a href="{% url 'accounts:lesson_add' form.instance.id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-2"></i>Add Lesson
+                    </a>
+                    <a href="{% url 'accounts:assignment_add' form.instance.id %}" class="btn btn-outline-success">
+                        <i class="fas fa-tasks me-2"></i>Add Assignment
+                    </a>
+                    <a href="{% url 'accounts:exam_add' form.instance.id %}" class="btn btn-outline-warning">
+                        <i class="fas fa-file-alt me-2"></i>Add Exam
+                    </a>
+                    <a href="{{ form.instance.get_absolute_url }}" class="btn btn-outline-info" target="_blank">
+                        <i class="fas fa-eye me-2"></i>View Course
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle price field based on is_paid checkbox
+        const isPaidCheckbox = document.getElementById('{{ form.is_paid.id_for_label }}');
+        const priceField = document.getElementById('priceField');
+        const priceInput = document.getElementById('{{ form.price.id_for_label }}');
+        
+        function togglePriceField() {
+            if (isPaidCheckbox.checked) {
+                priceField.style.display = 'block';
+                if (priceInput) priceInput.required = true;
+            } else {
+                priceField.style.display = 'none';
+                if (priceInput) priceInput.required = false;
+            }
+            updatePreview();
+        }
+        
+        if (isPaidCheckbox) {
+            isPaidCheckbox.addEventListener('change', togglePriceField);
+            togglePriceField(); // Initial check
+        }
+        
+        // Character counter for short description
+        const shortDescTextarea = document.getElementById('{{ form.short_description.id_for_label }}');
+        const shortDescCount = document.getElementById('shortDescCount');
+        
+        if (shortDescTextarea && shortDescCount) {
+            function updateCharCount() {
+                const length = shortDescTextarea.value.length;
+                shortDescCount.textContent = length;
+                
+                if (length > 400) {
+                    shortDescCount.classList.add('text-danger');
+                } else {
+                    shortDescCount.classList.remove('text-danger');
+                }
+                updatePreview();
+            }
+            
+            shortDescTextarea.addEventListener('input', updateCharCount);
+            updateCharCount(); // Initial count
+        }
+        
+        // Thumbnail preview
+        const thumbnailInput = document.getElementById('{{ form.thumbnail.id_for_label }}');
+        const thumbnailPreview = document.getElementById('thumbnailPreview');
+        
+        if (thumbnailInput && thumbnailPreview) {
+            thumbnailInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        if (thumbnailPreview.tagName === 'IMG') {
+                            thumbnailPreview.src = e.target.result;
+                        } else {
+                            // Replace div with image
+                            const img = document.createElement('img');
+                            img.id = 'thumbnailPreview';
+                            img.className = 'img-thumbnail';
+                            img.src = e.target.result;
+                            img.style.maxHeight = '200px';
+                            thumbnailPreview.parentNode.replaceChild(img, thumbnailPreview);
+                        }
+                        updatePreviewThumbnail(e.target.result);
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+        
+        // Live preview updates
+        const titleInput = document.getElementById('{{ form.title.id_for_label }}');
+        const levelSelect = document.getElementById('{{ form.level.id_for_label }}');
+        
+        if (titleInput) titleInput.addEventListener('input', updatePreview);
+        if (levelSelect) levelSelect.addEventListener('change', updatePreview);
+        
+        function updatePreview() {
+            // Update title
+            const previewTitle = document.getElementById('previewTitle');
+            if (previewTitle && titleInput) {
+                previewTitle.textContent = titleInput.value || 'Course Title';
+            }
+            
+            // Update short description
+            const previewShortDesc = document.getElementById('previewShortDesc');
+            if (previewShortDesc && shortDescTextarea) {
+                previewShortDesc.textContent = shortDescTextarea.value || 'Short description will appear here';
+            }
+            
+            // Update level badge
+            const previewLevel = document.getElementById('previewLevel');
+            if (previewLevel && levelSelect) {
+                const level = levelSelect.options[levelSelect.selectedIndex].text;
+                previewLevel.textContent = level;
+                previewLevel.className = 'badge level-' + levelSelect.value;
+            }
+            
+            // Update price
+            const previewPrice = document.getElementById('previewPrice');
+            if (previewPrice) {
+                if (isPaidCheckbox && isPaidCheckbox.checked && priceInput && priceInput.value) {
+                    previewPrice.innerHTML = `<strong>$${priceInput.value}</strong>`;
+                } else {
+                    previewPrice.innerHTML = '<span class="badge bg-success">FREE</span>';
+                }
+            }
+        }
+        
+        function updatePreviewThumbnail(src) {
+            const previewThumbnail = document.getElementById('previewThumbnail');
+            if (previewThumbnail) {
+                const img = previewThumbnail.querySelector('img');
+                if (img) {
+                    img.src = src;
+                } else {
+                    previewThumbnail.innerHTML = `<img src="${src}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                }
+            }
+        }
+        
+        // Rich text editor functionality
+        const editorToolbar = document.querySelector('.editor-toolbar');
+        const descriptionTextarea = document.getElementById('{{ form.description.id_for_label }}');
+        
+        if (editorToolbar && descriptionTextarea) {
+            editorToolbar.addEventListener('click', function(e) {
+                const button = e.target.closest('button');
+                if (!button) return;
+                
+                e.preventDefault();
+                const command = button.getAttribute('data-command');
+                
+                if (command === 'bold') {
+                    wrapSelection('**', '**');
+                } else if (command === 'italic') {
+                    wrapSelection('*', '*');
+                } else if (command === 'insertUnorderedList') {
+                    wrapSelection('- ', '');
+                } else if (command === 'insertOrderedList') {
+                    wrapSelection('1. ', '');
+                } else if (command === 'createLink') {
+                    const url = prompt('Enter URL:');
+                    if (url) {
+                        wrapSelection('[', `](${url})`);
+                    }
+                } else if (command === 'insertImage') {
+                    const url = prompt('Enter image URL:');
+                    if (url) {
+                        wrapSelection('![', `](${url})`);
+                    }
+                } else if (command === 'code') {
+                    wrapSelection('`', '`');
+                }
+                
+                descriptionTextarea.focus();
+            });
+        }
+        
+        function wrapSelection(before, after) {
+            const textarea = descriptionTextarea;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            const beforeText = textarea.value.substring(0, start);
+            const afterText = textarea.value.substring(end);
+            
+            textarea.value = beforeText + before + selectedText + after + afterText;
+            
+            // Update cursor position
+            const newCursorPos = start + before.length + selectedText.length + after.length;
+            textarea.selectionStart = newCursorPos;
+            textarea.selectionEnd = newCursorPos;
+            
+            // Trigger input event for preview
+            textarea.dispatchEvent(new Event('input'));
+        }
+        
+        // Form validation
+        const form = document.getElementById('courseForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                // Additional validation can be added here
+                if (isPaidCheckbox && isPaidCheckbox.checked) {
+                    if (!priceInput.value || parseFloat(priceInput.value) <= 0) {
+                        e.preventDefault();
+                        alert('Please enter a valid price for paid courses');
+                        return;
+                    }
+                }
+                
+                // Check slug format
+                const slugInput = document.getElementById('{{ form.slug.id_for_label }}');
+                if (slugInput && !/^[a-z0-9-]+$/.test(slugInput.value)) {
+                    e.preventDefault();
+                    alert('Slug can only contain lowercase letters, numbers, and hyphens');
+                    return;
+                }
+                
+                // Show loading state
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+                    submitBtn.disabled = true;
+                }
+            });
+        }
+        
+        // Auto-generate slug from title
+        if (titleInput) {
+            let slugGenerated = false;
+            
+            titleInput.addEventListener('blur', function() {
+                if (!slugGenerated) {
+                    const slugInput = document.getElementById('{{ form.slug.id_for_label }}');
+                    if (slugInput && !slugInput.value) {
+                        const slug = this.value
+                            .toLowerCase()
+                            .replace(/[^a-z0-9]+/g, '-')
+                            .replace(/^-+|-+$/g, '');
+                        slugInput.value = slug;
+                        slugGenerated = true;
+                    }
+                }
+            });
+        }
+    });
+</script>
+
+<style>
+    .char-count {
+        text-align: right;
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 4px;
+    }
+    
+    .editor-toolbar {
+        background: #f8f9fa;
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .course-preview {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .level-beginner { background-color: #d1fae5; color: #065f46; }
+    .level-intermediate { background-color: #fef3c7; color: #92400e; }
+    .level-advanced { background-color: #fee2e2; color: #991b1b; }
+    
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .img-thumbnail {
+        max-width: 100%;
+        height: auto;
+        cursor: pointer;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+</style>
+{% endblock %}

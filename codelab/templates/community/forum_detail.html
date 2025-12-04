@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ forum.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'community:index' %}">Forums</a></li>
+                <li class="breadcrumb-item active">{{ forum.name }}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>{{ forum.name }}</h1>
+            <a href="{% url 'community:create_discussion' forum.slug %}" class="btn btn-primary">
+                Start New Discussion
+            </a>
+        </div>
+
+        <p class="text-muted">{{ forum.description }}</p>
+
+        <!-- Discussions List -->
+        {% for discussion in page_obj %}
+        <div class="card mb-3 {% if discussion.is_pinned %}discussion-pinned{% endif %}">
+            <div class="card-body">
+                {% if discussion.is_pinned %}
+                <span class="badge bg-warning float-end">Pinned</span>
+                {% endif %}
+                
+                <h5 class="card-title">
+                    <a href="{% url 'community:discussion_detail' discussion.id %}" class="text-decoration-none">
+                        {{ discussion.title }}
+                    </a>
+                </h5>
+                
+                <p class="card-text">{{ discussion.content|truncatewords:30 }}</p>
+                
+                <div class="d-flex justify-content-between text-muted">
+                    <small>
+                        by {{ discussion.author.username }}
+                        {% if discussion.author.profile %}
+                            • {{ discussion.author.profile.points }} points
+                        {% endif %}
+                    </small>
+                    <small>
+                        {{ discussion.comment_count }} comments • 
+                        {{ discussion.views }} views • 
+                        {{ discussion.created_at|timesince }} ago
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">
+            No discussions in this forum yet. 
+            <a href="{% url 'community:create_discussion' forum.slug %}">Start the first one!</a>
+        </div>
+        {% endfor %}
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Discussion pagination">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <!-- Quick Start Discussion -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Start Discussion</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Content</label>
+                        <textarea class="form-control" id="content" name="content" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Create Discussion</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

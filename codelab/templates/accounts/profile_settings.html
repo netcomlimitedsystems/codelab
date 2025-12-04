@@ -1,0 +1,807 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile Settings - CodeLab{% endblock %}
+
+{% block page_title %}Profile Settings{% endblock %}
+{% block page_subtitle %}Manage your account and preferences{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Left Column - Navigation -->
+    <div class="col-lg-3 mb-4">
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <a href="#profile" class="list-group-item list-group-item-action active" data-bs-toggle="tab">
+                        <i class="fas fa-user me-3"></i>Profile
+                    </a>
+                    <a href="#account" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="fas fa-cog me-3"></i>Account
+                    </a>
+                    <a href="#notifications" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="fas fa-bell me-3"></i>Notifications
+                    </a>
+                    <a href="#security" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="fas fa-shield-alt me-3"></i>Security
+                    </a>
+                    <a href="#billing" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="fas fa-credit-card me-3"></i>Billing
+                    </a>
+                    <a href="#preferences" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="fas fa-sliders-h me-3"></i>Preferences
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title mb-3">Account Status</h6>
+                <div class="mb-3">
+                    <small class="text-muted d-block mb-1">Account Level</small>
+                    <span class="badge bg-primary">Level {{ user.profile.level }}</span>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted d-block mb-1">Points</small>
+                    <span class="h5">{{ user.profile.points }}</span>
+                </div>
+                <div>
+                    <small class="text-muted d-block mb-1">Member Since</small>
+                    <span>{{ user.date_joined|date:"M d, Y" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column - Content -->
+    <div class="col-lg-9">
+        <div class="tab-content">
+            <!-- Profile Tab -->
+            <div class="tab-pane fade show active" id="profile">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Profile Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{% url 'accounts:profile_settings' %}" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <!-- Profile Picture -->
+                            <div class="text-center mb-4">
+                                <div class="position-relative d-inline-block">
+                                    {% if user.profile.profile_picture %}
+                                    <img src="{{ user.profile.profile_picture.url }}" 
+                                         id="profilePreview" 
+                                         class="avatar avatar-xl rounded-circle border" 
+                                         alt="Profile">
+                                    {% else %}
+                                    <div id="profilePreview" 
+                                         class="avatar avatar-xl bg-primary text-white rounded-circle border d-flex align-items-center justify-content-center"
+                                         style="font-size: 2rem;">
+                                        {{ user.username|first|upper }}
+                                    </div>
+                                    {% endif %}
+                                    <label for="profile_picture" class="btn btn-primary btn-sm rounded-circle position-absolute" 
+                                           style="bottom: 0; right: 0;">
+                                        <i class="fas fa-camera"></i>
+                                        <input type="file" id="profile_picture" name="profile_picture" 
+                                               accept="image/*" class="d-none" onchange="previewImage(this)">
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="full_name" class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" id="full_name" name="full_name" 
+                                           value="{{ user.profile.full_name|default:'' }}" placeholder="Enter your full name">
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="username" value="{{ user.username }}" disabled>
+                                    <small class="text-muted">Username cannot be changed</small>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" value="{{ user.email }}" disabled>
+                                    <small class="text-muted">Contact support to change email</small>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" 
+                                           value="{{ user.profile.phone|default:'' }}" placeholder="Enter your phone number">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="bio" class="form-label">Bio</label>
+                                <textarea class="form-control" id="bio" name="bio" rows="3" 
+                                          placeholder="Tell us about yourself">{{ user.profile.bio|default:'' }}</textarea>
+                                <small class="text-muted">Maximum 500 characters</small>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="location" class="form-label">Location</label>
+                                    <input type="text" class="form-control" id="location" name="location" 
+                                           value="{{ user.profile.location|default:'' }}" placeholder="City, Country">
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="website" class="form-label">Website</label>
+                                    <input type="url" class="form-control" id="website" name="website" 
+                                           value="{{ user.profile.website|default:'' }}" placeholder="https://example.com">
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">Reset</button>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Account Tab -->
+            <div class="tab-pane fade" id="account">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Account Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Email Preferences -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Email Preferences</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                                <label class="form-check-label" for="emailNotifications">
+                                    Course notifications and updates
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="marketingEmails" checked>
+                                <label class="form-check-label" for="marketingEmails">
+                                    Marketing and promotional emails
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="communityUpdates">
+                                <label class="form-check-label" for="communityUpdates">
+                                    Community updates and announcements
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Account Deletion -->
+                        <div class="alert alert-danger">
+                            <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Danger Zone</h6>
+                            <p class="mb-2">Once you delete your account, there is no going back. Please be certain.</p>
+                            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                                Delete Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notifications Tab -->
+            <div class="tab-pane fade" id="notifications">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Notification Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <h6 class="mb-3">Push Notifications</h6>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="pushEnabled" checked>
+                                <label class="form-check-label" for="pushEnabled">Enable push notifications</label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h6 class="mb-3">Notification Types</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="notifyCourseUpdates" checked>
+                                <label class="form-check-label" for="notifyCourseUpdates">
+                                    Course updates and announcements
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="notifyAssignment" checked>
+                                <label class="form-check-label" for="notifyAssignment">
+                                    Assignment deadlines
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="notifyExam" checked>
+                                <label class="form-check-label" for="notifyExam">
+                                    Exam reminders
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="notifyMessages" checked>
+                                <label class="form-check-label" for="notifyMessages">
+                                    Direct messages
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="notifyCommunity" checked>
+                                <label class="form-check-label" for="notifyCommunity">
+                                    Community interactions
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary">Save Notification Settings</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Tab -->
+            <div class="tab-pane fade" id="security">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Security Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Change Password -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Change Password</h6>
+                            <form action="{% url 'accounts:change_password' %}" method="POST" id="passwordForm">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="old_password" class="form-label">Current Password</label>
+                                    <input type="password" class="form-control" id="old_password" name="old_password" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="new_password1" class="form-label">New Password</label>
+                                    <input type="password" class="form-control" id="new_password1" name="new_password1" required>
+                                    <div class="password-strength mt-2">
+                                        <div class="progress" style="height: 4px;">
+                                            <div class="progress-bar" id="passwordStrength"></div>
+                                        </div>
+                                        <small class="text-muted" id="passwordHint"></small>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="new_password2" class="form-label">Confirm New Password</label>
+                                    <input type="password" class="form-control" id="new_password2" name="new_password2" required>
+                                    <div class="form-text" id="passwordMatch"></div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Change Password</button>
+                            </form>
+                        </div>
+                        
+                        <!-- Two-Factor Authentication -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Two-Factor Authentication</h6>
+                            <div class="alert alert-info">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-shield-alt fa-2x me-3"></i>
+                                    <div>
+                                        <h6 class="alert-heading mb-1">Enhanced Security</h6>
+                                        <p class="mb-0">Add an extra layer of security to your account</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="twoFactorEnabled">
+                                <label class="form-check-label" for="twoFactorEnabled">Enable Two-Factor Authentication</label>
+                            </div>
+                        </div>
+                        
+                        <!-- Login History -->
+                        <div>
+                            <h6 class="mb-3">Recent Login History</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Date & Time</th>
+                                            <th>Device</th>
+                                            <th>Location</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>{{ user.last_login|date:"M d, Y H:i" }}</td>
+                                            <td>Chrome on Windows</td>
+                                            <td>New York, US</td>
+                                            <td><span class="badge bg-success">Success</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Yesterday, 14:30</td>
+                                            <td>Safari on iPhone</td>
+                                            <td>New York, US</td>
+                                            <td><span class="badge bg-success">Success</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>2 days ago, 09:15</td>
+                                            <td>Firefox on Mac</td>
+                                            <td>Chicago, US</td>
+                                            <td><span class="badge bg-warning">New Device</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button class="btn btn-outline-secondary btn-sm">View All Activity</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Billing Tab -->
+            <div class="tab-pane fade" id="billing">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Billing & Subscription</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Current Plan -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Current Plan</h6>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5 class="mb-1">Free Plan</h5>
+                                            <p class="text-muted mb-0">Access to free courses and basic features</p>
+                                        </div>
+                                        <a href="{% url 'accounts:upgrade' %}" class="btn btn-primary">Upgrade Plan</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Methods -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Payment Methods</h6>
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fab fa-cc-visa fa-2x text-primary me-3"></i>
+                                            <div>
+                                                <h6 class="mb-0">Visa ending in 4242</h6>
+                                                <small class="text-muted">Expires 12/24</small>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-success">Default</span>
+                                            <button class="btn btn-sm btn-outline-danger ms-2">Remove</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
+                                <i class="fas fa-plus me-2"></i>Add Payment Method
+                            </button>
+                        </div>
+                        
+                        <!-- Billing History -->
+                        <div>
+                            <h6 class="mb-3">Billing History</h6>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Description</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Invoice</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Jan 15, 2024</td>
+                                            <td>Premium Plan Upgrade</td>
+                                            <td>$49.99</td>
+                                            <td><span class="badge bg-success">Paid</span></td>
+                                            <td><a href="#" class="btn btn-sm btn-outline-primary">Download</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Dec 15, 2023</td>
+                                            <td>Monthly Subscription</td>
+                                            <td>$19.99</td>
+                                            <td><span class="badge bg-success">Paid</span></td>
+                                            <td><a href="#" class="btn btn-sm btn-outline-primary">Download</a></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Preferences Tab -->
+            <div class="tab-pane fade" id="preferences">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Preferences</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Preferences -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Display Preferences</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Theme</label>
+                                    <select class="form-select" id="themeSelect">
+                                        <option value="auto" selected>Auto (System)</option>
+                                        <option value="light">Light</option>
+                                        <option value="dark">Dark</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Language</label>
+                                    <select class="form-select" id="languageSelect">
+                                        <option value="en" selected>English</option>
+                                        <option value="es">Spanish</option>
+                                        <option value="fr">French</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="animationsEnabled" checked>
+                                <label class="form-check-label" for="animationsEnabled">Enable animations</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="compactView">
+                                <label class="form-check-label" for="compactView">Compact view</label>
+                            </div>
+                        </div>
+                        
+                        <!-- Learning Preferences -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Learning Preferences</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="autoPlayVideos" checked>
+                                <label class="form-check-label" for="autoPlayVideos">
+                                    Autoplay next video
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="showSubtitles" checked>
+                                <label class="form-check-label" for="showSubtitles">
+                                    Show subtitles by default
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="downloadVideos">
+                                <label class="form-check-label" for="downloadVideos">
+                                    Allow video downloads
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Privacy Preferences -->
+                        <div>
+                            <h6 class="mb-3">Privacy Preferences</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="showProfile" checked>
+                                <label class="form-check-label" for="showProfile">
+                                    Show profile in leaderboard
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="showProgress">
+                                <label class="form-check-label" for="showProgress">
+                                    Show course progress publicly
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="allowMessages" checked>
+                                <label class="form-check-label" for="allowMessages">
+                                    Allow direct messages from other users
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Delete Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    This action cannot be undone. All your data will be permanently deleted.
+                </div>
+                <p>Please type <strong>DELETE</strong> to confirm:</p>
+                <input type="text" class="form-control mb-3" id="confirmDelete" placeholder="Type DELETE">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="confirmCheckbox">
+                    <label class="form-check-label" for="confirmCheckbox">
+                        I understand that all my data will be permanently deleted
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="deleteAccountBtn" disabled>Delete Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Payment Modal -->
+<div class="modal fade" id="addPaymentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Payment Method</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Payment form would go here -->
+                <p>Payment method integration would be implemented here.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Profile image preview
+        function previewImage(input) {
+            const preview = document.getElementById('profilePreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (preview.tagName === 'IMG') {
+                        preview.src = e.target.result;
+                    } else {
+                        // Convert div to img
+                        const img = document.createElement('img');
+                        img.id = 'profilePreview';
+                        img.className = 'avatar avatar-xl rounded-circle border';
+                        img.src = e.target.result;
+                        img.alt = 'Profile';
+                        preview.parentNode.replaceChild(img, preview);
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        // Form reset
+        function resetForm() {
+            document.querySelector('form').reset();
+            // Reset image preview
+            const preview = document.getElementById('profilePreview');
+            if (preview && preview.tagName === 'IMG') {
+                preview.src = '{{ user.profile.profile_picture.url|default:"" }}';
+            }
+        }
+        
+        // Password strength checker
+        const password1 = document.getElementById('new_password1');
+        const password2 = document.getElementById('new_password2');
+        const strengthBar = document.getElementById('passwordStrength');
+        const strengthHint = document.getElementById('passwordHint');
+        const matchText = document.getElementById('passwordMatch');
+        
+        if (password1 && strengthBar) {
+            password1.addEventListener('input', function() {
+                const password = this.value;
+                let strength = 0;
+                let hint = '';
+                
+                if (password.length >= 8) strength += 25;
+                if (/[A-Z]/.test(password)) strength += 25;
+                if (/[0-9]/.test(password)) strength += 25;
+                if (/[^A-Za-z0-9]/.test(password)) strength += 25;
+                
+                if (strength <= 25) {
+                    hint = 'Weak';
+                    strengthBar.className = 'progress-bar bg-danger';
+                } else if (strength <= 50) {
+                    hint = 'Fair';
+                    strengthBar.className = 'progress-bar bg-warning';
+                } else if (strength <= 75) {
+                    hint = 'Good';
+                    strengthBar.className = 'progress-bar bg-info';
+                } else {
+                    hint = 'Strong';
+                    strengthBar.className = 'progress-bar bg-success';
+                }
+                
+                strengthBar.style.width = strength + '%';
+                strengthHint.textContent = hint;
+                
+                // Check password match
+                checkPasswordMatch();
+            });
+        }
+        
+        if (password2) {
+            password2.addEventListener('input', checkPasswordMatch);
+        }
+        
+        function checkPasswordMatch() {
+            if (!password1 || !password2) return;
+            
+            if (password1.value && password2.value) {
+                if (password1.value === password2.value) {
+                    matchText.textContent = '✓ Passwords match';
+                    matchText.className = 'form-text text-success';
+                } else {
+                    matchText.textContent = '✗ Passwords do not match';
+                    matchText.className = 'form-text text-danger';
+                }
+            } else {
+                matchText.textContent = '';
+                matchText.className = 'form-text';
+            }
+        }
+        
+        // Delete account confirmation
+        const confirmDelete = document.getElementById('confirmDelete');
+        const confirmCheckbox = document.getElementById('confirmCheckbox');
+        const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+        
+        if (confirmDelete && confirmCheckbox && deleteAccountBtn) {
+            function updateDeleteButton() {
+                deleteAccountBtn.disabled = !(
+                    confirmDelete.value === 'DELETE' && 
+                    confirmCheckbox.checked
+                );
+            }
+            
+            confirmDelete.addEventListener('input', updateDeleteButton);
+            confirmCheckbox.addEventListener('change', updateDeleteButton);
+            
+            deleteAccountBtn.addEventListener('click', function() {
+                // Implement account deletion
+                fetch('/api/account/delete/', {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/';
+                    } else {
+                        alert('Error deleting account: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting account');
+                });
+            });
+        }
+        
+        // Save preferences
+        const themeSelect = document.getElementById('themeSelect');
+        if (themeSelect) {
+            themeSelect.addEventListener('change', function() {
+                localStorage.setItem('theme', this.value);
+                applyTheme(this.value);
+            });
+            
+            // Apply saved theme
+            const savedTheme = localStorage.getItem('theme') || 'auto';
+            themeSelect.value = savedTheme;
+            applyTheme(savedTheme);
+        }
+        
+        function applyTheme(theme) {
+            if (theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+            }
+        }
+        
+        // Tab navigation persistence
+        const tabLinks = document.querySelectorAll('[data-bs-toggle="tab"]');
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                localStorage.setItem('activeTab', this.getAttribute('href'));
+            });
+        });
+        
+        // Restore active tab
+        const activeTab = localStorage.getItem('activeTab');
+        if (activeTab) {
+            const tab = document.querySelector(`[href="${activeTab}"]`);
+            if (tab) {
+                new bootstrap.Tab(tab).show();
+            }
+        }
+        
+        // Auto-save form data
+        const form = document.querySelector('form');
+        if (form) {
+            const formData = new FormData();
+            const fields = form.querySelectorAll('input, textarea, select');
+            
+            fields.forEach(field => {
+                field.addEventListener('input', function() {
+                    localStorage.setItem(`form_${this.name}`, this.value);
+                });
+                
+                // Restore saved data
+                const saved = localStorage.getItem(`form_${this.name}`);
+                if (saved && !this.value) {
+                    this.value = saved;
+                }
+            });
+        }
+    });
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+
+<style>
+    .tab-content {
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    .list-group-item.active {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .avatar-xl {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .password-strength .progress {
+        border-radius: 2px;
+    }
+    
+    .modal-backdrop {
+        backdrop-filter: blur(5px);
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}

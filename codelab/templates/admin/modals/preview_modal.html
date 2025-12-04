@@ -1,0 +1,298 @@
+<!-- templates/admin/modals/preview_modal.html -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="previewModalLabel">
+                    <i class="fas fa-eye me-2"></i>
+                    Exam Preview
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="sticky-top" style="top: 20px;">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Navigation</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="list-group list-group-flush" id="questionNav">
+                                        <!-- Questions will be added here by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Exam Info</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Title:</strong> <span id="previewExamTitle"></span></p>
+                                    <p><strong>Duration:</strong> <span id="previewExamDuration"></span> minutes</p>
+                                    <p><strong>Questions:</strong> <span id="previewExamQuestions"></span></p>
+                                    <p><strong>Total Points:</strong> <span id="previewExamPoints"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-0" id="previewExamTitleHeader">Exam Preview</h5>
+                                    <small class="text-muted" id="previewExamSubtitle"></small>
+                                </div>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="changePreviewMode('student')">
+                                        <i class="fas fa-user-graduate me-2"></i>Student View
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary active" onclick="changePreviewMode('teacher')">
+                                        <i class="fas fa-chalkboard-teacher me-2"></i>Teacher View
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="examPreviewContent">
+                                    <!-- Questions will be rendered here -->
+                                </div>
+                                
+                                <div class="text-center mt-4">
+                                    <button type="button" class="btn btn-primary" onclick="printPreview()">
+                                        <i class="fas fa-print me-2"></i>Print Preview
+                                    </button>
+                                    <button type="button" class="btn btn-success" onclick="exportPreview('pdf')">
+                                        <i class="fas fa-file-pdf me-2"></i>Export as PDF
+                                    </button>
+                                    <button type="button" class="btn btn-info" onclick="exportPreview('word')">
+                                        <i class="fas fa-file-word me-2"></i>Export as Word
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPreviewMode = 'teacher';
+let currentQuestionIndex = 0;
+
+function showExamPreview() {
+    const questions = window.examEditor.getQuestionsData();
+    const examTitle = document.getElementById('id_title').value || 'Untitled Exam';
+    const duration = document.getElementById('id_duration_minutes').value || '60';
+    
+    // Update exam info
+    document.getElementById('previewExamTitle').textContent = examTitle;
+    document.getElementById('previewExamTitleHeader').textContent = examTitle;
+    document.getElementById('previewExamDuration').textContent = duration;
+    document.getElementById('previewExamQuestions').textContent = questions.length;
+    
+    // Calculate total points
+    const totalPoints = questions.reduce((sum, q) => sum + (parseInt(q.points) || 1), 0);
+    document.getElementById('previewExamPoints').textContent = totalPoints;
+    
+    // Generate navigation
+    const questionNav = document.getElementById('questionNav');
+    questionNav.innerHTML = '';
+    
+    questions.forEach((q, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'list-group-item list-group-item-action';
+        button.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <span>Question ${index + 1}</span>
+                <span class="badge bg-primary">${q.points || 1} pts</span>
+            </div>
+            <small class="text-muted">${q.question_type || 'MC'}</small>
+        `;
+        button.onclick = () => showQuestionPreview(index);
+        questionNav.appendChild(button);
+    });
+    
+    // Show first question
+    showQuestionPreview(0);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+    modal.show();
+}
+
+function showQuestionPreview(index) {
+    currentQuestionIndex = index;
+    const questions = window.examEditor.getQuestionsData();
+    const question = questions[index];
+    const content = document.getElementById('examPreviewContent');
+    
+    // Update active nav item
+    document.querySelectorAll('#questionNav button').forEach((btn, i) => {
+        btn.classList.toggle('active', i === index);
+    });
+    
+    let html = `
+        <div class="question-preview-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5>Question ${index + 1} <small class="text-muted">(${question.points || 1} points)</small></h5>
+                <div>
+                    <span class="badge bg-info">${question.question_type || 'multiple_choice'}</span>
+                    ${question.time_limit ? `<span class="badge bg-warning ms-2">${question.time_limit}s</span>` : ''}
+                </div>
+            </div>
+            
+            <div class="question-text mb-4 p-3 bg-light rounded">
+                ${question.question_text || 'No question text'}
+            </div>
+    `;
+    
+    if (question.question_type === 'multiple_choice' && question.choices) {
+        html += '<div class="choices-preview">';
+        Object.entries(question.choices).forEach(([key, value]) => {
+            const isCorrect = currentPreviewMode === 'teacher' && question.correct_choice === key.toUpperCase();
+            html += `
+                <div class="choice-preview ${isCorrect ? 'bg-success bg-opacity-10 border-success' : ''} p-3 mb-2 border rounded">
+                    <div class="d-flex align-items-center">
+                        <div class="choice-letter ${isCorrect ? 'bg-success text-white' : 'bg-secondary'} 
+                            rounded-circle d-flex align-items-center justify-content-center me-3" 
+                            style="width: 30px; height: 30px;">
+                            ${key.toUpperCase()}
+                        </div>
+                        <div>${value || 'Empty choice'}</div>
+                    </div>
+                    ${isCorrect ? '<div class="text-success mt-2"><i class="fas fa-check-circle me-2"></i>Correct Answer</div>' : ''}
+                </div>
+            `;
+        });
+        html += '</div>';
+    }
+    
+    if (currentPreviewMode === 'teacher' && question.explanation) {
+        html += `
+            <div class="explanation-preview mt-4 p-3 bg-info bg-opacity-10 rounded">
+                <h6><i class="fas fa-lightbulb me-2"></i>Explanation</h6>
+                <p class="mb-0">${question.explanation}</p>
+            </div>
+        `;
+    }
+    
+    // Navigation buttons
+    html += `
+        <div class="d-flex justify-content-between mt-4">
+            <button class="btn btn-outline-primary ${index === 0 ? 'disabled' : ''}" 
+                    onclick="showQuestionPreview(${index - 1})">
+                <i class="fas fa-chevron-left me-2"></i>Previous
+            </button>
+            <button class="btn btn-outline-primary ${index === questions.length - 1 ? 'disabled' : ''}" 
+                    onclick="showQuestionPreview(${index + 1})">
+                Next <i class="fas fa-chevron-right ms-2"></i>
+            </button>
+        </div>
+    `;
+    
+    content.innerHTML = html;
+}
+
+function changePreviewMode(mode) {
+    currentPreviewMode = mode;
+    
+    // Update button states
+    document.querySelectorAll('[onclick*="changePreviewMode"]').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.includes(mode.charAt(0).toUpperCase() + mode.slice(1)));
+    });
+    
+    // Update subtitle
+    const subtitle = document.getElementById('previewExamSubtitle');
+    if (mode === 'student') {
+        subtitle.textContent = 'Student View - Answers hidden';
+    } else {
+        subtitle.textContent = 'Teacher View - Answers visible';
+    }
+    
+    // Refresh current question
+    showQuestionPreview(currentQuestionIndex);
+}
+
+function printPreview() {
+    const printWindow = window.open('', '_blank');
+    const questions = window.examEditor.getQuestionsData();
+    const examTitle = document.getElementById('id_title').value || 'Untitled Exam';
+    
+    let html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>${examTitle} - Exam Preview</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                .question { margin-bottom: 30px; page-break-inside: avoid; }
+                .question-header { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
+                .choice { margin: 5px 0; padding-left: 20px; }
+                .correct { background-color: #d4edda; font-weight: bold; }
+                @media print {
+                    .no-print { display: none; }
+                    body { margin: 20px; }
+                }
+            </style>
+        </head>
+        <body>
+            <h1>${examTitle}</h1>
+            <p><strong>Total Questions:</strong> ${questions.length}</p>
+            <hr>
+    `;
+    
+    questions.forEach((q, index) => {
+        html += `
+            <div class="question">
+                <div class="question-header">
+                    <h3>Question ${index + 1} (${q.points || 1} points)</h3>
+                </div>
+                <p><strong>${q.question_text || 'No question text'}</strong></p>
+        `;
+        
+        if (q.choices) {
+            Object.entries(q.choices).forEach(([key, value]) => {
+                const isCorrect = q.correct_choice === key.toUpperCase();
+                html += `
+                    <div class="choice ${isCorrect ? 'correct' : ''}">
+                        ${key.toUpperCase()}. ${value || 'Empty choice'}
+                        ${isCorrect ? ' ✓' : ''}
+                    </div>
+                `;
+            });
+        }
+        
+        if (q.explanation) {
+            html += `<p><em>Explanation:</em> ${q.explanation}</p>`;
+        }
+        
+        html += `</div><hr>`;
+    });
+    
+    html += `
+            <div class="no-print">
+                <button onclick="window.print()">Print</button>
+                <button onclick="window.close()">Close</button>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    printWindow.document.write(html);
+    printWindow.document.close();
+}
+
+function exportPreview(format) {
+    alert(`${format.toUpperCase()} export would be generated here in a real application.`);
+    // In a real app, this would make an API call to generate and download the file
+}
+
+// Make function globally available
+window.showPreview = showExamPreview;
+</script>

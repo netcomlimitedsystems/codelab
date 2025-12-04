@@ -1,0 +1,405 @@
+<!-- templates/admin/modals/ai_assistant_modal.html -->
+<div class="modal fade" id="aiAssistantModal" tabindex="-1" aria-labelledby="aiAssistantModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title" id="aiAssistantModalLabel">
+                    <i class="fas fa-robot me-2"></i>
+                    AI Question Assistant
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Quick Actions</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-primary" onclick="generateQuestions('multiple_choice')">
+                                        <i class="fas fa-list-ul me-2"></i>MC Questions
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="generateQuestions('true_false')">
+                                        <i class="fas fa-check-double me-2"></i>True/False
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="generateQuestions('short_answer')">
+                                        <i class="fas fa-align-left me-2"></i>Short Answer
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="generateQuestions('essay')">
+                                        <i class="fas fa-file-alt me-2"></i>Essay Questions
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">Settings</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Difficulty</label>
+                                    <select class="form-select" id="aiDifficulty">
+                                        <option value="easy">Easy</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="hard">Hard</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Number of Questions</label>
+                                    <input type="range" class="form-range" id="aiQuestionCount" min="1" max="20" value="5">
+                                    <div class="d-flex justify-content-between">
+                                        <span>1</span>
+                                        <span id="aiCountValue">5</span>
+                                        <span>20</span>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="aiIncludeExplanations" checked>
+                                    <label class="form-check-label" for="aiIncludeExplanations">
+                                        Include explanations
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">Question Generator</h6>
+                                <span class="badge bg-info" id="aiStatus">Ready</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="aiTopic" class="form-label">Topic</label>
+                                    <input type="text" class="form-control" id="aiTopic" 
+                                           placeholder="e.g., Python loops, World War II, Chemical reactions">
+                                    <div class="form-text">Be specific for better results</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="aiContext" class="form-label">Additional Context</label>
+                                    <textarea class="form-control" id="aiContext" rows="3" 
+                                              placeholder="Any specific requirements, learning objectives, or constraints..."></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="aiLearningObjectives" class="form-label">Learning Objectives</label>
+                                    <div id="aiObjectivesContainer">
+                                        <div class="input-group mb-2">
+                                            <input type="text" class="form-control" placeholder="e.g., Understand basic syntax">
+                                            <button class="btn btn-outline-danger" type="button" onclick="removeObjective(this)">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="addObjective()">
+                                        <i class="fas fa-plus me-1"></i>Add Objective
+                                    </button>
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    The AI will generate questions based on your topic and settings. 
+                                    You can review and edit them before adding to your exam.
+                                </div>
+                                
+                                <div class="d-grid">
+                                    <button class="btn btn-primary btn-lg" onclick="generateAIQuestions()">
+                                        <i class="fas fa-magic me-2"></i>
+                                        Generate Questions
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Results Section -->
+                <div id="aiResults" class="mt-4" style="display: none;">
+                    <h6>Generated Questions</h6>
+                    <div class="border rounded p-3 mb-3" style="max-height: 400px; overflow-y: auto;" id="aiQuestionsList"></div>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button class="btn btn-outline-secondary" onclick="regenerateAIQuestions()">
+                                <i class="fas fa-redo me-2"></i>Regenerate
+                            </button>
+                            <button class="btn btn-outline-info" onclick="editAIQuestions()">
+                                <i class="fas fa-edit me-2"></i>Edit All
+                            </button>
+                        </div>
+                        <div>
+                            <button class="btn btn-success" onclick="addAllAIQuestions()">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                Add All to Exam
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="aiSaveBtn" style="display: none;" onclick="saveAIQuestions()">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let generatedQuestions = [];
+
+function addObjective() {
+    const container = document.getElementById('aiObjectivesContainer');
+    const div = document.createElement('div');
+    div.className = 'input-group mb-2';
+    div.innerHTML = `
+        <input type="text" class="form-control" placeholder="e.g., Understand basic syntax">
+        <button class="btn btn-outline-danger" type="button" onclick="removeObjective(this)">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    container.appendChild(div);
+}
+
+function removeObjective(btn) {
+    btn.closest('.input-group').remove();
+}
+
+function generateQuestions(type) {
+    document.getElementById('aiTopic').focus();
+    // Simulate auto-fill based on type
+    const examples = {
+        'multiple_choice': 'Python functions and parameters',
+        'true_false': 'Common programming myths',
+        'short_answer': 'Key historical events',
+        'essay': 'Ethical implications of AI'
+    };
+    document.getElementById('aiTopic').value = examples[type] || '';
+}
+
+function generateAIQuestions() {
+    const topic = document.getElementById('aiTopic').value;
+    const context = document.getElementById('aiContext').value;
+    const difficulty = document.getElementById('aiDifficulty').value;
+    const count = parseInt(document.getElementById('aiQuestionCount').value);
+    const includeExplanations = document.getElementById('aiIncludeExplanations').checked;
+    
+    if (!topic.trim()) {
+        alert('Please enter a topic');
+        return;
+    }
+    
+    // Show loading state
+    const status = document.getElementById('aiStatus');
+    const btn = event.target;
+    const originalHTML = btn.innerHTML;
+    status.textContent = 'Generating...';
+    status.className = 'badge bg-warning';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+    btn.disabled = true;
+    
+    // Get learning objectives
+    const objectives = Array.from(document.querySelectorAll('#aiObjectivesContainer input'))
+        .map(input => input.value.trim())
+        .filter(val => val);
+    
+    // Simulate AI generation (in real app, this would be an API call)
+    setTimeout(() => {
+        generatedQuestions = [];
+        
+        for (let i = 1; i <= count; i++) {
+            const questionTypes = ['multiple_choice', 'true_false', 'short_answer'];
+            const type = questionTypes[Math.floor(Math.random() * questionTypes.length)];
+            
+            const question = {
+                id: Date.now() + i,
+                question_text: `${topic}: Question ${i} (${difficulty} difficulty)`,
+                question_type: type,
+                points: difficulty === 'easy' ? 1 : difficulty === 'medium' ? 2 : 3,
+                difficulty: difficulty,
+                topic: topic
+            };
+            
+            if (type === 'multiple_choice') {
+                question.choices = {
+                    a: `Option A for question ${i}`,
+                    b: `Option B for question ${i}`,
+                    c: `Correct answer for question ${i}`,
+                    d: `Option D for question ${i}`
+                };
+                question.correct_choice = 'C';
+            } else if (type === 'true_false') {
+                question.correct_choice = Math.random() > 0.5 ? 'A' : 'B';
+            }
+            
+            if (includeExplanations) {
+                question.explanation = `This question tests understanding of ${topic}. The correct answer is explained here.`;
+            }
+            
+            if (objectives.length > 0) {
+                question.learning_objective = objectives[Math.floor(Math.random() * objectives.length)];
+            }
+            
+            generatedQuestions.push(question);
+        }
+        
+        displayGeneratedQuestions();
+        
+        // Restore UI
+        status.textContent = 'Complete';
+        status.className = 'badge bg-success';
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+        
+        // Show results section
+        document.getElementById('aiResults').style.display = 'block';
+        document.getElementById('aiSaveBtn').style.display = 'block';
+    }, 2000);
+}
+
+function displayGeneratedQuestions() {
+    const container = document.getElementById('aiQuestionsList');
+    container.innerHTML = '';
+    
+    generatedQuestions.forEach((q, index) => {
+        const card = document.createElement('div');
+        card.className = 'card mb-3';
+        card.innerHTML = `
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h6 class="mb-0">Question ${index + 1}</h6>
+                        <small class="text-muted">
+                            ${q.question_type.replace('_', ' ').toUpperCase()} | 
+                            ${q.points} points | 
+                            ${q.difficulty}
+                        </small>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="editAIQuestion(${index})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-success" onclick="addAIQuestion(${index})">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <p class="mb-2">${q.question_text}</p>
+                ${q.learning_objective ? `<small class="text-info"><i class="fas fa-bullseye me-1"></i>${q.learning_objective}</small>` : ''}
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function editAIQuestion(index) {
+    const question = generatedQuestions[index];
+    const newText = prompt('Edit question text:', question.question_text);
+    if (newText !== null) {
+        question.question_text = newText;
+        displayGeneratedQuestions();
+    }
+}
+
+function addAIQuestion(index) {
+    const question = generatedQuestions[index];
+    
+    // Convert to exam format
+    const examQuestion = {
+        question_text: question.question_text,
+        question_type: question.question_type,
+        points: question.points,
+        correct_choice: question.correct_choice,
+        choices: question.choices,
+        explanation: question.explanation
+    };
+    
+    // Add to exam
+    window.examEditor.addQuestion(question.question_type);
+    
+    // Get the last added question
+    const questionsContainer = document.getElementById('questionsContainer');
+    const lastQuestion = questionsContainer.lastElementChild;
+    
+    if (lastQuestion) {
+        // Populate with AI data
+        const questionText = lastQuestion.querySelector('.question-text');
+        if (questionText) questionText.value = examQuestion.question_text;
+        
+        if (examQuestion.choices) {
+            Object.entries(examQuestion.choices).forEach(([key, value]) => {
+                const input = lastQuestion.querySelector(`.choice-${key}`);
+                if (input) input.value = value;
+            });
+        }
+        
+        const correctChoice = lastQuestion.querySelector('.correct-choice-select');
+        if (correctChoice && examQuestion.correct_choice) {
+            correctChoice.value = examQuestion.correct_choice;
+            window.examEditor.updateSelectedChoice(lastQuestion, examQuestion.correct_choice);
+        }
+        
+        const pointsInput = lastQuestion.querySelector('.points-input');
+        if (pointsInput) pointsInput.value = examQuestion.points;
+        
+        const explanation = lastQuestion.querySelector('.explanation-text');
+        if (explanation && examQuestion.explanation) {
+            explanation.value = examQuestion.explanation;
+        }
+    }
+    
+    window.examEditor.updateStats();
+    window.examEditor.updatePreview();
+    window.examEditor.showNotification('Question added from AI!', 'success');
+}
+
+function addAllAIQuestions() {
+    if (confirm(`Add all ${generatedQuestions.length} generated questions to your exam?`)) {
+        generatedQuestions.forEach((_, index) => addAIQuestion(index));
+        const modal = bootstrap.Modal.getInstance(document.getElementById('aiAssistantModal'));
+        modal.hide();
+    }
+}
+
+function regenerateAIQuestions() {
+    if (confirm('Regenerate questions? This will replace all current generated questions.')) {
+        generateAIQuestions();
+    }
+}
+
+function editAIQuestions() {
+    const newText = prompt('Edit all questions (one per line):', 
+        generatedQuestions.map(q => q.question_text).join('\n'));
+    
+    if (newText) {
+        const lines = newText.split('\n');
+        generatedQuestions.forEach((q, index) => {
+            if (lines[index]) {
+                q.question_text = lines[index];
+            }
+        });
+        displayGeneratedQuestions();
+    }
+}
+
+function saveAIQuestions() {
+    // In a real app, this would save to a template library
+    alert('AI questions saved to template library!');
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    // Update count display
+    const countSlider = document.getElementById('aiQuestionCount');
+    const countValue = document.getElementById('aiCountValue');
+    
+    countSlider.addEventListener('input', function() {
+        countValue.textContent = this.value;
+    });
+});
+</script>

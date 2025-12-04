@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Blog Search - CodeLab{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Blog Search</h1>
+
+    <form method="get" class="mb-4">
+        <input type="text" name="q" class="form-control" placeholder="Search blog..." value="{{ query }}">
+    </form>
+
+    {% if results %}
+        <ul class="list-group">
+            {% for post in results %}
+                <li class="list-group-item">
+                    <a href="{% url 'accounts:blog_detail' post.slug %}">{{ post.title }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="alert alert-info">No results found.</p>
+    {% endif %}
+</div>
+{% endblock %}

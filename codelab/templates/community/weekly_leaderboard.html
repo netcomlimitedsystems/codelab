@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Weekly Leaderboard - CodeLab{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Weekly Leaderboard</h1>
+
+    {% if top_users %}
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Rank</th>
+                    <th scope="col">User</th>
+                    <th scope="col">Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in top_users %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ user.user.get_full_name }}</td>
+                        <td>{{ user.score }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="alert alert-info">No scores available for this week.</p>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{% url 'community_index' %}" class="btn btn-secondary">Back to Community</a>
+    </div>
+</div>
+{% endblock %}

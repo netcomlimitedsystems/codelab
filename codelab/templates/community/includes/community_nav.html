@@ -1,0 +1,46 @@
+<!-- Community Specific Navigation Links -->
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'community:index' %}">🏠 Community Home</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'community:all_discussions' %}">💬 All Discussions</a>
+</li>
+{% if user.is_authenticated %}
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'community:my_discussions' %}">👤 My Discussions</a>
+</li>
+{% endif %}
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'community:leaderboard' %}">🏆 Leaderboard</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'community:tags' %}">🏷️ Tags</a>
+</li>
+
+<!-- Admin Links for Staff Users -->
+{% if user.is_authenticated and user.is_staff %}
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="communityAdminDropdown" role="button" 
+       data-bs-toggle="dropdown" aria-expanded="false">
+        🛠️ Manage Community
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="communityAdminDropdown">
+        <li>
+            <a class="dropdown-item" href="{% url 'community:manage_forums' %}">
+                📊 Manage Forums
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="{% url 'community:create_forum' %}">
+                ➕ Create Forum
+            </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+            <a class="dropdown-item" href="/admin/community/" target="_blank">
+                🔧 Community Admin
+            </a>
+        </li>
+    </ul>
+</li>
+{% endif %}

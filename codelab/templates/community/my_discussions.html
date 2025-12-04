@@ -1,0 +1,416 @@
+{% extends 'base.html' %}
+
+{% block title %}My Discussions - CodeLab Community{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-3">
+        <!-- Sidebar -->
+        <div class="card sidebar mb-4">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="fas fa-user-circle me-2"></i>My Community</h6>
+            </div>
+            <div class="card-body">
+                <ul class="nav flex-column">
+                    <li class="nav-item mb-2">
+                        <a class="nav-link active" href="{% url 'community:my_discussions' %}">
+                            <i class="fas fa-comments me-2"></i>My Discussions
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="{% url 'community:index' %}">
+                            <i class="fas fa-home me-2"></i>Community Home
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="{% url 'community:leaderboard' %}">
+                            <i class="fas fa-trophy me-2"></i>Leaderboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'community:tags' %}">
+                            <i class="fas fa-tags me-2"></i>Browse Tags
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h6 class="card-title mb-3">Discussion Stats</h6>
+                <div class="stat-item mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Discussions</span>
+                        <strong>{{ discussions|length }}</strong>
+                    </div>
+                </div>
+                <div class="stat-item mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Total Comments</span>
+                        <strong>{{ total_comments }}</strong>
+                    </div>
+                </div>
+                <div class="stat-item mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Total Views</span>
+                        <strong>{{ total_views }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">Quick Actions</h6>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'community:create_discussion' forum_slug='general' %}" 
+                       class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>New Discussion
+                    </a>
+                    {% if forums %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-primary btn-sm dropdown-toggle w-100" 
+                                    type="button" 
+                                    data-bs-toggle="dropdown">
+                                <i class="fas fa-folder me-1"></i>Post in Forum
+                            </button>
+                            <ul class="dropdown-menu">
+                                {% for forum in forums %}
+                                    <li>
+                                        <a class="dropdown-item" 
+                                           href="{% url 'community:create_discussion' forum_slug=forum.slug %}">
+                                            {{ forum.name }}
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-9">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">My Discussions</h2>
+                <p class="text-muted mb-0">Manage and track your discussions</p>
+            </div>
+            <div>
+                <a href="{% url 'community:create_discussion' forum_slug='general' %}" 
+                   class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>New Discussion
+                </a>
+            </div>
+        </div>
+        
+        {% if discussions %}
+            <!-- Discussions List -->
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Discussion</th>
+                                    <th>Forum</th>
+                                    <th>Comments</th>
+                                    <th>Views</th>
+                                    <th>Last Activity</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for discussion in discussions %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if discussion.is_pinned %}
+                                                    <i class="fas fa-thumbtack text-warning me-2" title="Pinned"></i>
+                                                {% endif %}
+                                                <div>
+                                                    <a href="{% url 'community:discussion_detail' discussion_id=discussion.id %}" 
+                                                       class="text-decoration-none">
+                                                        <strong>{{ discussion.title }}</strong>
+                                                    </a>
+                                                    <div class="small text-muted">
+                                                        Posted {{ discussion.created_at|timesince }} ago
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'community:forum_detail' forum_slug=discussion.forum.slug %}" 
+                                               class="badge bg-primary text-decoration-none">
+                                                {{ discussion.forum.name }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">
+                                                {{ discussion.comment_count }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted">{{ discussion.views }}</span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ discussion.updated_at|timesince }} ago
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'community:discussion_detail' discussion_id=discussion.id %}" 
+                                                   class="btn btn-outline-primary" 
+                                                   title="View">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'community:edit_discussion' pk=discussion.id %}" 
+                                                   class="btn btn-outline-warning" 
+                                                   title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" 
+                                                        class="btn btn-outline-danger" 
+                                                        title="Delete"
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#deleteModal{{ discussion.id }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <!-- Delete Modal -->
+                                            <div class="modal fade" id="deleteModal{{ discussion.id }}" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Confirm Delete</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            Are you sure you want to delete the discussion 
+                                                            <strong>"{{ discussion.title }}"</strong>? This action cannot be undone.
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <form method="POST" action="{% url 'community:delete_discussion' pk=discussion.id %}" class="d-inline">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-danger">Delete Discussion</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pagination -->
+            {% if discussions.paginator.num_pages > 1 %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if discussions.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ discussions.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in discussions.paginator.page_range %}
+                            {% if discussions.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > discussions.number|add:'-3' and num < discussions.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if discussions.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ discussions.next_page_number }}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ discussions.paginator.num_pages }}">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <!-- Empty State -->
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-comments fa-4x text-muted mb-4"></i>
+                    <h4 class="mb-3">No Discussions Yet</h4>
+                    <p class="text-muted mb-4">
+                        You haven't started any discussions yet. Share your knowledge or ask questions!
+                    </p>
+                    <a href="{% url 'community:create_discussion' forum_slug='general' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i>Start Your First Discussion
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Insights Section -->
+        <div class="row mt-5">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-fire fa-3x text-warning mb-3"></i>
+                        <h5 class="card-title">Most Active</h5>
+                        {% if most_active_discussion %}
+                            <a href="{% url 'community:discussion_detail' discussion_id=most_active_discussion.id %}" 
+                               class="text-decoration-none">
+                                <h6 class="mb-2">{{ most_active_discussion.title }}</h6>
+                            </a>
+                            <p class="text-muted small mb-0">
+                                {{ most_active_discussion.comment_count }} comments
+                            </p>
+                        {% else %}
+                            <p class="text-muted">No active discussions yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-eye fa-3x text-info mb-3"></i>
+                        <h5 class="card-title">Most Viewed</h5>
+                        {% if most_viewed_discussion %}
+                            <a href="{% url 'community:discussion_detail' discussion_id=most_viewed_discussion.id %}" 
+                               class="text-decoration-none">
+                                <h6 class="mb-2">{{ most_viewed_discussion.title }}</h6>
+                            </a>
+                            <p class="text-muted small mb-0">
+                                {{ most_viewed_discussion.views }} views
+                            </p>
+                        {% else %}
+                            <p class="text-muted">No views yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-clock fa-3x text-success mb-3"></i>
+                        <h5 class="card-title">Latest</h5>
+                        {% if latest_discussion %}
+                            <a href="{% url 'community:discussion_detail' discussion_id=latest_discussion.id %}" 
+                               class="text-decoration-none">
+                                <h6 class="mb-2">{{ latest_discussion.title }}</h6>
+                            </a>
+                            <p class="text-muted small mb-0">
+                                {{ latest_discussion.created_at|timesince }} ago
+                            </p>
+                        {% else %}
+                            <p class="text-muted">No discussions yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .sidebar .nav-link {
+        color: #495057;
+        padding: 0.5rem 0;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    
+    .sidebar .nav-link:hover {
+        background-color: #f8f9fa;
+        color: var(--primary-color);
+    }
+    
+    .sidebar .nav-link.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .stat-item {
+        padding-bottom: 10px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .stat-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    
+    table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+    }
+</style>
+
+{% block extra_js %}
+<script>
+    // Add confirmation for delete action
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteButtons = document.querySelectorAll('.btn-outline-danger');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                const discussionTitle = this.closest('tr').querySelector('strong').textContent;
+                if (!confirm(`Are you sure you want to delete "${discussionTitle}"?`)) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+    
+    // Add search functionality for discussions table
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.className = 'form-control mb-3';
+    searchInput.placeholder = 'Search your discussions...';
+    
+    const tableBody = document.querySelector('tbody');
+    if (tableBody) {
+        const tableContainer = tableBody.closest('.card-body');
+        tableContainer.insertBefore(searchInput, tableContainer.firstChild);
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = tableBody.querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                const title = row.querySelector('strong').textContent.toLowerCase();
+                const forum = row.querySelector('.badge').textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || forum.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+</script>
+{% endblock %}
+{% endblock %}

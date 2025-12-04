@@ -1,0 +1,596 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Forums - CodeLab Community{% endblock %}
+{% block meta_description %}Join the CodeLab developer community forums. Discuss programming, ask questions, and share knowledge with fellow developers.{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #121212;
+        color: #e0e0e0;
+    }
+    
+    .container {
+        background-color: #1e1e1e;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-top: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .forums-hero {
+        background: linear-gradient(135deg, #2c3e50 0%, #1a1a2e 100%);
+        color: #ffffff;
+        border-radius: 15px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 3rem;
+        border: 1px solid #333;
+    }
+    
+    .forums-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M1200 120L0 16.48 0 0 1200 0 1200 120z" fill="rgba(0,0,0,0.2)"/></svg>');
+        background-size: 100% 100px;
+        background-repeat: no-repeat;
+        background-position: bottom;
+    }
+    
+    .forum-card {
+        background: #2d2d2d;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #3a3a3a;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .forum-card:hover {
+        background: #333;
+        border-color: #4a5568;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+    
+    .forum-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, #667eea, #764ba2);
+    }
+    
+    .forum-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.5rem;
+    }
+    
+    .forum-icon i {
+        color: white;
+        font-size: 1.5rem;
+    }
+    
+    .forum-stats {
+        display: flex;
+        gap: 1.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #3a3a3a;
+    }
+    
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #a0aec0;
+        font-size: 0.9rem;
+    }
+    
+    .stat-item i {
+        color: #667eea;
+    }
+    
+    .badge-new {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .forum-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #3a3a3a;
+    }
+    
+    .search-box {
+        background: #2d2d2d;
+        border: 1px solid #3a3a3a;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        color: #e0e0e0;
+        width: 300px;
+    }
+    
+    .search-box:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: #2d2d2d;
+        border-radius: 12px;
+        border: 1px solid #3a3a3a;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #4a5568;
+        margin-bottom: 1.5rem;
+    }
+    
+    .category-badge {
+        background: #4a5568;
+        color: #e0e0e0;
+        padding: 0.3rem 0.8rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        margin-left: 1rem;
+    }
+    
+    .latest-post {
+        background: #333;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+        border-left: 3px solid #667eea;
+    }
+    
+    .latest-post small {
+        color: #a0aec0;
+    }
+    
+    .btn-dark-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-dark-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-dark-outline {
+        background: transparent;
+        color: #667eea;
+        border: 2px solid #667eea;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-dark-outline:hover {
+        background: rgba(102, 126, 234, 0.1);
+    }
+    
+    .list-group-item-action {
+        background-color: #2d2d2d;
+        border-color: #3a3a3a;
+        color: #e0e0e0;
+        transition: all 0.3s ease;
+    }
+    
+    .list-group-item-action:hover {
+        background-color: #333;
+        border-color: #4a5568;
+        color: #ffffff;
+        transform: translateX(5px);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .forums-hero {
+            border-radius: 10px;
+            margin: 0 -1rem 2rem -1rem;
+        }
+        
+        .search-box {
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .forum-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .forum-icon {
+            margin-right: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .forum-stats {
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .container {
+            padding: 1rem;
+        }
+        
+        .forum-card {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="forums-hero p-4 p-md-5 mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb" style="--bs-breadcrumb-divider: '›';">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}" style="color: #a0aec0;">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'community:community_index' %}" style="color: #a0aec0;">Community</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Forums</li>
+                </ol>
+            </nav>
+            
+            <h1 class="display-5 fw-bold mb-3">CodeLab Forums</h1>
+            <p class="lead mb-4">Join discussions, ask questions, and share knowledge with our community of developers.</p>
+            
+            <div class="d-flex align-items-center flex-wrap gap-3">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-users me-2"></i>
+                    <span>Active community of developers</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-comments me-2"></i>
+                    <span>Get help and share knowledge</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    <span>Moderated for quality</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 d-none d-lg-flex justify-content-center">
+            <div class="text-center">
+                <i class="fas fa-comments fa-6x" style="color: rgba(255,255,255,0.2);"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-4">
+    <!-- Header with Search -->
+    <div class="forum-header">
+        <div>
+            <h2 class="fw-bold mb-0">All Forums</h2>
+            <p class="text-muted mb-0">Browse discussions by category</p>
+        </div>
+        <div>
+            <div class="d-flex gap-2">
+                <input type="text" 
+                       class="search-box" 
+                       placeholder="Search forums..."
+                       aria-label="Search forums">
+                <button class="btn-dark-primary">
+                    <i class="fas fa-plus me-2"></i>New Forum
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forums List -->
+    {% if forums %}
+    <div class="forums-list">
+        {% for forum in forums %}
+        <div class="forum-card">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="d-flex align-items-start">
+                        <div class="forum-icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <h4 class="fw-bold mb-0">
+                                    <a href="{% url 'forum_detail' forum.id %}" class="text-decoration-none text-white">
+                                        {{ forum.name }}
+                                    </a>
+                                </h4>
+                                {% if forum.is_new %}
+                                <span class="badge-new ms-2">New</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-muted mb-3">
+                                {{ forum.description|default:"Discussion about programming topics, best practices, and technical questions." }}
+                            </p>
+                            
+                            <div class="forum-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-comments"></i>
+                                    <span>{{ forum.thread_count|default:"0" }} Threads</span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-reply"></i>
+                                    <span>{{ forum.post_count|default:"0" }} Posts</span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-eye"></i>
+                                    <span>{{ forum.views|default:"0" }} Views</span>
+                                </div>
+                                {% if forum.category %}
+                                <div class="stat-item">
+                                    <i class="fas fa-tag"></i>
+                                    <span>{{ forum.category }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    {% if forum.latest_post %}
+                    <div class="latest-post">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <small class="text-muted">Latest Post</small>
+                                <p class="mb-1 fw-semibold">{{ forum.latest_post.title|truncatewords:8 }}</p>
+                            </div>
+                            {% if forum.latest_post.is_new %}
+                            <span class="badge bg-danger">New</span>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-user me-1"></i>
+                                {{ forum.latest_post.author|default:"Anonymous" }}
+                            </small>
+                            <small class="text-muted">
+                                <i class="far fa-clock me-1"></i>
+                                {{ forum.latest_post.created_at|timesince|default:"Recently" }} ago
+                            </small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center mt-3 mt-lg-0">
+                        <p class="text-muted mb-2">No posts yet</p>
+                        <a href="{% url 'forum_detail' forum.id %}" class="btn-dark-outline btn-sm">
+                            <i class="fas fa-plus me-1"></i>Start Discussion
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <i class="fas fa-comments"></i>
+        <h3 class="fw-bold mb-3">No Forums Yet</h3>
+        <p class="text-muted mb-4">Be the first to create a forum and start discussions with the community.</p>
+        <button class="btn-dark-primary">
+            <i class="fas fa-plus me-2"></i>Create First Forum
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- Stats Footer -->
+    <div class="row mt-5 pt-5 border-top border-secondary">
+        <div class="col-md-3 col-6 mb-3">
+            <div class="text-center">
+                <div class="display-6 fw-bold text-primary">{{ total_forums|default:"0" }}</div>
+                <div class="text-muted">Forums</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="text-center">
+                <div class="display-6 fw-bold text-primary">{{ total_threads|default:"0" }}</div>
+                <div class="text-muted">Threads</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="text-center">
+                <div class="display-6 fw-bold text-primary">{{ total_posts|default:"0" }}</div>
+                <div class="text-muted">Posts</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="text-center">
+                <div class="display-6 fw-bold text-primary">{{ total_members|default:"0" }}</div>
+                <div class="text-muted">Members</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-dark border-secondary">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Popular Topics</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for topic in popular_topics %}
+                        <a href="{% url 'forum_topic' topic.slug %}" class="btn btn-sm btn-outline-secondary">
+                            {{ topic.name }}
+                        </a>
+                        {% empty %}
+                        <span class="text-muted">No topics yet</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="text-center mt-5">
+        <a href="{% url 'community:community_index' %}" class="btn-dark-outline">
+            <i class="fas fa-arrow-left me-2"></i>Back to Community Home
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Search functionality
+        const searchBox = document.querySelector('.search-box');
+        const forumCards = document.querySelectorAll('.forum-card');
+        
+        if (searchBox) {
+            searchBox.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                
+                forumCards.forEach(card => {
+                    const forumName = card.querySelector('h4').textContent.toLowerCase();
+                    const forumDesc = card.querySelector('p.text-muted').textContent.toLowerCase();
+                    
+                    if (forumName.includes(searchTerm) || forumDesc.includes(searchTerm)) {
+                        card.style.display = 'block';
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    } else {
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(-20px)';
+                        setTimeout(() => {
+                            card.style.display = 'none';
+                        }, 300);
+                    }
+                });
+            });
+        }
+        
+        // Add animation to cards
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }, index * 100);
+                }
+            });
+        }, observerOptions);
+        
+        // Animate forum cards on scroll
+        forumCards.forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            observer.observe(card);
+        });
+        
+        // Hover effect for forum cards
+        forumCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                const icon = this.querySelector('.forum-icon');
+                if (icon) {
+                    icon.style.transform = 'scale(1.1) rotate(5deg)';
+                    icon.style.transition = 'transform 0.3s ease';
+                }
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                const icon = this.querySelector('.forum-icon');
+                if (icon) {
+                    icon.style.transform = 'scale(1) rotate(0deg)';
+                }
+            });
+        });
+        
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // Add click animation to buttons
+        const buttons = document.querySelectorAll('.btn-dark-primary, .btn-dark-outline');
+        buttons.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                // Ripple effect
+                const ripple = document.createElement('span');
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+                
+                ripple.style.cssText = `
+                    position: absolute;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.3);
+                    transform: scale(0);
+                    animation: ripple 0.6s linear;
+                    width: ${size}px;
+                    height: ${size}px;
+                    top: ${y}px;
+                    left: ${x}px;
+                `;
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        });
+        
+        // Add CSS for ripple animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    });
+</script>
+{% endblock %}

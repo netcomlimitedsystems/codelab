@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+{% load community_tags %}
+{% block title %}Browse Tags - CodeLab Community{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Main Content -->
+    <div class="col-lg-9">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">Browse Tags</h2>
+                <p class="text-muted mb-0">Discover discussions by topics and technologies</p>
+            </div>
+            <div class="d-flex gap-2">
+                <!-- Search -->
+                <div class="input-group" style="width: 300px;">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" 
+                           class="form-control" 
+                           id="tagSearch" 
+                           placeholder="Search tags..."
+                           value="{{ search_query }}">
+                </div>
+                
+                <!-- Sort Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-sort me-1"></i>
+                        {% if sort_by == 'name' %}Name{% elif sort_by == 'newest' %}Newest{% else %}Popular{% endif %}
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="?sort=popular{% if search_query %}&q={{ search_query }}{% endif %}">Popular</a></li>
+                        <li><a class="dropdown-item" href="?sort=name{% if search_query %}&q={{ search_query }}{% endif %}">Name</a></li>
+                        <li><a class="dropdown-item" href="?sort=newest{% if search_query %}&q={{ search_query }}{% endif %}">Newest</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tag Cloud -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-4">Tag Cloud</h5>
+                <div class="tag-cloud">
+                    {% for tag in tags %}
+                        <a href="?tag={{ tag.slug }}" 
+                           class="tag-cloud-item {% if selected_tag and selected_tag.id == tag.id %}active{% endif %}"
+                           style="font-size: {{ tag.discussion_count|add:12 }}px;">
+                            {{ tag.name }}
+                            <span class="badge bg-light text-dark ms-1">{{ tag.discussion_count }}</span>
+                        </a>
+                    {% empty %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No tags found</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Selected Tag Discussions -->
+        {% if selected_tag and tagged_discussions %}
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tag me-2"></i>
+                            Discussions tagged "{{ selected_tag.name }}"
+                        </h5>
+                        <span class="badge bg-light text-dark">
+                            {{ tagged_discussions|length }} discussions
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for discussion in tagged_discussions %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <a href="{% url 'community:discussion_detail' discussion_id=discussion.id %}" 
+                                               class="text-decoration-none">
+                                                {{ discussion.title }}
+                                            </a>
+                                        </h6>
+                                        <div class="text-muted small">
+                                            <span class="me-3">
+                                                <i class="far fa-user me-1"></i>
+                                                {{ discussion.author.username }}
+                                            </span>
+                                            <span class="me-3">
+                                                <i class="far fa-clock me-1"></i>
+                                                {{ discussion.created_at|timesince }} ago
+                                            </span>
+                                            <span class="me-3">
+                                                <i class="far fa-comment me-1"></i>
+                                                {{ discussion.comment_count }} comments
+                                            </span>
+                                            <span>
+                                                <i class="far fa-eye me-1"></i>
+                                                {{ discussion.views }} views
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <a href="{% url 'community:forum_detail' forum_slug=discussion.forum.slug %}" 
+                                           class="badge bg-primary text-decoration-none">
+                                            {{ discussion.forum.name }}
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tags -->
+                                <div class="mt-2">
+                                    {% for tag in discussion.tags.all %}
+                                        {% if tag.id != selected_tag.id %}
+                                            <a href="?tag={{ tag.slug }}" class="badge bg-light text-dark me-1">
+                                                {{ tag.name }}
+                                            </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pagination for Tagged Discussions -->
+            {% if tagged_discussions.paginator.num_pages > 1 %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if tagged_discussions.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?tag={{ selected_tag.slug }}&page=1">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?tag={{ selected_tag.slug }}&page={{ tagged_discussions.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in tagged_discussions.paginator.page_range %}
+                            {% if tagged_discussions.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > tagged_discussions.number|add:'-3' and num < tagged_discussions.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?tag={{ selected_tag.slug }}&page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if tagged_discussions.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?tag={{ selected_tag.slug }}&page={{ tagged_discussions.next_page_number }}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?tag={{ selected_tag.slug }}&page={{ tagged_discussions.paginator.num_pages }}">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% endif %}
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-3">
+        <!-- Tag Stats -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h6 class="card-title mb-3">Tag Statistics</h6>
+                <div class="stat-item mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Total Tags</span>
+                        <strong>{{ tags.paginator.count }}</strong>
+                    </div>
+                </div>
+                <div class="stat-item mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Discussions</span>
+                        <strong>{{ tags|map:"discussion_count"|sum }}</strong>
+                    </div>
+                </div>
+                {% if selected_tag %}
+                    <div class="stat-item">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">This Tag</span>
+                            <strong>{{ selected_tag.discussion_count }}</strong>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Popular Tags -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="fas fa-fire me-2"></i>Popular Tags</h6>
+            </div>
+            <div class="card-body">
+                <div class="popular-tags">
+                    {% for tag in tags|slice:":10" %}
+                        <a href="?tag={{ tag.slug }}" class="d-flex justify-content-between align-items-center mb-2 text-decoration-none">
+                            <span>{{ tag.name }}</span>
+                            <span class="badge bg-primary">{{ tag.discussion_count }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Browse By -->
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="fas fa-compass me-2"></i>Browse By</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'community:index' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-home me-2"></i>All Forums
+                    </a>
+                    <a href="{% url 'community:leaderboard' %}" class="btn btn-outline-success">
+                        <i class="fas fa-trophy me-2"></i>Leaderboard
+                    </a>
+                    <a href="{% url 'community:my_discussions' %}" class="btn btn-outline-info">
+                        <i class="fas fa-user me-2"></i>My Discussions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tag-cloud {
+        text-align: center;
+        line-height: 2.5;
+    }
+    
+    .tag-cloud-item {
+        display: inline-block;
+        margin: 5px 10px;
+        padding: 5px 10px;
+        color: #495057;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    
+    .tag-cloud-item:hover {
+        background-color: var(--primary-color);
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .tag-cloud-item.active {
+        background-color: var(--primary-color);
+        color: white;
+        box-shadow: 0 4px 6px rgba(67, 97, 238, 0.3);
+    }
+    
+    .stat-item {
+        padding-bottom: 10px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .stat-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    
+    .popular-tags a:hover {
+        background-color: #f8f9fa;
+        padding: 5px 10px;
+        border-radius: 4px;
+    }
+    
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+
+{% block extra_js %}
+<script>
+    // Tag search functionality
+    document.getElementById('tagSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const tagItems = document.querySelectorAll('.tag-cloud-item');
+        
+        tagItems.forEach(item => {
+            const tagName = item.textContent.toLowerCase();
+            if (tagName.includes(searchTerm)) {
+                item.style.display = 'inline-block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Update URL with search parameter
+        const url = new URL(window.location);
+        if (searchTerm) {
+            url.searchParams.set('q', searchTerm);
+        } else {
+            url.searchParams.delete('q');
+        }
+        window.history.replaceState({}, '', url);
+    });
+    
+    // Debounce search to prevent too many URL updates
+    let searchTimeout;
+    document.getElementById('tagSearch').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const searchTerm = this.value;
+            if (searchTerm) {
+                window.location.href = `?q=${encodeURIComponent(searchTerm)}`;
+            } else {
+                window.location.href = window.location.pathname;
+            }
+        }, 500);
+    });
+    
+    // Highlight tag badges on hover
+    document.querySelectorAll('.badge.bg-light').forEach(badge => {
+        badge.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = var('--primary-color');
+            this.style.color = 'white';
+        });
+        
+        badge.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+            this.style.color = '';
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}
